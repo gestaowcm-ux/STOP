@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+  <!-- Ferrari Rosso Corsa Industrial geometric emblem -->
+  <polygon points="20,6 32,6 38,16 38,28 32,38 20,38 14,28 14,16" stroke="#da291c" stroke-width="2.5" fill="#181818" />
+  <circle cx="26" cy="22" r="4.5" fill="#da291c" />
+  <path d="M22 22h8" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
+  
+  <!-- Text STOP -->
+  <text x="48" y="27" fill="#ffffff" font-family="'Inter', sans-serif" font-weight="800" font-size="20" letter-spacing="2.5">STOP</text>
+  <!-- Ferrari Red Accent Badge / OPS -->
+  <rect x="114" y="15" width="32" height="15" fill="#da291c" rx="0" />
+  <text x="119" y="26" fill="#ffffff" font-family="'Inter', sans-serif" font-weight="700" font-size="9" letter-spacing="1">OPS</text>
+</svg>

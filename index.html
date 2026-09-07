@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STOP - Sistema Técnico de Operações e Paradas de Manutenção</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+
+  <!-- Google Fonts: Inter & Material Symbols Outlined -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Tailwind CSS via CDN configurado com os tokens do DESIGN.md (Ferrari Design Language) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "canvas": "#181818",
+            "canvas-night": "#181818",
+            "canvas-night-soft": "#141414",
+            "canvas-card": "#202020",
+            "canvas-elevated": "#262626",
+            "hairline": "#303030",
+            "hairline-subtle": "#242424",
+            "primary": "#da291c",
+            "rosso-corsa": "#da291c",
+            "primary-hover": "#9d2211",
+            "primary-active": "#b01e0a",
+            "on-primary": "#ffffff",
+            "accent-yellow": "#f6e500",
+            "semantic-emerald": "#03904a",
+            "semantic-success": "#03904a",
+            "semantic-info": "#4c98b9",
+            "semantic-cyan": "#4c98b9",
+            "semantic-warning": "#f13a2c",
+            "body-text": "#969696",
+            "muted-text": "#666666"
+          },
+          fontFamily: {
+            sans: ['FerrariSans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom CSS tokens from DESIGN.md -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="bg-[#181818] text-white antialiased">
+
+  <!-- ========================================================================
+       SIDEBAR RETRÁTIL DINÂMICA
+       ======================================================================== -->
+  <aside id="sidebar" class="sidebar">
+    
+    <!-- Topo da Sidebar: Logo e Nome (Ferrari Livery Accent) -->
+    <div class="sidebar-header-brand h-16 px-4 border-b border-[#303030] flex items-center justify-between">
+      <a href="#projetos" onclick="App.switchToProjects()" class="flex items-center gap-2.5 overflow-hidden" title="Ir para o Portfólio de Projetos">
+        <div class="w-8 h-8 rounded-none bg-[#da291c] border border-white/20 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-white text-lg font-bold">handyman</span>
+        </div>
+        <div class="sidebar-brand-text flex flex-col leading-tight">
+          <span class="font-display-title text-sm tracking-widest text-white">STOP</span>
+          <span class="text-[9px] uppercase tracking-wider text-[#969696] font-semibold">Gestão de Paradas</span>
+        </div>
+      </a>
+      
+      <!-- Botão para Recolher/Expandir a Sidebar -->
+      <button onclick="App.toggleSidebar()" title="Recolher / Expandir Menu" class="btn-icon-pill w-7 h-7 text-[#969696] hover:text-white border-transparent hover:border-[#303030]">
+        <span id="sidebar-toggle-icon" class="material-symbols-outlined text-lg">menu_open</span>
+      </button>
+    </div>
+
+    <!-- Navegação da Sidebar: Renderizada Dinamicamente por App.updateSidebarView() -->
+    <nav id="sidebar-nav-container" class="flex-1 overflow-y-auto p-3 space-y-1.5 text-xs">
+      <!-- Injetado por js/app.js -->
+    </nav>
+
+    <!-- Rodapé da Sidebar -->
+    <div class="p-3 border-t border-[#303030] sidebar-text text-[11px] text-[#666666] flex items-center justify-between">
+      <span>STOP v2.5 • PMBOK 8th</span>
+      <span class="status-dot bg-[#03904a] inline-block" title="Sistema Operacional"></span>
+    </div>
+
+  </aside>
+
+  <!-- ========================================================================
+       MAIN WRAPPER & TOP HEADER
+       ======================================================================== -->
+  <div id="main-wrapper" class="main-wrapper">
+    
+    <!-- Top Header Fixo -->
+    <header class="top-header no-print">
+      
+      <!-- Esquerda: Toggle Mobile + Breadcrumbs -->
+      <div class="flex items-center gap-4">
+        <button onclick="App.toggleSidebar()" class="btn-icon-pill sm:hidden w-8 h-8">
+          <span class="material-symbols-outlined text-lg">menu</span>
+        </button>
+
+        <div id="breadcrumb-container" class="flex items-center gap-2 text-xs font-medium tracking-wide">
+          <!-- Injetado dinamicamente por App.updateHeaderInfo() -->
+        </div>
+      </div>
+
+      <!-- Centro: Identificador da Parada Ativa -->
+      <div id="header-active-turnaround-badge" class="relative hidden md:block">
+        <!-- Injetado dinamicamente por App.updateHeaderInfo() -->
+      </div>
+
+      <!-- Direita: Notificações & Perfil do Usuário Logado -->
+      <div class="flex items-center gap-3">
+        
+        <!-- Notificações com Drawer -->
+        <div id="notifications-wrapper" class="relative">
+          <button onclick="App.toggleNotifications()" title="Alertas de Governança" class="btn-icon-pill w-9 h-9 relative">
+            <span class="material-symbols-outlined text-lg">notifications</span>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#f6e500] shadow-[0_0_6px_#f6e500]"></span>
+          </button>
+
+          <!-- Drawer de Notificações -->
+          <div id="notifications-drawer" class="notifications-drawer hidden animate-fade-in">
+            <div class="p-3.5 border-b border-[#303030] flex items-center justify-between bg-[#181818]">
+              <span class="font-button-cap text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-base text-[#da291c]">notifications</span>
+                Alertas da Iniciação
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#f6e500]/10 text-[#f6e500] font-bold">2 Alertas</span>
+            </div>
+
+            <div class="p-2 space-y-1.5 max-h-80 overflow-y-auto text-xs">
+              <div class="p-2.5 rounded-none bg-[#222222] border border-[#303030] hover:border-[#da291c] transition-all cursor-pointer">
+                <div class="flex items-center justify-between text-[11px] font-bold text-white mb-1">
+                  <span class="flex items-center gap-1.5 text-[#f6e500]">
+                    <span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+                    Gate 1 Pronto para Assinatura
+                  </span>
+                  <span class="text-[10px] text-[#666666]">Hoje</span>
+                </div>
+                <p class="text-[#969696] text-[11px]">Todos os 5 critérios de saída do Termo de Abertura foram validados pela equipe de engenharia.</p>
+              </div>
+
+              <div class="p-2.5 rounded-none bg-[#222222] border border-[#303030] hover:border-[#da291c] transition-all cursor-pointer">
+                <div class="flex items-center justify-between text-[11px] font-bold text-white mb-1">
+                  <span class="flex items-center gap-1.5 text-[#4c98b9]">
+                    <span class="material-symbols-outlined text-sm">groups</span>
+                    Registro de Stakeholders Concluído
+                  </span>
+                  <span class="text-[10px] text-[#666666]">Hoje</span>
+                </div>
+                <p class="text-[#969696] text-[11px]">Partes interessadas catalogadas com estratégias na Matriz Decisão × Participação.</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 border-t border-[#303030] text-center bg-[#141414]">
+              <button onclick="App.toggleNotifications(false)" class="text-[11px] text-[#969696] hover:text-white uppercase font-bold tracking-wider">
+                Fechar Alertas
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Usuário Logado no Canto Superior Direito -->
+        <div id="user-wrapper" class="relative">
+          <button onclick="App.toggleUserMenu()" class="flex items-center gap-3 p-1.5 pl-3 rounded-none hover:bg-white/5 border border-transparent hover:border-[#303030] transition-all">
+            <div class="text-right hidden sm:block leading-tight">
+              <span class="text-xs font-bold text-white block">Juliana Santos</span>
+              <span class="text-[10px] text-[#969696] block font-medium">Gerente Geral de Parada</span>
+            </div>
+            <!-- Avatar Initials (Ferrari Rosso Corsa emblem) -->
+            <div class="w-8 h-8 rounded-none bg-[#da291c] border border-white/30 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm">
+              JS
+            </div>
+          </button>
+
+          <!-- Dropdown do Perfil do Usuário -->
+          <div id="user-dropdown-menu" class="absolute top-12 right-0 w-60 bg-[#1e1e1e] border border-[#303030] rounded-none shadow-2xl p-2 hidden z-50 text-xs">
+            <div class="px-3 py-2 border-b border-[#303030] mb-1">
+              <span class="text-white font-bold block">Juliana Santos</span>
+              <span class="text-[10px] text-[#969696] font-mono">ID: ENG-77291 • CREA/RJ</span>
+            </div>
+            <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="flex items-center gap-2 px-3 py-2 rounded-none hover:bg-[#242424] text-[#c4c4d0] hover:text-white transition-colors">
+              <span class="material-symbols-outlined text-base text-[#da291c]">badge</span>
+              Meu Perfil Operacional
+            </a>
+            <a href="#projetos" onclick="App.switchToProjects()" class="flex items-center gap-2 px-3 py-2 rounded-none hover:bg-[#242424] text-[#c4c4d0] hover:text-white transition-colors">
+              <span class="material-symbols-outlined text-base text-[#da291c]">grid_view</span>
+              Portfólio de Projetos
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </header>
+
+    <!-- Conteúdo Dinâmico da SPA (Projetos / Iniciação / Configurações) -->
+    <main id="app-content" class="flex-1 pb-16">
+      <!-- Injetado por js/projects.js, js/iniciacao.js ou js/modules.js -->
+    </main>
+
+    <!-- Rodapé Ferrari Editorial -->
+    <footer class="border-t border-[#303030] py-4 px-8 text-center text-xs text-[#666666] bg-[#141414] no-print">
+      <p>STOP • Sistema Técnico de Operações e Paradas de Manutenção — Gestão de Governança Baseada no PMBOK® 8ª Edição (ANSI/PMI 99-001-2025)</p>
+    </footer>
+
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CRIAÇÃO E EDIÇÃO DE PROJETO DE PARADA
+       ======================================================================== -->
+  <div id="project-edit-modal" onclick="if(event.target === this) ProjectsView.closeModal()" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#303030] bg-[#1e1e1e] shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto rounded-none">
+      
+      <div class="flex items-center justify-between border-b border-[#303030] pb-4">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#da291c] text-xl">precision_manufacturing</span>
+          <h2 id="modal-project-title" class="text-base font-bold text-white tracking-wide uppercase">Cadastrar Novo Projeto de Parada</h2>
+        </div>
+        <button onclick="ProjectsView.closeModal()" class="text-[#666666] hover:text-white p-1">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div>
+          <label class="form-label">Código da Parada (ID)</label>
+          <input type="text" id="form-project-code" class="form-input font-mono font-bold" placeholder="PRD-2026-XXXX" />
+        </div>
+
+        <div>
+          <label class="form-label">Nome da Parada</label>
+          <input type="text" id="form-project-name" class="form-input" placeholder="Ex: Parada Geral U-210" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Unidade / Planta Operacional</label>
+          <input type="text" id="form-project-unit" class="form-input" placeholder="Ex: U-210 Destilação Atmosférica" />
+        </div>
+
+        <div>
+          <label class="form-label">Gerente da Parada Designado</label>
+          <input type="text" id="form-project-manager" class="form-input" placeholder="Nome do Gerente" />
+        </div>
+
+        <div>
+          <label class="form-label">Patrocinador Executivo (Sponsor)</label>
+          <input type="text" id="form-project-sponsor" class="form-input" placeholder="Nome do Sponsor" />
+        </div>
+
+        <div>
+          <label class="form-label">Tipo de Parada</label>
+          <input type="text" id="form-project-type" class="form-input" placeholder="Geral, Setorial, etc." />
+        </div>
+
+        <div>
+          <label class="form-label">Orçamento Total Previsto</label>
+          <input type="text" id="form-project-budget" class="form-input font-mono text-[#03904a] font-bold" placeholder="R$ 0,00" />
+        </div>
+
+        <div>
+          <label class="form-label">Data Prevista de Início (D-0)</label>
+          <input type="date" id="form-project-start" class="form-input" />
+        </div>
+
+        <div>
+          <label class="form-label">Data Prevista de Término</label>
+          <input type="date" id="form-project-end" class="form-input" />
+        </div>
+
+        <div>
+          <label class="form-label">Duração Alvo em Dias</label>
+          <input type="number" id="form-project-days" class="form-input font-bold" placeholder="30" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Descrição Resumida do Escopo / Justificativa</label>
+          <textarea id="form-project-desc" rows="2" class="form-input" placeholder="Descreva sucintamente o objetivo da parada..."></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#303030]">
+        <button onclick="ProjectsView.closeModal()" class="btn-pill hover:border-white rounded-none">
+          Cancelar
+        </button>
+        <button onclick="ProjectsView.saveModal()" class="btn-pill-primary px-6 py-2.5 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] transition-all">
+          Salvar Dados do Projeto
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CRIAÇÃO E EDIÇÃO DE STAKEHOLDER (PARTE INTERESSADA)
+       ======================================================================== -->
+  <div id="stakeholder-edit-modal" onclick="if(event.target === this) IniciacaoView.closeStakeholderModal()" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-lg w-full border border-[#303030] bg-[#1e1e1e] shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto rounded-none">
+      
+      <div class="flex items-center justify-between border-b border-[#303030] pb-4">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#da291c] text-xl">group</span>
+          <h2 id="modal-stakeholder-title" class="text-base font-bold text-white tracking-wide uppercase">Cadastrar Stakeholder</h2>
+        </div>
+        <button onclick="IniciacaoView.closeStakeholderModal()" class="text-[#666666] hover:text-white p-1" title="Fechar">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <input type="hidden" id="form-stk-id" value="" />
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Nome do Stakeholder <span class="text-[#da291c]">*</span></label>
+          <input type="text" id="form-stk-name" class="form-input font-bold" placeholder="Ex: Juliana Santos / Dr. Roberto Albuquerque" />
+        </div>
+
+        <div>
+          <label class="form-label">Papel ou Função na Parada</label>
+          <input type="text" id="form-stk-role" class="form-input" placeholder="Ex: Patrocinador Executivo / Gerente Geral" />
+        </div>
+
+        <div>
+          <label class="form-label">Organização / Área / Empresa</label>
+          <input type="text" id="form-stk-org" class="form-input" placeholder="Ex: Diretoria Industrial / INEA" />
+        </div>
+
+        <div>
+          <label class="form-label flex items-center justify-between">
+            <span>Decisão (Poder de Decisão)</span>
+            <span class="text-[10px] text-[#f6e500] font-mono">seletor</span>
+          </label>
+          <select id="form-stk-decision" class="form-input font-bold text-[#f6e500]" onchange="IniciacaoView.onModalDecisionOrParticipationChange()">
+            <option value="Alto">Alto</option>
+            <option value="Médio" selected>Médio</option>
+            <option value="Baixo">Baixo</option>
+          </select>
+          <span class="text-[10px] text-[#666666] mt-1 block">Autoridade formal sobre escopo e liberação</span>
+        </div>
+
+        <div>
+          <label class="form-label flex items-center justify-between">
+            <span>Participação (Engajamento)</span>
+            <span class="text-[10px] text-[#4c98b9] font-mono">seletor</span>
+          </label>
+          <select id="form-stk-participation" class="form-input font-bold text-[#4c98b9]" onchange="IniciacaoView.onModalDecisionOrParticipationChange()">
+            <option value="Alto" selected>Alto</option>
+            <option value="Médio">Médio</option>
+            <option value="Baixo">Baixo</option>
+          </select>
+          <span class="text-[10px] text-[#666666] mt-1 block">Nível de envolvimento nas reuniões e rotinas</span>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label flex items-center justify-between">
+            <span>Estratégia de Engajamento Recomendada</span>
+            <span id="stk-strategy-hint" class="text-[10px] text-[#03904a] font-mono">Calculada pela Matriz</span>
+          </label>
+          <select id="form-stk-strategy" class="form-input font-semibold">
+            <option value="Gerenciar de Perto">Gerenciar de Perto (Decisão Alta × Participação Alta)</option>
+            <option value="Manter Satisfeito">Manter Satisfeito (Decisão Alta × Participação Moderada/Baixa)</option>
+            <option value="Manter Informado">Manter Informado (Decisão Moderada/Baixa × Participação Alta)</option>
+            <option value="Monitorar">Monitorar (Decisão Baixa × Participação Baixa/Moderada)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#303030]">
+        <button onclick="IniciacaoView.closeStakeholderModal()" class="btn-pill hover:border-white rounded-none">
+          Cancelar
+        </button>
+        <button onclick="IniciacaoView.saveStakeholderModal()" class="btn-pill-primary px-6 py-2.5 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] transition-all">
+          Salvar Stakeholder
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE PACOTE DE TRABALHO DA EAP (PILAR 1)
+       ======================================================================== -->
+  <div id="wbs-item-modal" onclick="if(event.target === this) PlanejamentoView.closeWbsModal()" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-xl w-full border border-[#303030] bg-[#1e1e1e] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto rounded-none">
+      
+      <div class="flex items-center justify-between border-b border-[#303030] pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#da291c] text-xl">account_tree</span>
+          <h2 id="modal-wbs-title" class="text-sm font-bold text-white tracking-wide uppercase">Adicionar Pacote à EAP</h2>
+        </div>
+        <button onclick="PlanejamentoView.closeWbsModal()" class="text-[#666666] hover:text-white p-1">
+          <span class="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="form-label">Código EAP / WBS</label>
+          <input type="text" id="form-wbs-code" class="form-input font-mono font-bold" placeholder="Ex: 1.3.4" />
+        </div>
+
+        <div>
+          <label class="form-label">Nível Hierárquico</label>
+          <select id="form-wbs-level" class="form-input font-bold">
+            <option value="1">Nível 1 (Projeto / Geral)</option>
+            <option value="2">Nível 2 (Frente de Trabalho / Macro)</option>
+            <option value="3" selected>Nível 3 (Pacote de Trabalho Executável)</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Nome / Descrição do Elemento da EAP</label>
+          <input type="text" id="form-wbs-name" class="form-input" placeholder="Ex: Torre Fracionadora T-201 (Abertura e Limpeza)" />
+        </div>
+
+        <div>
+          <label class="form-label">Elemento Pai (Parent Code)</label>
+          <input type="text" id="form-wbs-parent" class="form-input font-mono" placeholder="Ex: 1.3" />
+        </div>
+
+        <div>
+          <label class="form-label">Unidade / Ativo / Equipamento</label>
+          <input type="text" id="form-wbs-unit" class="form-input" placeholder="Ex: T-201 ou U-210" />
+        </div>
+
+        <div>
+          <label class="form-label">Responsável Técnico / Contratada</label>
+          <input type="text" id="form-wbs-resp" class="form-input" placeholder="Ex: Empreiteira Alfa ou Nome" />
+        </div>
+
+        <div>
+          <label class="form-label">Tipo de Pacote</label>
+          <select id="form-wbs-type" class="form-input font-semibold">
+            <option value="Pacote de Trabalho" selected>Pacote de Trabalho</option>
+            <option value="Frente Mecânica">Frente Mecânica</option>
+            <option value="Frente Operacional">Frente Operacional</option>
+            <option value="Frente Fornos">Frente Fornos</option>
+            <option value="Frente E&I">Frente E&I (Elétrica & Instrumentação)</option>
+            <option value="Gestão">Gestão & Governança</option>
+            <option value="Projeto">Projeto Integral</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Status da Entrega</label>
+          <select id="form-wbs-status" class="form-input font-bold text-[#03904a]">
+            <option value="Planejado" selected>Planejado</option>
+            <option value="Em Andamento">Em Andamento</option>
+            <option value="Concluído">Concluído</option>
+            <option value="Aprovado">Aprovado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#303030]">
+        <button onclick="PlanejamentoView.closeWbsModal()" class="btn-pill hover:border-white rounded-none text-xs">
+          Cancelar
+        </button>
+        <button onclick="PlanejamentoView.saveWbsModal()" class="btn-pill-primary px-6 py-2.5 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] transition-all">
+          Salvar Pacote
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE ATIVIDADE DO CRONOGRAMA P6 / CPM (PILAR 2 - ESTILO MS PROJECT)
+       ======================================================================== -->
+  <div id="activity-item-modal" onclick="if(event.target === this) PlanejamentoView.closeActivityModal()" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#303030] bg-[#1e1e1e] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto rounded-none">
+      
+      <div class="flex items-center justify-between border-b border-[#303030] pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#da291c] text-xl">schedule</span>
+          <h2 id="modal-act-title" class="text-sm font-bold text-white tracking-wide uppercase">Adicionar Atividade ao Cronograma P6</h2>
+        </div>
+        <button onclick="PlanejamentoView.closeActivityModal()" class="text-[#666666] hover:text-white p-1">
+          <span class="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="form-label">ID / Código da Atividade</label>
+          <input type="text" id="form-act-code" class="form-input font-mono font-bold" placeholder="Ex: A1160" />
+        </div>
+
+        <div>
+          <label class="form-label">Duração (Dias Corridos)</label>
+          <input type="number" id="form-act-duration" min="0" max="180" class="form-input font-mono font-bold text-[#da291c]" placeholder="Ex: 4" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Descrição / Nome da Tarefa</label>
+          <input type="text" id="form-act-name" class="form-input" placeholder="Ex: Montagem dos Feixes e Teste Hidrostático" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="flex items-center justify-between mb-1">
+            <label class="form-label mb-0">Predecessoras (Dependências PDM / Término-a-Início)</label>
+            <span class="text-[10px] text-[#969696] font-mono">Clique nos chips abaixo ou digite os códigos</span>
+          </div>
+          <input type="text" id="form-act-pred" class="form-input font-mono font-bold text-[#4c98b9]" placeholder="Ex: A1050 ou A1040, A1050 (deixe '-' se for inicial)" />
+          
+          <!-- Chips rápidos das tarefas existentes -->
+          <div class="mt-2 p-2.5 bg-[#141414] border border-[#303030] space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-[#969696] block font-mono uppercase">Clique para vincular/desvincular predecessora:</span>
+              <span class="text-[10px] text-[#da291c] font-mono">Término-a-Início (FS)</span>
+            </div>
+            <div id="act-pred-chips" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+              <!-- Injetado dinamicamente por openCreateActivityModal / openEditActivityModal -->
+            </div>
+          </div>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Responsável Técnico / Empreiteira</label>
+          <input type="text" id="form-act-resp" class="form-input" placeholder="Ex: Empreiteira Mecânica Alfa / Supervisão" />
+        </div>
+
+        <!-- Painel Informativo do Motor CPM (MS Project) -->
+        <div class="sm:col-span-2 p-3 bg-[#181818] border border-[#303030] flex items-start gap-3">
+          <span class="material-symbols-outlined text-[#da291c] text-lg mt-0.5">calculate</span>
+          <div class="space-y-1 text-[11px] leading-relaxed">
+            <span class="font-bold text-white uppercase block text-[10px]">Cálculo Dinâmico de Cronograma (Estilo MS Project / Primavera P6)</span>
+            <p class="text-[#969696]">
+              Ao salvar, o motor executará automaticamente os cálculos de <strong>Ida (Forward Pass)</strong> e <strong>Volta (Backward Pass)</strong>. As datas mais cedo, mais tarde, folga total e a identificação do caminho crítico serão calculados e ajustados em cascata em todo o projeto.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#303030]">
+        <button onclick="PlanejamentoView.closeActivityModal()" class="btn-pill hover:border-white rounded-none text-xs">
+          Cancelar
+        </button>
+        <button onclick="PlanejamentoView.saveActivityModal()" class="btn-pill-primary px-6 py-2.5 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] transition-all flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-sm">calculate</span>
+          <span>Calcular & Salvar</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE RISCO & SMS COM SELETORES P×I (PILAR 5)
+       ======================================================================== -->
+  <div id="risk-item-modal" onclick="if(event.target === this) PlanejamentoView.closeRiskModal()" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#303030] bg-[#1e1e1e] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto rounded-none">
+      
+      <div class="flex items-center justify-between border-b border-[#303030] pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#da291c] text-xl">gavel</span>
+          <h2 id="modal-risk-title" class="text-sm font-bold text-white tracking-wide uppercase">Identificar e Registrar Risco</h2>
+        </div>
+        <button onclick="PlanejamentoView.closeRiskModal()" class="text-[#666666] hover:text-white p-1">
+          <span class="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="form-label">Código do Risco</label>
+          <input type="text" id="form-risk-code" class="form-input font-mono font-bold" placeholder="RSK-06" />
+        </div>
+
+        <div>
+          <label class="form-label">Categoria do Risco</label>
+          <select id="form-risk-category" class="form-input font-semibold">
+            <option value="Técnico / NR-13" selected>Técnico / NR-13</option>
+            <option value="SMS / Segurança Operacional">SMS / Segurança Operacional</option>
+            <option value="Suprimentos & Contratos">Suprimentos & Contratos</option>
+            <option value="Climático / Ambiental">Climático / Ambiental</option>
+            <option value="Automação & Elétrica">Automação & Elétrica</option>
+            <option value="Recursos Humanos">Recursos Humanos / Mão de Obra</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Descrição do Evento de Risco</label>
+          <textarea id="form-risk-desc" rows="2" class="form-input leading-relaxed" placeholder="Descreva a condição de incerteza, causa e impacto potencial na parada..."></textarea>
+        </div>
+
+        <div>
+          <label class="form-label flex items-center justify-between">
+            <span>Probabilidade (P)</span>
+            <span class="text-[10px] text-[#da291c] font-mono">seletor normatizado</span>
+          </label>
+          <select id="form-risk-prob" class="form-input font-bold text-[#da291c]" onchange="PlanejamentoView.onRiskProbabilityOrImpactChange()">
+            <option value="Alto">Alto</option>
+            <option value="Médio" selected>Médio</option>
+            <option value="Baixo">Baixo</option>
+          </select>
+          <span class="text-[10px] text-[#666666] mt-0.5 block">Frequência histórica estimada do evento</span>
+        </div>
+
+        <div>
+          <label class="form-label flex items-center justify-between">
+            <span>Impacto (I)</span>
+            <span class="text-[10px] text-[#4c98b9] font-mono">seletor normatizado</span>
+          </label>
+          <select id="form-risk-impact" class="form-input font-bold text-[#4c98b9]" onchange="PlanejamentoView.onRiskProbabilityOrImpactChange()">
+            <option value="Alto">Alto</option>
+            <option value="Médio" selected>Médio</option>
+            <option value="Baixo">Baixo</option>
+          </select>
+          <span class="text-[10px] text-[#666666] mt-0.5 block">Consequência em Custo, Prazo ou SMS</span>
+        </div>
+
+        <div class="sm:col-span-2 p-3 bg-[#181818] border border-[#303030] flex items-center justify-between">
+          <div>
+            <span class="font-eyebrow text-[#969696] text-[10px] block">Severidade Calculada (Matriz P×I)</span>
+            <span class="text-[11px] text-[#c4c4d0]">Cálculo automático em conformidade com o PMBOK 8ª Edição</span>
+          </div>
+          <span id="risk-severity-preview" class="status-pill font-mono text-xs status-amber border border-[#f6e500]/40 text-[#f6e500]">
+            MÉDIO
+          </span>
+        </div>
+
+        <div>
+          <label class="form-label">Estratégia de Resposta</label>
+          <select id="form-risk-strategy" class="form-input font-semibold">
+            <option value="Mitigar" selected>Mitigar (Reduzir probabilidade ou impacto)</option>
+            <option value="Evitar">Evitar (Alterar abordagem técnica)</option>
+            <option value="Transferir">Transferir (Seguro / Cláusula contratual)</option>
+            <option value="Aceitar">Aceitar (Monitorar e absorver reserva)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Responsável pela Ação</label>
+          <input type="text" id="form-risk-resp" class="form-input" placeholder="Ex: Eng. Lúcia Albuquerque" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="form-label">Plano de Ação / Resposta de Contingência</label>
+          <textarea id="form-risk-action" rows="2" class="form-input leading-relaxed" placeholder="Ação preventiva imediata e procedimento em caso de materialização do risco..."></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#303030]">
+        <button onclick="PlanejamentoView.closeRiskModal()" class="btn-pill hover:border-white rounded-none text-xs">
+          Cancelar
+        </button>
+        <button onclick="PlanejamentoView.saveRiskModal()" class="btn-pill-primary px-6 py-2.5 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] transition-all">
+          Salvar Risco
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts da Aplicação -->
+  <script src="js/projects.js"></script>
+  <script src="js/iniciacao.js"></script>
+  <script src="js/planejamento.js"></script>
+  <script src="js/modules.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
