@@ -490,9 +490,19 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="sm:col-span-2">
+          <div class="flex items-center justify-between mb-1">
+            <label class="form-label mb-0">Pacote de Trabalho Pai da EAP (Nível 3) <span class="text-[#da291c]">*</span></label>
+            <span class="text-[10px] text-[#4c98b9] font-mono">Vínculo obrigatório ao Nível 4 da EAP</span>
+          </div>
+          <select id="form-act-wbs-parent" onchange="PlanejamentoView.onActivityWbsParentChange()" class="form-input font-mono font-bold text-white bg-[#141414]">
+            <!-- Injetado dinamicamente com os pacotes de Nível 3 da EAP -->
+          </select>
+        </div>
+
         <div>
-          <label class="form-label">ID / Código da Atividade</label>
-          <input type="text" id="form-act-code" class="form-input font-mono font-bold" placeholder="Ex: A1160" />
+          <label class="form-label">Código da Atividade (EAP Nível 4) <span class="text-[#da291c]">*</span></label>
+          <input type="text" id="form-act-code" class="form-input font-mono font-bold text-[#da291c]" placeholder="Ex: 1.2.1.1" />
         </div>
 
         <div>
@@ -510,7 +520,7 @@
             <label class="form-label mb-0">Predecessoras (Dependências PDM / Término-a-Início)</label>
             <span class="text-[10px] text-[#969696] font-mono">Clique nos chips abaixo ou digite os códigos</span>
           </div>
-          <input type="text" id="form-act-pred" class="form-input font-mono font-bold text-[#4c98b9]" placeholder="Ex: A1050 ou A1040, A1050 (deixe '-' se for inicial)" />
+          <input type="text" id="form-act-pred" class="form-input font-mono font-bold text-[#4c98b9]" placeholder="Ex: 1.2.1.1 ou 1.2.2.1, 1.3.1.1 (deixe '-' se for inicial)" />
           
           <!-- Chips rápidos das tarefas existentes -->
           <div class="mt-2 p-2.5 bg-[#141414] border border-[#303030] space-y-1.5">

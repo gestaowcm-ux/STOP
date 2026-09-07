@@ -50,28 +50,29 @@ const PlanejamentoView = {
         { id: 'wbs-13', code: '1.4.1', level: 3, name: 'Forno F-201 (Demolição e Concretagem de Refratário)', parent: '1.4', unit: 'F-201', resp: 'Empreiteira Refratários Beta', packageType: 'Pacote de Trabalho', status: 'Planejado' },
         { id: 'wbs-14', code: '1.5', level: 2, name: 'Instrumentação, Elétrica & Automação (SDCD)', parent: '1.0', unit: 'Subestação / SDCD', resp: 'Tatiane Ramos', packageType: 'Frente E&I', status: 'Planejado' },
         { id: 'wbs-15', code: '1.5.1', level: 3, name: 'Migração de Cartões e Teste de Malhas SDCD', parent: '1.5', unit: 'SDCD', resp: 'Automação Integrada', packageType: 'Pacote de Trabalho', status: 'Planejado' },
-        { id: 'wbs-16', code: '1.6', level: 2, name: 'Comissionamento, Testes de Pressão e Partida', parent: '1.0', unit: 'U-210', resp: 'Carlos Eduardo Mendes', packageType: 'Frente Operacional', status: 'Planejado' }
+        { id: 'wbs-16', code: '1.6', level: 2, name: 'Comissionamento, Testes de Pressão e Partida', parent: '1.0', unit: 'U-210', resp: 'Carlos Eduardo Mendes', packageType: 'Frente Operacional', status: 'Planejado' },
+        { id: 'wbs-17', code: '1.6.1', level: 3, name: 'Testes de Estanqueidade, Descegamento e Partida', parent: '1.6', unit: 'U-210', resp: 'Carlos Eduardo Mendes', packageType: 'Pacote de Trabalho', status: 'Planejado' }
       ]
     },
     pilar2: {
-      scheduleVersion: 'P6-Rev.04',
+      scheduleVersion: 'P6-Rev.05 (WBS Level 4)',
       targetDurationDays: 35,
       activities: [
-        { id: 'act-1', code: 'A1010', name: 'Corte de Alimentação & Inertização da Unidade', duration: 3, pred: '-', earlyStart: 'D+0', earlyFinish: 'D+3', lateStart: 'D+0', lateFinish: 'D+3', float: 0, isCritical: true, resp: 'Operação U-210' },
-        { id: 'act-2', code: 'A1020', name: 'Instalação de Raquetes / Cegamento Geral & LOTO', duration: 2, pred: 'A1010', earlyStart: 'D+3', earlyFinish: 'D+5', lateStart: 'D+3', lateFinish: 'D+5', float: 0, isCritical: true, resp: 'SMS / Mecânica' },
-        { id: 'act-3', code: 'A1030', name: 'Abertura de Bocas de Visita (BVs) dos 18 Vasos NR-13', duration: 2, pred: 'A1020', earlyStart: 'D+5', earlyFinish: 'D+7', lateStart: 'D+7', lateFinish: 'D+9', float: 2, isCritical: false, resp: 'Empreiteira Alfa' },
-        { id: 'act-4', code: 'A1040', name: 'Abertura e Despressurização da Torre Fracionadora T-201', duration: 2, pred: 'A1020', earlyStart: 'D+5', earlyFinish: 'D+7', lateStart: 'D+5', lateFinish: 'D+7', float: 0, isCritical: true, resp: 'Empreiteira Alfa' },
-        { id: 'act-5', code: 'A1050', name: 'Limpeza Química e Hidrojateamento Interno T-201', duration: 4, pred: 'A1040', earlyStart: 'D+7', earlyFinish: 'D+11', lateStart: 'D+7', lateFinish: 'D+11', float: 0, isCritical: true, resp: 'Hidrojato Especializado' },
-        { id: 'act-6', code: 'A1060', name: 'Desmontagem e Substituição das Bandejas T-201', duration: 10, pred: 'A1050', earlyStart: 'D+11', earlyFinish: 'D+21', lateStart: 'D+11', lateFinish: 'D+21', float: 0, isCritical: true, resp: 'Mecânica Especializada' },
-        { id: 'act-7', code: 'A1070', name: 'Inspeção e Ensaios Não Destrutivos (END) Vasos NR-13', duration: 6, pred: 'A1030', earlyStart: 'D+7', earlyFinish: 'D+13', lateStart: 'D+9', lateFinish: 'D+15', float: 2, isCritical: false, resp: 'Engenharia de Integridade' },
-        { id: 'act-8', code: 'A1080', name: 'Demolição e Aplicação de Concreto Refratário Forno F-201', duration: 8, pred: 'A1020', earlyStart: 'D+5', earlyFinish: 'D+13', lateStart: 'D+6', lateFinish: 'D+14', float: 1, isCritical: false, resp: 'Empreiteira Beta' },
-        { id: 'act-9', code: 'A1090', name: 'Secagem Controlada e Curva Térmica Forno F-201', duration: 5, pred: 'A1080', earlyStart: 'D+13', earlyFinish: 'D+18', lateStart: 'D+14', lateFinish: 'D+19', float: 1, isCritical: false, resp: 'Empreiteira Beta' },
-        { id: 'act-10', code: 'A1100', name: 'Retubagem dos Permutadores E-204 A/B', duration: 7, pred: 'A1020', earlyStart: 'D+5', earlyFinish: 'D+12', lateStart: 'D+10', lateFinish: 'D+17', float: 5, isCritical: false, resp: 'Empreiteira Alfa' },
-        { id: 'act-11', code: 'A1110', name: 'Migração de Cartões e Testes de Malhas SDCD', duration: 12, pred: 'A1010', earlyStart: 'D+3', earlyFinish: 'D+15', lateStart: 'D+8', lateFinish: 'D+20', float: 5, isCritical: false, resp: 'Automação' },
-        { id: 'act-12', code: 'A1120', name: 'Fechamento de BVs e Teste de Estanqueidade Geral', duration: 4, pred: 'A1060,A1070,A1090,A1100', earlyStart: 'D+21', earlyFinish: 'D+25', lateStart: 'D+21', lateFinish: 'D+25', float: 0, isCritical: true, resp: 'Comissão Mista' },
-        { id: 'act-13', code: 'A1130', name: 'Descegamento (Retirada de Raquetes) e Normalização LOTO', duration: 3, pred: 'A1120', earlyStart: 'D+25', earlyFinish: 'D+28', lateStart: 'D+25', lateFinish: 'D+28', float: 0, isCritical: true, resp: 'Operação / SMS' },
-        { id: 'act-14', code: 'A1140', name: 'Inertização, Pressurização e Circulação de Hidrocarbonetos', duration: 4, pred: 'A1130,A1110', earlyStart: 'D+28', earlyFinish: 'D+32', lateStart: 'D+28', lateFinish: 'D+32', float: 0, isCritical: true, resp: 'Operação U-210' },
-        { id: 'act-15', code: 'A1150', name: 'Acendimento de Queimadores F-201 e Partida da Unidade', duration: 3, pred: 'A1140', earlyStart: 'D+32', earlyFinish: 'D+35', lateStart: 'D+32', lateFinish: 'D+35', float: 0, isCritical: true, resp: 'Gerência Operacional' }
+        { id: 'act-1', code: '1.2.1.1', wbsParent: '1.2.1', name: 'Corte de Alimentação & Inertização da Unidade', duration: 3, pred: '-', earlyStart: 'D+0', earlyFinish: 'D+3', lateStart: 'D+0', lateFinish: 'D+3', float: 0, isCritical: true, resp: 'Operação U-210' },
+        { id: 'act-2', code: '1.2.2.1', wbsParent: '1.2.2', name: 'Instalação de Raquetes / Cegamento Geral & LOTO', duration: 2, pred: '1.2.1.1', earlyStart: 'D+3', earlyFinish: 'D+5', lateStart: 'D+3', lateFinish: 'D+5', float: 0, isCritical: true, resp: 'SMS / Mecânica' },
+        { id: 'act-3', code: '1.3.2.1', wbsParent: '1.3.2', name: 'Abertura de Bocas de Visita (BVs) dos 18 Vasos NR-13', duration: 2, pred: '1.2.2.1', earlyStart: 'D+5', earlyFinish: 'D+7', lateStart: 'D+7', lateFinish: 'D+9', float: 2, isCritical: false, resp: 'Empreiteira Alfa' },
+        { id: 'act-4', code: '1.3.1.1', wbsParent: '1.3.1', name: 'Abertura e Despressurização da Torre Fracionadora T-201', duration: 2, pred: '1.2.2.1', earlyStart: 'D+5', earlyFinish: 'D+7', lateStart: 'D+5', lateFinish: 'D+7', float: 0, isCritical: true, resp: 'Empreiteira Alfa' },
+        { id: 'act-5', code: '1.3.1.2', wbsParent: '1.3.1', name: 'Limpeza Química e Hidrojateamento Interno T-201', duration: 4, pred: '1.3.1.1', earlyStart: 'D+7', earlyFinish: 'D+11', lateStart: 'D+7', lateFinish: 'D+11', float: 0, isCritical: true, resp: 'Hidrojato Especializado' },
+        { id: 'act-6', code: '1.3.1.3', wbsParent: '1.3.1', name: 'Desmontagem e Substituição das Bandejas T-201', duration: 10, pred: '1.3.1.2', earlyStart: 'D+11', earlyFinish: 'D+21', lateStart: 'D+11', lateFinish: 'D+21', float: 0, isCritical: true, resp: 'Mecânica Especializada' },
+        { id: 'act-7', code: '1.3.2.2', wbsParent: '1.3.2', name: 'Inspeção e Ensaios Não Destrutivos (END) Vasos NR-13', duration: 6, pred: '1.3.2.1', earlyStart: 'D+7', earlyFinish: 'D+13', lateStart: 'D+9', lateFinish: 'D+15', float: 2, isCritical: false, resp: 'Engenharia de Integridade' },
+        { id: 'act-8', code: '1.4.1.1', wbsParent: '1.4.1', name: 'Demolição e Aplicação de Concreto Refratário Forno F-201', duration: 8, pred: '1.2.2.1', earlyStart: 'D+5', earlyFinish: 'D+13', lateStart: 'D+6', lateFinish: 'D+14', float: 1, isCritical: false, resp: 'Empreiteira Beta' },
+        { id: 'act-9', code: '1.4.1.2', wbsParent: '1.4.1', name: 'Secagem Controlada e Curva Térmica Forno F-201', duration: 5, pred: '1.4.1.1', earlyStart: 'D+13', earlyFinish: 'D+18', lateStart: 'D+14', lateFinish: 'D+19', float: 1, isCritical: false, resp: 'Empreiteira Beta' },
+        { id: 'act-10', code: '1.3.3.1', wbsParent: '1.3.3', name: 'Retubagem dos Permutadores E-204 A/B', duration: 7, pred: '1.2.2.1', earlyStart: 'D+5', earlyFinish: 'D+12', lateStart: 'D+10', lateFinish: 'D+17', float: 5, isCritical: false, resp: 'Empreiteira Alfa' },
+        { id: 'act-11', code: '1.5.1.1', wbsParent: '1.5.1', name: 'Migração de Cartões e Testes de Malhas SDCD', duration: 12, pred: '1.2.1.1', earlyStart: 'D+3', earlyFinish: 'D+15', lateStart: 'D+8', lateFinish: 'D+20', float: 5, isCritical: false, resp: 'Automação' },
+        { id: 'act-12', code: '1.6.1.1', wbsParent: '1.6.1', name: 'Fechamento de BVs e Teste de Estanqueidade Geral', duration: 4, pred: '1.3.1.3, 1.3.2.2, 1.4.1.2, 1.3.3.1', earlyStart: 'D+21', earlyFinish: 'D+25', lateStart: 'D+21', lateFinish: 'D+25', float: 0, isCritical: true, resp: 'Comissão Mista' },
+        { id: 'act-13', code: '1.2.2.2', wbsParent: '1.2.2', name: 'Descegamento (Retirada de Raquetes) e Normalização LOTO', duration: 3, pred: '1.6.1.1', earlyStart: 'D+25', earlyFinish: 'D+28', lateStart: 'D+25', lateFinish: 'D+28', float: 0, isCritical: true, resp: 'Operação / SMS' },
+        { id: 'act-14', code: '1.6.1.2', wbsParent: '1.6.1', name: 'Inertização, Pressurização e Circulação de Hidrocarbonetos', duration: 4, pred: '1.2.2.2, 1.5.1.1', earlyStart: 'D+28', earlyFinish: 'D+32', lateStart: 'D+28', lateFinish: 'D+32', float: 0, isCritical: true, resp: 'Operação U-210' },
+        { id: 'act-15', code: '1.6.1.3', wbsParent: '1.6.1', name: 'Acendimento de Queimadores F-201 e Partida da Unidade', duration: 3, pred: '1.6.1.2', earlyStart: 'D+32', earlyFinish: 'D+35', lateStart: 'D+32', lateFinish: 'D+35', float: 0, isCritical: true, resp: 'Gerência Operacional' }
       ]
     },
     pilar3: {
@@ -192,7 +193,80 @@ const PlanejamentoView = {
       }
       this.saveData(false);
     }
+    this.migrateDataToLevel4();
     this.calculateCPM();
+  },
+
+  migrateDataToLevel4() {
+    if (!this.data) return;
+
+    // Garantir pacote 1.6.1 na EAP se ausente
+    if (this.data.pilar1 && Array.isArray(this.data.pilar1.wbs)) {
+      const has161 = this.data.pilar1.wbs.some(w => w.code === '1.6.1');
+      if (!has161) {
+        this.data.pilar1.wbs.push({
+          id: 'wbs-17',
+          code: '1.6.1',
+          level: 3,
+          name: 'Testes de Estanqueidade, Descegamento e Partida',
+          parent: '1.6',
+          unit: 'U-210',
+          resp: 'Carlos Eduardo Mendes',
+          packageType: 'Pacote de Trabalho',
+          status: 'Planejado'
+        });
+      }
+    }
+
+    // Mapeamento de migração legado A1010-A1150 -> Decimais Nível 4
+    const legacyCodeMap = {
+      'A1010': { code: '1.2.1.1', wbsParent: '1.2.1' },
+      'A1020': { code: '1.2.2.1', wbsParent: '1.2.2' },
+      'A1030': { code: '1.3.2.1', wbsParent: '1.3.2' },
+      'A1040': { code: '1.3.1.1', wbsParent: '1.3.1' },
+      'A1050': { code: '1.3.1.2', wbsParent: '1.3.1' },
+      'A1060': { code: '1.3.1.3', wbsParent: '1.3.1' },
+      'A1070': { code: '1.3.2.2', wbsParent: '1.3.2' },
+      'A1080': { code: '1.4.1.1', wbsParent: '1.4.1' },
+      'A1090': { code: '1.4.1.2', wbsParent: '1.4.1' },
+      'A1100': { code: '1.3.3.1', wbsParent: '1.3.3' },
+      'A1110': { code: '1.5.1.1', wbsParent: '1.5.1' },
+      'A1120': { code: '1.6.1.1', wbsParent: '1.6.1' },
+      'A1130': { code: '1.2.2.2', wbsParent: '1.2.2' },
+      'A1140': { code: '1.6.1.2', wbsParent: '1.6.1' },
+      'A1150': { code: '1.6.1.3', wbsParent: '1.6.1' }
+    };
+
+    if (this.data.pilar2 && Array.isArray(this.data.pilar2.activities)) {
+      let migrated = false;
+      this.data.pilar2.activities.forEach(act => {
+        if (legacyCodeMap[act.code]) {
+          const m = legacyCodeMap[act.code];
+          act.code = m.code;
+          act.wbsParent = m.wbsParent;
+          migrated = true;
+        } else if (!act.wbsParent) {
+          const parts = act.code.split('.');
+          act.wbsParent = parts.length >= 4 ? parts.slice(0, 3).join('.') : '1.2.1';
+          migrated = true;
+        }
+
+        if (act.pred && act.pred !== '-') {
+          let pStr = act.pred;
+          Object.keys(legacyCodeMap).forEach(oldCode => {
+            if (pStr.includes(oldCode)) {
+              pStr = pStr.split(oldCode).join(legacyCodeMap[oldCode].code);
+              migrated = true;
+            }
+          });
+          act.pred = pStr;
+        }
+      });
+
+      if (migrated) {
+        this.saveData(false);
+      }
+    }
   },
 
   saveData(showFeedback = true) {
@@ -707,13 +781,58 @@ const PlanejamentoView = {
     `).join('');
   },
 
-  openCreateActivityModal() {
+  populateWbsParentSelect(selectedCode) {
+    const select = document.getElementById('form-act-wbs-parent');
+    if (!select || !this.data || !this.data.pilar1 || !Array.isArray(this.data.pilar1.wbs)) return;
+    const workPackages = this.data.pilar1.wbs.filter(w => w.level === 3);
+    select.innerHTML = workPackages.map(wp => `
+      <option value="${wp.code}" ${wp.code === selectedCode ? 'selected' : ''}>
+        ${wp.code} — ${wp.name}
+      </option>
+    `).join('');
+  },
+
+  suggestNextActivityCode(wbsParentCode) {
+    if (!wbsParentCode) return '1.2.1.1';
+    const activities = (this.data && this.data.pilar2 && this.data.pilar2.activities) ? this.data.pilar2.activities : [];
+    const prefix = wbsParentCode + '.';
+    let maxSuffix = 0;
+    activities.forEach(a => {
+      if (a.code && a.code.startsWith(prefix)) {
+        const sub = a.code.substring(prefix.length);
+        const num = parseInt(sub, 10);
+        if (!isNaN(num) && num > maxSuffix) {
+          maxSuffix = num;
+        }
+      }
+    });
+    return `${wbsParentCode}.${maxSuffix + 1}`;
+  },
+
+  onActivityWbsParentChange() {
+    const select = document.getElementById('form-act-wbs-parent');
+    const codeInput = document.getElementById('form-act-code');
+    if (!select || !codeInput) return;
+    const parentCode = select.value;
+    if (!this.editingActId) {
+      codeInput.value = this.suggestNextActivityCode(parentCode);
+      this.renderPredecessorChips(codeInput.value);
+    }
+  },
+
+  openCreateActivityModal(suggestedWbsParent) {
     this.editingActId = null;
     const title = document.getElementById('modal-act-title');
-    if (title) title.textContent = 'Adicionar Atividade ao Cronograma P6';
+    if (title) title.textContent = 'Adicionar Atividade ao Cronograma (Nível 4 da EAP)';
 
-    const nextNumber = 1000 + (this.data.pilar2.activities.length + 1) * 10;
-    document.getElementById('form-act-code').value = 'A' + nextNumber;
+    // Determinar pacote de trabalho pai da EAP
+    const workPackages = (this.data && this.data.pilar1 && this.data.pilar1.wbs) ? this.data.pilar1.wbs.filter(w => w.level === 3) : [];
+    const defaultParent = suggestedWbsParent || (workPackages.length > 0 ? workPackages[0].code : '1.2.1');
+
+    this.populateWbsParentSelect(defaultParent);
+
+    const nextCode = this.suggestNextActivityCode(defaultParent);
+    document.getElementById('form-act-code').value = nextCode;
     document.getElementById('form-act-name').value = '';
     document.getElementById('form-act-duration').value = '3';
     
@@ -722,7 +841,7 @@ const PlanejamentoView = {
     document.getElementById('form-act-pred').value = lastAct ? lastAct.code : '-';
     document.getElementById('form-act-resp').value = 'Equipe de Manutenção';
 
-    this.renderPredecessorChips('A' + nextNumber);
+    this.renderPredecessorChips(nextCode);
 
     const modal = document.getElementById('activity-item-modal');
     if (modal) modal.classList.remove('hidden');
@@ -734,7 +853,14 @@ const PlanejamentoView = {
 
     this.editingActId = id;
     const title = document.getElementById('modal-act-title');
-    if (title) title.textContent = 'Editar Atividade (' + act.code + ')';
+    if (title) title.textContent = 'Editar Atividade N4 (' + act.code + ')';
+
+    let parentCode = act.wbsParent;
+    if (!parentCode) {
+      const parts = act.code.split('.');
+      parentCode = parts.length >= 4 ? parts.slice(0, 3).join('.') : '1.2.1';
+    }
+    this.populateWbsParentSelect(parentCode);
 
     document.getElementById('form-act-code').value = act.code || '';
     document.getElementById('form-act-name').value = act.name || '';
@@ -755,6 +881,8 @@ const PlanejamentoView = {
   },
 
   saveActivityModal() {
+    const select = document.getElementById('form-act-wbs-parent');
+    const wbsParent = select ? select.value.trim() : '';
     const code = document.getElementById('form-act-code').value.trim();
     const name = document.getElementById('form-act-name').value.trim();
     const duration = parseInt(document.getElementById('form-act-duration').value, 10) || 0;
@@ -762,25 +890,55 @@ const PlanejamentoView = {
     if (!pred) pred = '-';
     const resp = document.getElementById('form-act-resp').value.trim() || 'Equipe Geral';
 
+    if (!wbsParent) {
+      alert('Por favor, selecione obrigatoriamente o Pacote de Trabalho Pai da EAP (Nível 3).');
+      return;
+    }
+
     if (!code || !name) {
       alert('Por favor, informe o Código e a Descrição da Atividade.');
+      return;
+    }
+
+    // Validação mandatória: toda atividade deve ser Nível 4 subordinada a um pacote Nível 3
+    if (!code.startsWith(wbsParent + '.')) {
+      alert(`Erro de Validação EAP: O código da atividade "${code}" deve obrigatoriamente iniciar com o prefixo do Pacote Pai selecionado ("${wbsParent}."). Exemplo: "${wbsParent}.1"`);
+      return;
+    }
+
+    // Verificar se já existe outra atividade com o mesmo código
+    const existingSameCode = this.data.pilar2.activities.find(a => a.code === code && a.id !== this.editingActId);
+    if (existingSameCode) {
+      alert(`Já existe uma atividade com o código ${code} ("${existingSameCode.name}"). Por favor, utilize um código único.`);
       return;
     }
 
     if (this.editingActId) {
       const act = this.data.pilar2.activities.find(a => a.id === this.editingActId);
       if (act) {
+        const oldCode = act.code;
         act.code = code;
+        act.wbsParent = wbsParent;
         act.name = name;
         act.duration = duration;
         act.pred = pred;
         act.resp = resp;
+
+        // Se o código mudou, atualizar referências em outras predecessoras
+        if (oldCode !== code) {
+          this.data.pilar2.activities.forEach(other => {
+            if (other.pred && other.pred.includes(oldCode)) {
+              other.pred = other.pred.split(oldCode).join(code);
+            }
+          });
+        }
       }
     } else {
       const newId = 'act-' + Date.now();
       this.data.pilar2.activities.push({
         id: newId,
         code,
+        wbsParent,
         name,
         duration,
         pred,
@@ -1009,33 +1167,53 @@ const PlanejamentoView = {
   },
 
   checkGate2Eligibility() {
-    if (typeof document === 'undefined') return;
-    const chk = this.data.pilar6.checklist;
-    const allChecked = chk.g2_c1 && chk.g2_c2 && chk.g2_c3 && chk.g2_c4 && chk.g2_c5;
+    const chk = (this.data && this.data.pilar6 && this.data.pilar6.checklist) ? this.data.pilar6.checklist : {};
+    const allChecked = !!(chk.g2_c1 && chk.g2_c2 && chk.g2_c3 && chk.g2_c4 && chk.g2_c5);
     const gate1Passed = this.getGate1Status();
 
-    const btnSign = document.getElementById('btn-sign-gate2');
-    const warningText = document.getElementById('gate2-sign-warning');
+    // Validar se 100% das atividades do cronograma estão vinculadas a um pacote de trabalho Nível 3 da EAP
+    const activities = (this.data && this.data.pilar2 && Array.isArray(this.data.pilar2.activities)) ? this.data.pilar2.activities : [];
+    const wbsPackages = (this.data && this.data.pilar1 && Array.isArray(this.data.pilar1.wbs)) ? this.data.pilar1.wbs.filter(w => w.level === 3) : [];
+    const unlinkedActivities = activities.filter(a => {
+      if (!a.wbsParent) return true;
+      return !wbsPackages.some(wp => wp.code === a.wbsParent);
+    });
+    const allActivitiesLinked = activities.length > 0 && unlinkedActivities.length === 0;
+    const isEligible = allChecked && gate1Passed && allActivitiesLinked && !(this.data && this.data.pilar6 && this.data.pilar6.signed);
 
-    if (btnSign) {
-      if (allChecked && gate1Passed && !this.data.pilar6.signed) {
-        btnSign.disabled = false;
-        btnSign.classList.remove('opacity-40', 'cursor-not-allowed');
-        btnSign.classList.add('hover:bg-[#9d2211]');
-        if (warningText) warningText.textContent = 'Todos os 5 critérios atendidos. Pronto para assinatura da Linha de Base pelo Sponsor.';
-      } else {
-        btnSign.disabled = true;
-        btnSign.classList.add('opacity-40', 'cursor-not-allowed');
-        btnSign.classList.remove('hover:bg-[#9d2211]');
-        if (warningText) {
-          if (!gate1Passed) {
-            warningText.textContent = 'Atenção: Requer homologação prévia do Gate 1 (Iniciação) para assinar o Gate 2.';
-          } else {
-            warningText.textContent = 'Marque todos os 5 critérios de prontidão técnica para habilitar a homologação.';
+    if (typeof document !== 'undefined') {
+      const btnSign = document.getElementById('btn-sign-gate2');
+      const warningText = document.getElementById('gate2-sign-warning');
+
+      if (btnSign) {
+        if (isEligible) {
+          btnSign.disabled = false;
+          btnSign.classList.remove('opacity-40', 'cursor-not-allowed');
+          btnSign.classList.add('hover:bg-[#9d2211]');
+          if (warningText) warningText.textContent = 'Todos os 5 critérios atendidos e 100% das atividades vinculadas à EAP Nível 4. Pronto para homologação da Linha de Base.';
+        } else {
+          btnSign.disabled = true;
+          btnSign.classList.add('opacity-40', 'cursor-not-allowed');
+          btnSign.classList.remove('hover:bg-[#9d2211]');
+          if (warningText) {
+            if (!gate1Passed) {
+              warningText.textContent = 'Atenção: Requer homologação prévia do Gate 1 (Iniciação) para assinar o Gate 2.';
+            } else if (!allActivitiesLinked) {
+              warningText.textContent = `Atenção: Existem ${unlinkedActivities.length} atividade(s) sem vínculo a Pacote de Trabalho Nível 3 da EAP. Vincule todas as atividades como Nível 4 para habilitar o Gate 2.`;
+            } else {
+              warningText.textContent = 'Marque todos os 5 critérios de prontidão técnica para habilitar a homologação.';
+            }
           }
         }
       }
     }
+
+    return {
+      eligible: isEligible,
+      unlinkedActivities,
+      allChecked,
+      gate1Passed
+    };
   },
 
   signGate2() {
@@ -1047,6 +1225,17 @@ const PlanejamentoView = {
 
     if (!this.getGate1Status()) {
       alert('Bloqueio de Governança: O Gate 1 (Iniciação) ainda não foi homologado pelo Patrocinador. Homologue a Iniciação antes de aprovar a Linha de Base.');
+      return;
+    }
+
+    const activities = (this.data.pilar2 && Array.isArray(this.data.pilar2.activities)) ? this.data.pilar2.activities : [];
+    const wbsPackages = (this.data.pilar1 && Array.isArray(this.data.pilar1.wbs)) ? this.data.pilar1.wbs.filter(w => w.level === 3) : [];
+    const unlinkedActivities = activities.filter(a => {
+      if (!a.wbsParent) return true;
+      return !wbsPackages.some(wp => wp.code === a.wbsParent);
+    });
+    if (unlinkedActivities.length > 0) {
+      alert(`Não é possível homologar o Gate 2: Existem ${unlinkedActivities.length} atividade(s) sem vínculo ao Nível 4 da EAP. Toda atividade deve ser obrigatoriamente vinculada a um Pacote de Trabalho.`);
       return;
     }
 
@@ -1252,8 +1441,11 @@ const PlanejamentoView = {
   // ==========================================================================
   renderPillar1ScopeWBS() {
     const p1 = this.data.pilar1;
+    const activities = (this.data.pilar2 && Array.isArray(this.data.pilar2.activities)) ? this.data.pilar2.activities : [];
     const wbsCount = p1.wbs.length;
     const workPackages = p1.wbs.filter(w => w.level === 3).length;
+    const activitiesCount = activities.length;
+    const linkedActivitiesCount = activities.filter(a => a.wbsParent || p1.wbs.some(w => w.level === 3 && a.code.startsWith(w.code + '.'))).length;
 
     return `
       <section id="pilar-1" class="card-industrial bg-[#202020] border border-[#303030] p-5 lg:p-6 space-y-5">
@@ -1265,13 +1457,16 @@ const PlanejamentoView = {
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Escopo & Estrutura Analítica do Projeto (EAP / WBS)</h2>
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Escopo & Estrutura Analítica do Projeto (EAP / WBS — 4 Níveis)</h2>
                 <span class="status-pill ${p1.scopeFreeze ? 'status-green' : 'status-amber'} text-[10px] font-mono">
                   ${p1.scopeFreeze ? 'ESCOPO CONGELADO (SCOPE FREEZE)' : 'ESCOPO EM ABERTO'}
                 </span>
+                <span class="status-pill status-gray text-[10px] font-mono">
+                  NÍVEL 4: ${activitiesCount} ATIVIDADES VINCULADAS
+                </span>
               </div>
               <p class="text-[11px] text-[#969696] mt-0.5">
-                Processos 1 a 6 do PMBOK: Decomposição analítica multi-nível, Dicionário da EAP e governança formal de controle de mudanças.
+                Processos 1 a 6 do PMBOK: Decomposição analítica em 4 níveis (Projeto, Macro-frentes, Pacotes de Trabalho e Atividades do Cronograma).
               </p>
             </div>
           </div>
@@ -1283,9 +1478,13 @@ const PlanejamentoView = {
               </span>
               <span>${p1.scopeFreeze ? 'Congelado' : 'Congelar Escopo'}</span>
             </button>
-            <button onclick="PlanejamentoView.openCreateWbsModal()" class="btn-pill-primary px-3 py-1.5 text-xs bg-[#da291c] text-white hover:bg-[#9d2211] font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <button onclick="PlanejamentoView.openCreateWbsModal()" class="btn-pill hover:border-[#4c98b9] hover:text-[#4c98b9] text-xs font-semibold" title="Adicionar Pacote WBS Nível 1 a 3">
+              <span class="material-symbols-outlined text-sm">create_new_folder</span>
+              <span>Novo Pacote WBS</span>
+            </button>
+            <button onclick="PlanejamentoView.openCreateActivityModal()" class="btn-pill-primary px-3 py-1.5 text-xs bg-[#da291c] text-white hover:bg-[#9d2211] font-bold uppercase tracking-wider flex items-center gap-1.5" title="Adicionar Atividade de Nível 4">
               <span class="material-symbols-outlined text-sm">add</span>
-              <span>Novo Pacote (EAP)</span>
+              <span>Nova Atividade (N4)</span>
             </button>
           </div>
         </div>
@@ -1301,40 +1500,44 @@ const PlanejamentoView = {
           </p>
         </div>
 
-        <!-- Tabela Analítica da EAP -->
+        <!-- Tabela Analítica da EAP com 4 Níveis Hierárquicos Integrados -->
         <div class="overflow-x-auto border border-[#303030]">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="bg-[#141414] border-b border-[#303030] text-[#969696] uppercase text-[10px] font-mono tracking-wider">
-                <th class="py-2.5 px-3 w-20">Código</th>
-                <th class="py-2.5 px-3">Elemento da EAP / Pacote de Trabalho</th>
-                <th class="py-2.5 px-3 w-20 text-center">Nível</th>
-                <th class="py-2.5 px-3 w-36">Unidade / Ativo</th>
-                <th class="py-2.5 px-3 w-40">Responsável</th>
-                <th class="py-2.5 px-3 w-32">Classificação</th>
+                <th class="py-2.5 px-3 w-28">Código EAP</th>
+                <th class="py-2.5 px-3">Elemento da EAP / Pacote / Atividade</th>
+                <th class="py-2.5 px-3 w-28 text-center">Nível</th>
+                <th class="py-2.5 px-3 w-40">Unidade / Ativo / Prazos</th>
+                <th class="py-2.5 px-3 w-36">Responsável</th>
+                <th class="py-2.5 px-3 w-28">Classificação</th>
                 <th class="py-2.5 px-3 w-28 text-center">Status</th>
-                <th class="py-2.5 px-3 w-20 text-right no-print">Ações</th>
+                <th class="py-2.5 px-3 w-28 text-right no-print">Ações</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#262626]">
               ${p1.wbs.map(item => {
-                const indent = item.level === 1 ? 'pl-2 font-bold text-white text-[13px]' : item.level === 2 ? 'pl-6 font-semibold text-[#f0f0f0]' : 'pl-10 text-[#c4c4d0]';
+                const indent = item.level === 1 ? 'pl-2 font-bold text-white text-[13px]' : item.level === 2 ? 'pl-6 font-semibold text-[#f0f0f0]' : 'pl-10 text-[#c4c4d0] font-medium';
                 const levelBadge = item.level === 1 ? 'bg-[#da291c]/20 text-[#da291c] border-[#da291c]/40' : item.level === 2 ? 'bg-[#4c98b9]/20 text-[#4c98b9] border-[#4c98b9]/40' : 'bg-white/5 text-[#969696] border-[#303030]';
                 
+                // Atividades filhas deste pacote de trabalho (Nível 4)
+                const childActs = item.level === 3 ? activities.filter(a => a.wbsParent === item.code || a.code.startsWith(item.code + '.')) : [];
+
                 return `
-                  <tr class="hover:bg-white/[0.02] transition-colors">
+                  <tr class="hover:bg-white/[0.02] transition-colors ${item.level === 1 ? 'bg-white/[0.02]' : ''}">
                     <td class="py-2 px-3 font-mono font-bold text-white text-[11px]">
                       ${item.code}
                     </td>
                     <td class="py-2 px-3 ${indent}">
                       <div class="flex items-center gap-2">
-                        ${item.level === 3 ? '<span class="w-1.5 h-1.5 bg-[#da291c] inline-block"></span>' : ''}
+                        ${item.level === 3 ? '<span class="w-2 h-2 bg-[#da291c] inline-block shrink-0"></span>' : ''}
                         <span>${item.name}</span>
+                        ${item.level === 3 ? `<span class="text-[9px] font-mono text-[#969696]">(${childActs.length} ativ.)</span>` : ''}
                       </div>
                     </td>
                     <td class="py-2 px-3 text-center">
                       <span class="inline-block px-1.5 py-0.5 text-[10px] font-mono border ${levelBadge}">
-                        N${item.level}
+                        ${item.level === 3 ? 'N3 • Pacote' : 'N' + item.level}
                       </span>
                     </td>
                     <td class="py-2 px-3 text-[#969696] text-[11px]">
@@ -1353,6 +1556,12 @@ const PlanejamentoView = {
                     </td>
                     <td class="py-2 px-3 text-right no-print">
                       <div class="inline-flex items-center gap-1 justify-end min-h-[26px]">
+                        ${item.level === 3 ? `
+                          <button onclick="PlanejamentoView.openCreateActivityModal('${item.code}')" class="px-2 py-0.5 bg-[#da291c]/15 hover:bg-[#da291c] text-[#da291c] hover:text-white border border-[#da291c]/30 text-[10px] font-mono font-bold transition-all flex items-center gap-0.5 shrink-0" title="Adicionar Atividade (Nível 4) vinculada a este Pacote">
+                            <span class="material-symbols-outlined text-[13px]">add</span>
+                            <span>Atividade</span>
+                          </button>
+                        ` : ''}
                         <div id="wbs-actions-${item.id}" class="inline-flex items-center gap-1">
                           <button onclick="PlanejamentoView.openEditWbsModal('${item.id}')" class="text-[#969696] hover:text-white p-1 transition-colors" title="Editar Pacote">
                             <span class="material-symbols-outlined text-sm">edit</span>
@@ -1369,15 +1578,65 @@ const PlanejamentoView = {
                       </div>
                     </td>
                   </tr>
+
+                  <!-- Atividades Subordinadas de Nível 4 (Vinculação Obrigatória na EAP) -->
+                  ${childActs.map(act => `
+                    <tr class="wbs-level-4-row ${act.isCritical ? 'is-critical' : ''}">
+                      <td class="py-1.5 px-3 font-mono font-bold ${act.isCritical ? 'text-[#da291c]' : 'text-[#4c98b9]'} text-[11px] pl-6">
+                        ${act.code}
+                      </td>
+                      <td class="py-1.5 px-3 pl-12 text-white text-[11px]">
+                        <div class="flex items-center gap-2">
+                          <span class="text-[#666666] font-mono text-[10px]">└─</span>
+                          <span class="font-medium text-[#f0f0f0]">${act.name}</span>
+                          <span class="wbs-level-4-badge ${act.isCritical ? 'bg-[#da291c]/20 text-[#da291c] border-[#da291c]/40' : 'bg-[#4c98b9]/20 text-[#4c98b9] border-[#4c98b9]/40'}">
+                            ${act.isCritical ? 'CRÍTICO' : 'FOLGA ' + act.totalFloat + 'd'}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="py-1.5 px-3 text-center">
+                        <span class="inline-block px-1.5 py-0.5 text-[9px] font-mono border bg-[#da291c]/10 text-[#da291c] border-[#da291c]/30 font-bold">
+                          N4 • Atividade
+                        </span>
+                      </td>
+                      <td class="py-1.5 px-3 text-[#969696] font-mono text-[10px]">
+                        Duração: <strong class="text-white">${act.duration}d</strong> (${act.earlyStart || 'D+' + act._es} a ${act.earlyFinish || 'D+' + act._ef})
+                      </td>
+                      <td class="py-1.5 px-3 text-[#c4c4d0] text-[11px] truncate" title="${act.resp}">
+                        ${act.resp || '-'}
+                      </td>
+                      <td class="py-1.5 px-3 text-[10px] text-[#969696] font-mono truncate" title="Predecessoras: ${act.pred || '-'}">
+                        Pred: <span class="text-[#4c98b9] font-bold">${act.pred || '-'}</span>
+                      </td>
+                      <td class="py-1.5 px-3 text-center">
+                        <span class="status-pill ${act.isCritical ? 'status-red' : 'status-green'} text-[9px]">
+                          ${act.isCritical ? 'Crítico (CPM)' : 'Programado'}
+                        </span>
+                      </td>
+                      <td class="py-1.5 px-3 text-right no-print">
+                        <div class="inline-flex items-center gap-1 justify-end min-h-[24px]">
+                          <button onclick="PlanejamentoView.openEditActivityModal('${act.id}')" class="text-[#969696] hover:text-white p-1 transition-colors" title="Editar Atividade N4">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                          </button>
+                          <button onclick="PlanejamentoView.askDeleteActivity('${act.id}')" class="text-[#666666] hover:text-[#da291c] p-1 transition-colors" title="Excluir Atividade N4">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
                 `;
               }).join('')}
             </tbody>
           </table>
         </div>
 
-        <div class="flex items-center justify-between text-xs text-[#969696] pt-1">
-          <span class="font-mono text-[11px]">Total de Elementos na EAP: <strong>${wbsCount}</strong> (sendo <strong>${workPackages}</strong> Pacotes de Trabalho executáveis)</span>
-          <span class="text-[10px] text-[#666666] font-mono uppercase">Decomposição Técnica • Norma ABNT / PMI WBS Standard</span>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[#969696] pt-1 gap-1">
+          <span class="font-mono text-[11px]">
+            Estrutura da EAP: <strong>${wbsCount}</strong> Elementos (N1 a N3) com <strong>${workPackages}</strong> Pacotes de Trabalho • 
+            <strong class="text-white">${activitiesCount}</strong> Atividades do Cronograma (<span class="text-[#03904a] font-bold">${linkedActivitiesCount}/${activitiesCount} vinculadas a N4</span>)
+          </span>
+          <span class="text-[10px] text-[#666666] font-mono uppercase">Decomposição Hierárquica 4 Níveis • PMI WBS Standard & ABNT</span>
         </div>
 
       </section>
@@ -1505,8 +1764,9 @@ const PlanejamentoView = {
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-[#141414] border-b border-[#303030] text-[#969696] uppercase text-[10px] font-mono tracking-wider">
-                  <th class="py-2.5 px-3 w-16">ID</th>
+                  <th class="py-2.5 px-3 w-24">ID (N4)</th>
                   <th class="py-2.5 px-3 min-w-[200px]">Descrição da Atividade</th>
+                  <th class="py-2.5 px-2 w-24 text-center">Pacote EAP</th>
                   <th class="py-2.5 px-2 w-14 text-center">Dur.</th>
                   <th class="py-2.5 px-2 w-24 text-center">Predec.</th>
                   <th class="py-2.5 px-2 w-16 text-center">Início Cedo</th>
@@ -1533,6 +1793,11 @@ const PlanejamentoView = {
                           ${isCrit ? '<span class="material-symbols-outlined text-[14px] text-[#da291c]" title="Atividade no Caminho Crítico (Folga Zero)">priority_high</span>' : ''}
                           <span>${act.name}</span>
                         </div>
+                      </td>
+                      <td class="py-2 px-2 text-center font-mono text-[10px]">
+                        <span class="bg-[#4c98b9]/15 text-[#4c98b9] border border-[#4c98b9]/30 px-1.5 py-0.5" title="Pacote de Trabalho Pai (Nível 3 da EAP)">
+                          ${act.wbsParent || act.code.split('.').slice(0, 3).join('.')}
+                        </span>
                       </td>
                       <td class="py-2 px-2 text-center font-mono font-bold text-white">
                         ${act.duration}d
@@ -2123,8 +2388,8 @@ const PlanejamentoView = {
             <label class="flex items-start gap-3 p-3 bg-[#181818] border border-[#303030] cursor-pointer hover:border-[#da291c]/50 transition-colors">
               <input type="checkbox" ${chk.g2_c1 ? 'checked' : ''} ${isSigned ? 'disabled' : ''} onchange="PlanejamentoView.toggleChecklist('g2_c1')" class="mt-0.5 h-4 w-4 rounded-none accent-[#da291c] cursor-pointer" />
               <div>
-                <span class="font-bold text-white block">1. Escopo Detalhado na EAP & Scope Freeze Formalizado</span>
-                <span class="text-[#969696] text-[11px]">Todas as frentes decompostas até o nível de pacotes de trabalho (Nível 3) com dicionário e controle formal de mudanças.</span>
+                <span class="font-bold text-white block">1. Escopo Formalizado na EAP até Nível 4 & Scope Freeze Aprovado</span>
+                <span class="text-[#969696] text-[11px]">100% das atividades do cronograma integradas e vinculadas aos pacotes de trabalho (Nível 3) da EAP como Nível 4, com dicionário e controle formal de mudanças.</span>
               </div>
             </label>
 
