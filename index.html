@@ -48,7 +48,7 @@
   </script>
 
   <!-- Custom CSS tokens from DESIGN.md -->
-  <link rel="stylesheet" href="styles.css?v=4.0" />
+  <link rel="stylesheet" href="styles.css?v=4.1" />
 </head>
 
 <body class="bg-[#ffffff] text-[#111111] antialiased">
@@ -748,7 +748,8 @@
 
           <div>
             <label class="form-label">Custo Estimado Total (R$) *</label>
-            <input type="number" id="form-srv-cost" class="form-input font-mono font-bold text-[#007d48]" placeholder="250000" value="250000" />
+            <input type="text" id="form-srv-cost" oninput="PreParadaView.onCostInput(this.value)" onblur="PreParadaView.onCostBlur(this)" class="form-input font-mono font-bold text-[#007d48]" placeholder="Ex: 5,5M ou R$ 250.000" value="R$ 250.000" />
+            <div id="form-srv-cost-hint" class="text-[11px] mt-1 font-mono text-[#707072] min-h-[18px]"></div>
           </div>
         </div>
 
@@ -1111,12 +1112,12 @@
     </div>
   </div>
 
-  <script src="js/users.js?v=4.0"></script>
-  <script src="js/projects.js?v=4.0"></script>
-  <script src="js/configuracoes.js?v=4.0"></script>
-  <script src="js/preparada.js?v=4.0"></script>
-  <script src="js/parada.js?v=4.0"></script>
-  <script src="js/posparada.js?v=4.0"></script>
-  <script src="js/app.js?v=4.0"></script>
+  <script src="js/users.js?v=4.1"></script>
+  <script src="js/projects.js?v=4.1"></script>
+  <script src="js/configuracoes.js?v=4.1"></script>
+  <script src="js/preparada.js?v=4.1"></script>
+  <script src="js/parada.js?v=4.1"></script>
+  <script src="js/posparada.js?v=4.1"></script>
+  <script src="js/app.js?v=4.1"></script>
 </body>
 </html>

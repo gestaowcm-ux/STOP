@@ -2068,7 +2068,11 @@ const PreParadaView = {
       if (descInput) descInput.value = '';
       if (stdInput) stdInput.value = '';
       if (hhInput) hhInput.value = 120;
-      if (costInput) costInput.value = 250000;
+      if (costInput) {
+        const defaultCost = typeof ProjectsView !== 'undefined' ? ProjectsView.formatCurrency(250000) : 'R$ 250.000';
+        costInput.value = defaultCost;
+        this.onCostInput(defaultCost);
+      }
       if (probInput) probInput.value = 7;
       if (sevInput) sevInput.value = 7;
       if (overrideSelect) overrideSelect.value = 'auto';
@@ -2122,7 +2126,11 @@ const PreParadaView = {
       }
       if (descInput) descInput.value = srv.description || '';
       if (hhInput) hhInput.value = srv.hh || 0;
-      if (costInput) costInput.value = srv.cost || 0;
+      if (costInput) {
+        const costVal = typeof ProjectsView !== 'undefined' ? ProjectsView.formatCurrency(srv.cost || 0) : (srv.cost || 0);
+        costInput.value = costVal;
+        this.onCostInput(costVal);
+      }
       if (probInput) probInput.value = srv.prob || 5;
       if (sevInput) sevInput.value = srv.sev || 5;
 
@@ -3497,97 +3505,6 @@ const PreParadaView = {
 
       </div>
 
-      <!-- ====================================================================
-           MODAL DE CADASTRO RÁPIDO DE ENTREGA / AÇÃO NO KANBAN
-           ==================================================================== -->
-      <div id="kanban-add-action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
-        <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
-          
-          <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-[#111111] text-2xl">add_task</span>
-              <div>
-                <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Nova Entrega da Pré-Parada</h3>
-                <p class="text-[11px] text-[#707072]">Cadastre uma ação/entregável vinculada a um marco cronológico</p>
-              </div>
-            </div>
-            <button onclick="PreParadaView.closeAddKanbanActionModal()" class="text-[#707072] hover:text-[#111111] p-1">
-              <span class="material-symbols-outlined text-xl">close</span>
-            </button>
-          </div>
-
-          <div class="space-y-4 text-xs">
-            
-            <!-- Marco de Vinculação -->
-            <div>
-              <label class="form-label">Marco Cronológico Vinculado (D-X) *</label>
-              <select id="form-kanban-action-milestone" class="form-input font-medium font-mono">
-                ${milestones.map(m => `<option value="${m.id}">[${m.relativeDay}] ${m.title} (Prazo: ${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'})</option>`).join('')}
-              </select>
-            </div>
-
-            <!-- Título da Entrega -->
-            <div>
-              <label class="form-label">Descrição / Título do Entregável *</label>
-              <textarea id="form-kanban-action-title" rows="2.5" class="form-input leading-relaxed" placeholder="Ex: Emissão das RCs de sobressalentes Long Lead, Inspeção de andaimes..."></textarea>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <!-- Área de Suporte -->
-              <div>
-                <label class="form-label">Área de Suporte Responsável *</label>
-                <select id="form-kanban-action-area" class="form-input font-medium" onchange="PreParadaView.onKanbanAreaChange()">
-                  ${this.getSupportAreaNames().map(a => `<option value="${a}">${a}</option>`).join('')}
-                </select>
-              </div>
-
-              <!-- Responsável -->
-              <div>
-                <label class="form-label">Colaborador Responsável *</label>
-                <select id="form-kanban-action-owner" class="form-input font-medium">
-                  <!-- Preenchido dinamicamente com base na Área selecionada -->
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <!-- Data Limite -->
-              <div>
-                <label class="form-label">Data Limite *</label>
-                <input type="date" id="form-kanban-action-deadline" class="form-input font-mono" value="${new Date().toISOString().split('T')[0]}" />
-              </div>
-
-              <!-- Horas Estimadas -->
-              <div>
-                <label class="form-label">Estimativa (HH) *</label>
-                <input type="number" id="form-kanban-action-hh" class="form-input font-mono font-bold" value="40" min="1" />
-              </div>
-
-              <!-- Estágio Inicial -->
-              <div>
-                <label class="form-label">Estágio Inicial</label>
-                <select id="form-kanban-action-status" class="form-input font-medium">
-                  <option value="Não Iniciada" selected>Não Iniciada</option>
-                  <option value="Em Andamento">Em Andamento</option>
-                  <option value="Bloqueada">Bloqueada</option>
-                  <option value="Concluída">Concluída</option>
-                </select>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
-            <button onclick="PreParadaView.closeAddKanbanActionModal()" class="btn-ghost-pill text-xs">
-              Cancelar
-            </button>
-            <button onclick="PreParadaView.saveAddKanbanAction('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
-              <span class="material-symbols-outlined text-sm">save</span>
-              <span>Salvar Entrega</span>
-            </button>
-          </div>
-
-        </div>
       </div>
     `;
   },
@@ -3632,19 +3549,41 @@ const PreParadaView = {
   },
 
   openAddKanbanActionModal(paradaId, targetMilestoneId = null) {
+    const pid = paradaId || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     const modal = document.getElementById('kanban-add-action-modal');
     if (!modal) return;
-    if (targetMilestoneId) {
-      const sel = document.getElementById('form-kanban-action-milestone');
-      if (sel) sel.value = targetMilestoneId;
+
+    const paradaIdEl = document.getElementById('form-kanban-action-parada-id');
+    if (paradaIdEl && pid) paradaIdEl.value = pid;
+
+    const milestones = parada ? this.getSortedMilestones(parada.preParada.milestones || []) : [];
+    const milestoneSel = document.getElementById('form-kanban-action-milestone');
+    if (milestoneSel) {
+      milestoneSel.innerHTML = milestones.map(m => `<option value="${m.id}">[${m.relativeDay}] ${m.title} (Prazo: ${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'})</option>`).join('');
+      if (targetMilestoneId) {
+        milestoneSel.value = targetMilestoneId;
+      }
     }
 
     const areaSelect = document.getElementById('form-kanban-action-area');
     const ownerSelect = document.getElementById('form-kanban-action-owner');
-    if (areaSelect && ownerSelect) {
-      const defaultArea = areaSelect.value || this.getSupportAreaNames()[0];
-      this.populateCollaboratorsSelect(ownerSelect, defaultArea, '');
+    if (areaSelect) {
+      areaSelect.innerHTML = this.getSupportAreaNames().map(a => `<option value="${a}">${a}</option>`).join('');
+      if (ownerSelect) {
+        const defaultArea = areaSelect.value || this.getSupportAreaNames()[0];
+        this.populateCollaboratorsSelect(ownerSelect, defaultArea, '');
+      }
     }
+
+    const titleInput = document.getElementById('form-kanban-action-title');
+    if (titleInput) titleInput.value = '';
+    const deadlineInput = document.getElementById('form-kanban-action-deadline');
+    if (deadlineInput) deadlineInput.value = new Date().toISOString().split('T')[0];
+    const hhInput = document.getElementById('form-kanban-action-hh');
+    if (hhInput) hhInput.value = '40';
+    const statusSel = document.getElementById('form-kanban-action-status');
+    if (statusSel) statusSel.value = 'Não Iniciada';
 
     modal.classList.remove('hidden');
   },
@@ -3663,7 +3602,8 @@ const PreParadaView = {
   },
 
   saveAddKanbanAction(paradaId) {
-    const parada = ProjectsView.getParadaById(paradaId);
+    const pid = paradaId || (document.getElementById('form-kanban-action-parada-id') ? document.getElementById('form-kanban-action-parada-id').value : null) || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     if (!parada) return;
 
     const milestoneId = document.getElementById('form-kanban-action-milestone')?.value;

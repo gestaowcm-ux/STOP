@@ -115,6 +115,30 @@ const ConfiguracoesView = {
           ]
         }
       ]
+    },
+    {
+      unit: 'U-300 Caldeira & Utilidades Industriais',
+      systems: [
+        {
+          name: 'Sistema de Geração de Vapor & Fornalha',
+          tags: [
+            { tag: 'CALD-01', name: 'Caldeira de Recuperação e Fornalha Principal', type: 'Caldeira Aquatubular de Alta Pressão', criticality: 'Classe A (Crítica)', inspectionStandard: 'NR-13 / ASME I', description: 'Caldeira com fornalha selada, tubulões de vapor e 8 queimadores' },
+            { tag: 'SUP-01', name: 'Superaquecedor & Serpentinas de Alta Pressão', type: 'Serpentinas Tubulares Aço Liga', criticality: 'Classe A (Crítica)', inspectionStandard: 'ASME I / NR-13', description: 'Bateria de serpentinas em liga Cr-Mo para vapor superaquecido a 480°C' },
+            { tag: 'REF-01', name: 'Revestimento Refratário da Fornalha', type: 'Refratário Denso Antiabrasivo', criticality: 'Classe B (Média)', inspectionStandard: 'ASTM C / Petrobras N', description: 'Aplicação e dry-out de concreto refratário e ancoragens' },
+            { tag: 'VASO-100', name: 'Vaso Desaerador e Água de Alimentação', type: 'Vaso de Pressão Desaerador', criticality: 'Classe B (Média)', inspectionStandard: 'NR-13', description: 'Desaerador térmico com torre de bandejas de alívio de O2' }
+          ]
+        },
+        {
+          name: 'Sistemas de Bloqueio, Acesso e Testes',
+          tags: [
+            { tag: 'LOTO-01', name: 'Painel Geral de Bloqueio e Isolamento LOTO', type: 'Sistema de Isolamento de Energias', criticality: 'Classe A (Crítica)', inspectionStandard: 'NR-10 / NR-12 / OSHA', description: 'Estação de bloqueio com cadeados, etiquetas e raquetes de cegamento' },
+            { tag: 'AND-01', name: 'Estrutura de Andaimes da Fornalha', type: 'Acesso Tubular Industrial', criticality: 'Classe B (Média)', inspectionStandard: 'NR-18 / NR-35', description: 'Torre de andaimes multidirecionais internos com ART de montagem' },
+            { tag: 'INSP-NR13', name: 'Bocas de Visita e Pontos de Inspeção END NR-13', type: 'Inspeção Legal Mandatória', criticality: 'Classe A (Crítica)', inspectionStandard: 'NR-13', description: 'Abertura para ensaio visual interno, ultrassom e medição de espessuras' },
+            { tag: 'TEST-HD', name: 'Circuito de Teste Hidrostático e Pressurização', type: 'Ensaio de Estanqueidade', criticality: 'Classe A (Crítica)', inspectionStandard: 'NR-13 / ASME', description: 'Circuito pressurizado a 1.5x PMTA para homologação legal' },
+            { tag: 'MARCO-01', name: 'Marco de Liberação de Área e Desenergização', type: 'Marco Operacional', criticality: 'Classe A (Crítica)', inspectionStandard: 'Gestão de Paradas', description: 'Marco formal de entrega da planta desenergizada e lavada' }
+          ]
+        }
+      ]
     }
   ],
 

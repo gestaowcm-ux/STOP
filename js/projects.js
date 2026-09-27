@@ -390,7 +390,7 @@ const ProjectsView = {
   parseCurrency(val) {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
     if (!val) return 0;
-    let str = String(val).trim();
+    let str = String(val).trim().replace(/^R\$\s*/i, '').trim();
     if (!str) return 0;
 
     // Suporte a abreviações como 15M, 14.5M, 3.5 mi, 3 milhões, 500k, 500 mil

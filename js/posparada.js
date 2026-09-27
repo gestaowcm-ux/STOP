@@ -74,72 +74,6 @@ const PosParadaView = {
           ${this.renderActiveTab(parada, activeTab)}
         </div>
 
-        <!-- MODAL DE CADASTRO DE PENDÊNCIA (PUNCH LIST) -->
-        <div id="punch-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
-          <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
-              <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Item na Punch List</h3>
-              <button onclick="PosParadaView.closeAddPunchModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
-            </div>
-
-            <div class="space-y-4 text-xs">
-              <div class="space-y-3">
-                <div>
-                  <div class="flex items-center justify-between mb-1">
-                    <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
-                    <button type="button" onclick="PosParadaView.closeAddPunchModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
-                      <span class="material-symbols-outlined text-xs">settings</span>
-                      <span>Gerenciar TAGs</span>
-                    </button>
-                  </div>
-                  <select id="form-punch-tag" onchange="PosParadaView.onPunchTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
-                    ${ConfiguracoesView.renderTagSelectOptions('', parada.unit)}
-                  </select>
-                </div>
-
-                <div id="punch-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
-                  <div class="flex items-center justify-between mb-1">
-                    <span id="punch-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
-                    <span id="punch-preview-tag-crit" class="nike-pill text-[9px]"></span>
-                  </div>
-                  <p id="punch-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="form-label">Tipo de Pendência *</label>
-                  <select id="form-punch-type" class="form-input font-medium">
-                    <option value="A (Impeditiva)">A (Impeditiva - Bloqueia Startup)</option>
-                    <option value="B (Não Impeditiva)" selected>B (Não Impeditiva - Pós-Partida)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="form-label">Prazo Limite de Saneamento</label>
-                  <input type="date" id="form-punch-deadline" class="form-input font-mono" value="${new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]}" />
-                </div>
-              </div>
-
-              <div>
-                <label class="form-label">Descrição Detalhada da Pendência *</label>
-                <textarea id="form-punch-desc" rows="2.5" class="form-input leading-relaxed" placeholder="Ex: Pintura externa de isolamento térmico nos anéis de suporte / Teste hidrostático final..."></textarea>
-              </div>
-
-              <div>
-                <label class="form-label">Responsável pelo Saneamento</label>
-                <select id="form-punch-resp" class="form-input font-medium">
-                  ${ConfiguracoesView.getSupportAreas().map(a => `<option value="${a.name} (${a.coordinator})">${a.name} — ${a.coordinator}</option>`).join('')}
-                </select>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
-              <button onclick="PosParadaView.closeAddPunchModal()" class="btn-ghost-pill text-xs">Cancelar</button>
-              <button onclick="PosParadaView.saveAddPunchModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">Salvar na Punch List</button>
-            </div>
-          </div>
-        </div>
-
       </div>
     `;
   },
@@ -382,7 +316,8 @@ const PosParadaView = {
 
   openAddPunchModal(paradaId) {
     const modal = document.getElementById('punch-create-modal');
-    const parada = ProjectsView.getParadaById(paradaId);
+    const pid = paradaId || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     if (modal) {
       const tagSelect = document.getElementById('form-punch-tag');
       const descInput = document.getElementById('form-punch-desc');
@@ -438,7 +373,8 @@ const PosParadaView = {
   },
 
   saveAddPunchModal(paradaId) {
-    const parada = ProjectsView.getParadaById(paradaId);
+    const pid = paradaId || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     if (!parada) return;
 
     const tagSelect = document.getElementById('form-punch-tag');
