@@ -1984,141 +1984,6 @@ const PreParadaView = {
         </div>
 
       </div>
-
-      <!-- MODAL DE CADASTRO / EDIÇÃO DE SERVIÇO DE ESCOPO -->
-      <div id="service-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
-        <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
-          
-          <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
-            <div class="flex items-center gap-2">
-              <h3 id="modal-service-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Demanda de Manutenção</h3>
-            </div>
-            <button onclick="PreParadaView.closeAddServiceModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">
-              Fechar
-            </button>
-          </div>
-
-          <div class="space-y-4 text-xs">
-            
-            <div class="space-y-3">
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <label class="form-label mb-0">TAG do Equipamento (Tabela de Configurações) *</label>
-                  <button type="button" onclick="PreParadaView.closeAddServiceModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
-                    <span class="material-symbols-outlined text-xs">settings</span>
-                    <span>Gerenciar TAGs</span>
-                  </button>
-                </div>
-                <select id="form-srv-tag" onchange="PreParadaView.onEquipmentTagChange(this.value, true)" class="form-input font-mono font-bold text-xs bg-white">
-                  ${ConfiguracoesView.renderTagSelectOptions('', parada.unit)}
-                </select>
-              </div>
-
-              <!-- Detalhes do Equipamento Selecionado da Tabela Mestra -->
-              <div id="srv-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
-                <div class="flex items-center justify-between mb-1">
-                  <span id="srv-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
-                  <span id="srv-preview-tag-crit" class="nike-pill text-[9px]"></span>
-                </div>
-                <div class="text-[11px] text-[#4b4b4d] space-y-0.5">
-                  <p id="srv-preview-tag-desc"></p>
-                  <p id="srv-preview-tag-unit" class="text-[10px] text-[#707072] font-medium"></p>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="form-label">Disciplina / Categoria *</label>
-                  <select id="form-srv-category" class="form-input font-medium">
-                    ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                  </select>
-                </div>
-
-                <div>
-                  <label class="form-label">Norma Técnica / Criticidade</label>
-                  <input type="text" id="form-srv-standard" readonly class="form-input bg-[#f5f5f5] text-[#707072] font-mono text-xs cursor-default" placeholder="Vinculado ao TAG" />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label class="form-label">Descrição Detalhada da Atividade *</label>
-              <textarea id="form-srv-desc" rows="2.5" class="form-input leading-relaxed" placeholder="Descreva a intervenção mecânica, caldeiraria, inspeção, troca de peças..."></textarea>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="form-label">Horas-Homem Estimadas (HH) *</label>
-                <input type="number" id="form-srv-hh" class="form-input font-mono font-bold" placeholder="120" value="120" />
-              </div>
-
-              <div>
-                <label class="form-label">Custo Estimado Total (R$) *</label>
-                <input type="number" id="form-srv-cost" class="form-input font-mono font-bold text-[#007d48]" placeholder="250000" value="250000" />
-              </div>
-            </div>
-
-            <!-- Parâmetros da Matriz de Risco PxS (1-10) -->
-            <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">Avaliação de Risco (Matriz P×S)</span>
-                <span id="srv-preview-score" class="nike-pill font-mono font-bold bg-[#111111] text-white">Score: 49 pts</span>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div class="flex justify-between text-[11px] mb-1">
-                    <span class="text-[#707072]">Probabilidade de Falha (1 a 10)</span>
-                    <span id="label-prob-val" class="font-bold font-mono">7</span>
-                  </div>
-                  <input type="range" id="form-srv-prob" min="1" max="10" value="7" oninput="PreParadaView.updateServiceModalScorePreview()" class="w-full accent-[#111111]" />
-                </div>
-
-                <div>
-                  <div class="flex justify-between text-[11px] mb-1">
-                    <span class="text-[#707072]">Severidade / Impacto (1 a 10)</span>
-                    <span id="label-sev-val" class="font-bold font-mono text-[#d30005]">7</span>
-                  </div>
-                  <input type="range" id="form-srv-sev" min="1" max="10" value="7" oninput="PreParadaView.updateServiceModalScorePreview()" class="w-full accent-[#d30005]" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Override de Escopo (Decisão Técnica / Ajuste) -->
-            <div class="p-4 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">Ajuste de Escopo & Override</span>
-                <span class="nike-pill text-[9px] bg-white">Decisão Técnica</span>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="form-label">Comportamento no Escopo</label>
-                  <select id="form-srv-override" onchange="PreParadaView.onOverrideSelectChange(this.value)" class="form-input font-medium text-xs bg-white">
-                    <option value="auto">Cálculo Automático por Score (P×S)</option>
-                    <option value="include">Forçar INCLUSÃO no Escopo (Override)</option>
-                    <option value="exclude">Forçar EXCLUSÃO do Escopo (Corte Técnico)</option>
-                  </select>
-                </div>
-                <div id="wrapper-override-reason" class="hidden">
-                  <label class="form-label">Justificativa Técnica</label>
-                  <input type="text" id="form-srv-override-reason" class="form-input bg-white text-xs" placeholder="Ex: Mandatório NR-13 / Decisão Gerencial" />
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
-            <button onclick="PreParadaView.closeAddServiceModal()" class="btn-ghost-pill text-xs">
-              Cancelar
-            </button>
-            <button id="btn-save-service-modal" onclick="PreParadaView.saveAddServiceModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">
-              Salvar Demanda de Escopo
-            </button>
-          </div>
-
-        </div>
-      </div>
     `;
   },
 
@@ -2168,9 +2033,13 @@ const PreParadaView = {
 
   openAddServiceModal(paradaId) {
     this.currentEditingServiceId = null;
+    const pid = paradaId || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     const modal = document.getElementById('service-create-modal');
-    const parada = ProjectsView.getParadaById(paradaId);
     if (modal) {
+      const paradaIdEl = document.getElementById('form-srv-parada-id');
+      if (paradaIdEl && pid) paradaIdEl.value = pid;
+
       const titleEl = document.getElementById('modal-service-title');
       const btnSaveEl = document.getElementById('btn-save-service-modal');
       const tagSelect = document.getElementById('form-srv-tag');
@@ -2213,7 +2082,8 @@ const PreParadaView = {
   },
 
   openEditServiceModal(paradaId, serviceId) {
-    const parada = ProjectsView.getParadaById(paradaId);
+    const pid = paradaId || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     if (!parada) return;
     const srv = (parada.preParada.servicesList || []).find(s => s.id === serviceId);
     if (!srv) return;
@@ -2221,6 +2091,9 @@ const PreParadaView = {
     this.currentEditingServiceId = serviceId;
     const modal = document.getElementById('service-create-modal');
     if (modal) {
+      const paradaIdEl = document.getElementById('form-srv-parada-id');
+      if (paradaIdEl && pid) paradaIdEl.value = pid;
+
       const titleEl = document.getElementById('modal-service-title');
       const btnSaveEl = document.getElementById('btn-save-service-modal');
       const tagSelect = document.getElementById('form-srv-tag');
@@ -2386,7 +2259,8 @@ const PreParadaView = {
   },
 
   saveAddServiceModal(paradaId) {
-    const parada = ProjectsView.getParadaById(paradaId);
+    const pid = paradaId || (document.getElementById('form-srv-parada-id') ? document.getElementById('form-srv-parada-id').value : null) || App.currentParadaId;
+    const parada = ProjectsView.getParadaById(pid);
     if (!parada) return;
 
     const tagInput = document.getElementById('form-srv-tag');
