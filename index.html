@@ -782,7 +782,7 @@
   <!-- ========================================================================
        MODAL DE DESDOBRAMENTO DE AÇÕES DO MILESTONE (WBS)
        ======================================================================== -->
-  <div id="milestone-action-modal" onclick="if(event.target === this) PreParadaView.closeActionModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="milestone-action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
       
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
@@ -870,7 +870,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE RISCO (MATRIZ 10x10)
        ======================================================================== -->
-  <div id="risk-edit-modal" onclick="if(event.target === this) PreParadaView.closeRiskModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="risk-edit-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
       
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
@@ -1002,7 +1002,7 @@
   <!-- ========================================================================
        MODAL DE AÇÃO MITIGADORA DA MATRIZ DE RISCO
        ======================================================================== -->
-  <div id="mitigation-action-modal" onclick="if(event.target === this) PreParadaView.closeMitigationModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[260] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="mitigation-action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[260] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
       
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
@@ -1081,7 +1081,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE SERVIÇO DE ESCOPO (MATRIZ PxS)
        ======================================================================== -->
-  <div id="service-create-modal" onclick="if(event.target === this) PreParadaView.closeAddServiceModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="service-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
       
       <input type="hidden" id="form-srv-parada-id" value="" />
@@ -1233,7 +1233,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO RÁPIDO DE ENTREGA / AÇÃO NO KANBAN
        ======================================================================== -->
-  <div id="kanban-add-action-modal" onclick="if(event.target === this) PreParadaView.closeAddKanbanActionModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="kanban-add-action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
       
       <input type="hidden" id="form-kanban-action-parada-id" value="" />
@@ -1316,7 +1316,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO DE ORDEM DE SERVIÇO (OS) NA EXECUÇÃO
        ======================================================================== -->
-  <div id="order-create-modal" onclick="if(event.target === this) ParadaView.closeAddOrderModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="order-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Emitir Ordem de Serviço (OS)</h3>
@@ -1393,7 +1393,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO DE PONTO DE BLOQUEIO LOTO NA EXECUÇÃO
        ======================================================================== -->
-  <div id="loto-create-modal" onclick="if(event.target === this) ParadaView.closeAddLotoModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="loto-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Bloqueio LOTO</h3>
@@ -1464,7 +1464,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO DE PENDÊNCIA NA PÓS-PARADA (PUNCH LIST)
        ======================================================================== -->
-  <div id="punch-create-modal" onclick="if(event.target === this) PosParadaView.closeAddPunchModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="punch-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Item na Punch List</h3>

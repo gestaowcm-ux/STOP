@@ -622,14 +622,14 @@ const PreParadaView = {
                 <!-- Cabeçalho do Milestone com Ações e Botão de Expandir/Recolher -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
                   <div class="flex items-center gap-3 cursor-pointer" onclick="PreParadaView.toggleMilestoneCollapse('${m.id}')" title="Clique para expandir/recolher este marco">
-                    <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold leading-tight shrink-0 shadow-sm ${
+                    <div class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-mono font-bold leading-tight shrink-0 shadow-sm px-1 ${
                       isComplete ? 'bg-[#007d48] text-white' :
                       isBlocked ? 'bg-[#d30005] text-white' :
                       mDone > 0 ? 'bg-[#111111] text-white' :
                       'bg-[#111111] text-white'
                     }">
-                      <span class="text-xs">${m.relativeDay}</span>
-                      <span class="text-[8px] uppercase tracking-wider text-zinc-300">MARCO</span>
+                      <span class="text-xs font-black tracking-tight">${m.relativeDay}</span>
+                      <span class="text-[8.5px] uppercase tracking-wider text-zinc-300">MARCO</span>
                     </div>
                     <div>
                       <div class="flex items-center gap-2">
@@ -1070,14 +1070,14 @@ const PreParadaView = {
                 <div class="relative flex items-start gap-4 sm:gap-6 group">
                   
                   <!-- Marcador / Ícone do Nó -->
-                  <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs shrink-0 shadow-md relative z-10 ${
+                  <div class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs shrink-0 shadow-md relative z-10 px-1 ${
                     isComplete ? 'bg-[#007d48] text-white' :
                     isBlocked ? 'bg-[#d30005] text-white' :
                     mDone > 0 ? 'bg-[#111111] text-white timeline-node-active' :
                     'bg-[#f0f0f0] text-[#707072] border border-[#cacacb]'
                   }">
-                    <span class="text-xs leading-none">${m.relativeDay}</span>
-                    <span class="text-[8px] uppercase tracking-wider font-semibold opacity-90">MARCO</span>
+                    <span class="text-xs leading-none font-black tracking-tight">${m.relativeDay}</span>
+                    <span class="text-[8.5px] uppercase tracking-wider font-semibold opacity-90">MARCO</span>
                   </div>
 
                   <!-- Conteúdo do Card do Marco na Linha do Tempo -->
@@ -1780,10 +1780,12 @@ const PreParadaView = {
 
               <div class="relative min-w-[200px]">
                 <input 
+                  id="escopo-search-input"
                   type="text" 
-                  placeholder="Buscar TAG, código ou descrição..." 
+                  placeholder="Buscar TAG, código ou descrição... (Enter ou 2s)" 
                   value="${filterSearch}" 
-                  oninput="PreParadaView.setEscopoSearch(this.value)"
+                  oninput="PreParadaView.onEscopoSearchInput(this.value)"
+                  onkeydown="PreParadaView.onEscopoSearchKeyDown(event, this.value)"
                   class="form-input text-xs py-1.5 px-3 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full"
                 />
                 ${filterSearch ? `
@@ -2000,9 +2002,46 @@ const PreParadaView = {
     App.renderCurrentView();
   },
 
+  escopoSearchTimer: null,
+
+  onEscopoSearchInput(term) {
+    if (this.escopoSearchTimer) clearTimeout(this.escopoSearchTimer);
+    this.escopoSearchTimer = setTimeout(() => {
+      this.applyEscopoSearch(term);
+    }, 2000);
+  },
+
+  onEscopoSearchKeyDown(event, term) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (this.escopoSearchTimer) {
+        clearTimeout(this.escopoSearchTimer);
+        this.escopoSearchTimer = null;
+      }
+      this.applyEscopoSearch(term);
+    }
+  },
+
   setEscopoSearch(search) {
-    this.escopoFilterState.search = search;
+    this.applyEscopoSearch(search);
+  },
+
+  applyEscopoSearch(search) {
+    if (this.escopoSearchTimer) {
+      clearTimeout(this.escopoSearchTimer);
+      this.escopoSearchTimer = null;
+    }
+    const clean = (search || '').trim();
+    this.escopoFilterState.search = clean;
     App.renderCurrentView();
+    setTimeout(() => {
+      const input = document.getElementById('escopo-search-input');
+      if (input) {
+        input.focus();
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+      }
+    }, 50);
   },
 
   clearEscopoFilters() {
@@ -3319,9 +3358,10 @@ const PreParadaView = {
                 <input 
                   type="text" 
                   id="kanban-search-input"
-                  placeholder="Buscar por entrega, código (ACT), responsável, marco..." 
+                  placeholder="Buscar por entrega, código (ACT), responsável, marco... (Enter ou 2s)" 
                   value="${this.kanbanFilterState.search || ''}" 
-                  oninput="PreParadaView.setKanbanFilter('search', this.value)"
+                  oninput="PreParadaView.onKanbanSearchInput(this.value)"
+                  onkeydown="PreParadaView.onKanbanSearchKeyDown(event, this.value)"
                   class="form-input text-xs py-2 px-4 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full focus:bg-white focus:border-[#111111] transition-all"
                 />
                 ${this.kanbanFilterState.search ? `
@@ -3451,18 +3491,18 @@ const PreParadaView = {
             const colHh = colActions.reduce((acc, a) => acc + (a.estimatedHh || 0), 0);
             
             return `
-              <div class="bg-[#f5f5f5] p-4 rounded-3xl border border-[#e5e5e5] flex flex-col space-y-3.5 shadow-sm min-h-[450px]">
+              <div class="bg-[#f5f5f5] p-3.5 sm:p-4 rounded-3xl border border-[#e5e5e5] flex flex-col space-y-3.5 shadow-sm min-h-[450px] min-w-0 w-full overflow-hidden">
                 
                 <!-- Cabeçalho da Coluna -->
                 <div class="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
-                  <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full ${col.color}"></span>
-                    <h4 class="font-extrabold text-xs uppercase tracking-wider text-[#111111]">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-3 h-3 rounded-full ${col.color} shrink-0"></span>
+                    <h4 class="font-extrabold text-xs uppercase tracking-wider text-[#111111] truncate">
                       ${col.label}
                     </h4>
                   </div>
                   
-                  <div class="flex items-center gap-1.5 font-mono text-[11px]">
+                  <div class="flex items-center gap-1.5 font-mono text-[11px] shrink-0">
                     <span class="nike-pill text-[10px] py-0.5 px-2 bg-white font-bold text-[#111111] shadow-xs">
                       ${colActions.length}
                     </span>
@@ -3471,7 +3511,7 @@ const PreParadaView = {
                 </div>
 
                 <!-- Lista de Cards de Entregas da Coluna -->
-                <div class="space-y-3 flex-1 flex flex-col">
+                <div class="space-y-3 flex-1 flex flex-col min-w-0 w-full">
                   ${colActions.map(act => {
                     const isOverdue = act.status !== 'Concluída' && act.deadline && act.deadline < todayStr;
                     let diffDays = null;
@@ -3481,20 +3521,20 @@ const PreParadaView = {
                     const isDueSoon = act.status !== 'Concluída' && diffDays !== null && diffDays >= 0 && diffDays <= 7;
 
                     return `
-                      <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-2xl p-4 space-y-3 shadow-xs hover:border-[#111111] hover:shadow-md transition-all group">
+                      <div class="kanban-card space-y-3 hover:border-[#111111] hover:shadow-md transition-all group min-w-0 w-full">
                         
                         <!-- Topo do Card: Marco e Área de Suporte -->
-                        <div class="flex items-start justify-between gap-2">
-                          <div class="flex flex-wrap items-center gap-1.5">
-                            <span class="font-mono text-[10px] font-black text-white bg-[#111111] px-2 py-0.5 rounded-md" title="Marco: ${act.milestoneTitle || act.milestoneId}">
+                        <div class="flex items-center justify-between gap-2 min-w-0">
+                          <div class="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">
+                            <span class="font-mono text-[10px] font-black text-white bg-[#111111] px-2 py-0.5 rounded-md shrink-0" title="Marco: ${act.milestoneTitle || act.milestoneId}">
                               ${act.milestoneRel}
                             </span>
-                            <span class="nike-pill text-[9px] py-0.5 bg-blue-50 text-blue-900 border-blue-200 font-bold truncate max-w-[130px]" title="Área: ${act.area}">
+                            <span class="nike-pill text-[9px] py-0.5 px-2 bg-blue-50 text-blue-900 border-blue-200 font-bold truncate max-w-[120px]" title="Área: ${act.area}">
                               ${act.area}
                             </span>
                           </div>
 
-                          <div class="flex items-center gap-1 text-[10px] font-mono text-[#707072]">
+                          <div class="flex items-center gap-1 text-[10px] font-mono text-[#707072] shrink-0">
                             <span>${act.id}</span>
                             <div id="act-card-actions-${act.id}" class="inline-flex items-center">
                               <button onclick="PreParadaView.askDeleteCardAction('${act.id}')" title="Excluir entrega" class="opacity-0 group-hover:opacity-100 text-[#707072] hover:text-[#d30005] transition-opacity p-0.5 font-bold flex items-center">
@@ -3509,14 +3549,14 @@ const PreParadaView = {
                           </div>
                         </div>
 
-                        <!-- Título da Entrega / Ação -->
-                        <h5 class="font-bold text-xs text-[#111111] leading-relaxed tracking-tight break-words whitespace-normal">
+                        <!-- Título da Entrega / Ação com Quebra de Linha Adequada -->
+                        <h5 class="font-bold text-xs text-[#111111] leading-relaxed tracking-tight break-words whitespace-normal" style="word-break: break-word; overflow-wrap: anywhere; min-width: 0;">
                           ${act.title}
                         </h5>
 
                         <!-- Metadados: Responsável e HH -->
-                        <div class="flex items-center justify-between text-[11px] text-[#707072] pt-2 border-t border-[#f0f0f0]">
-                          <div class="flex items-center gap-1.5 truncate mr-2" title="Responsável: ${act.owner}">
+                        <div class="flex items-center justify-between text-[11px] text-[#707072] pt-2 border-t border-[#f0f0f0] min-w-0 gap-2">
+                          <div class="flex items-center gap-1.5 truncate min-w-0 flex-1" title="Responsável: ${act.owner}">
                             <span class="font-semibold text-[#2d2d2e] truncate">${act.owner}</span>
                           </div>
                           <span class="font-mono text-[10px] font-semibold bg-[#f0f0f0] px-1.5 py-0.5 rounded shrink-0">
@@ -3525,22 +3565,22 @@ const PreParadaView = {
                         </div>
 
                         <!-- Data Limite & Status de Prazo -->
-                        <div class="flex items-center justify-between gap-2 pt-1 text-[10px] font-mono">
-                          <div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] font-mono min-w-0">
+                          <div class="min-w-0">
                             ${act.status === 'Concluída' ? `
                               <span class="inline-flex items-center gap-1 text-[#007d48] font-bold">
                                 <span>Entregue</span>
                               </span>
                             ` : isOverdue ? `
-                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-bold">
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-bold whitespace-nowrap">
                                 <span>Atrasada (${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'})</span>
                               </span>
                             ` : isDueSoon ? `
-                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold whitespace-nowrap">
                                 <span>Vence em ${diffDays}d</span>
                               </span>
                             ` : `
-                              <span class="text-[#707072]">
+                              <span class="text-[#707072] whitespace-nowrap">
                                 Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}
                               </span>
                             `}
@@ -3584,16 +3624,42 @@ const PreParadaView = {
   },
 
   // Métodos de Controle de Filtros do Kanban
+  kanbanSearchTimer: null,
+
+  onKanbanSearchInput(term) {
+    if (this.kanbanSearchTimer) clearTimeout(this.kanbanSearchTimer);
+    this.kanbanSearchTimer = setTimeout(() => {
+      this.setKanbanFilter('search', term);
+    }, 2000);
+  },
+
+  onKanbanSearchKeyDown(event, term) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (this.kanbanSearchTimer) {
+        clearTimeout(this.kanbanSearchTimer);
+        this.kanbanSearchTimer = null;
+      }
+      this.setKanbanFilter('search', term);
+    }
+  },
+
   setKanbanFilter(key, value) {
+    if (this.kanbanSearchTimer && key === 'search') {
+      clearTimeout(this.kanbanSearchTimer);
+      this.kanbanSearchTimer = null;
+    }
     this.kanbanFilterState[key] = value;
     App.renderCurrentView();
     if (key === 'search') {
-      const searchInput = document.getElementById('kanban-search-input');
-      if (searchInput) {
-        searchInput.focus();
-        const len = searchInput.value.length;
-        searchInput.setSelectionRange(len, len);
-      }
+      setTimeout(() => {
+        const searchInput = document.getElementById('kanban-search-input');
+        if (searchInput) {
+          searchInput.focus();
+          const len = searchInput.value.length;
+          searchInput.setSelectionRange(len, len);
+        }
+      }, 50);
     }
   },
 

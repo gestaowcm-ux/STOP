@@ -12,9 +12,10 @@ const App = {
   init() {
     console.log('Inicializando STOP - Sistema Técnico de Operações e Paradas de Manutenção');
     
-    // Configurar listener para hash change e cliques externos
+    // Configurar listener para hash change, cliques externos e atalho Esc
     window.addEventListener('hashchange', () => this.handleRouting());
     document.addEventListener('click', (e) => this.handleGlobalClick(e));
+    document.addEventListener('keydown', (e) => this.handleGlobalKeyDown(e));
 
     // Inicializar rota
     this.handleRouting();
@@ -459,6 +460,60 @@ const App = {
     if (userWrapper && !userWrapper.contains(e.target)) {
       this.toggleUserMenu(false);
     }
+  },
+
+  handleGlobalKeyDown(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      this.closeActiveModal();
+    }
+  },
+
+  closeActiveModal() {
+    // Lista ordenada de modais por hierarquia de sobreposição / z-index
+    const modalHandlers = [
+      { id: 'copy-cadastros-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closeCopyModal === 'function' && ConfiguracoesView.closeCopyModal() },
+      { id: 'config-collab-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closeCollaboratorModal === 'function' && ConfiguracoesView.closeCollaboratorModal() },
+      { id: 'mitigation-action-modal', close: () => window.PreParadaView && typeof PreParadaView.closeMitigationModal === 'function' && PreParadaView.closeMitigationModal() },
+      { id: 'config-area-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closeAreaModal === 'function' && ConfiguracoesView.closeAreaModal() },
+      { id: 'config-plant-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closePlantModal === 'function' && ConfiguracoesView.closePlantModal() },
+      { id: 'config-system-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closeSystemModal === 'function' && ConfiguracoesView.closeSystemModal() },
+      { id: 'config-tag-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closeTagModal === 'function' && ConfiguracoesView.closeTagModal() },
+      { id: 'config-discipline-modal', close: () => window.ConfiguracoesView && typeof ConfiguracoesView.closeDisciplineModal === 'function' && ConfiguracoesView.closeDisciplineModal() },
+      { id: 'service-create-modal', close: () => window.PreParadaView && typeof PreParadaView.closeAddServiceModal === 'function' && PreParadaView.closeAddServiceModal() },
+      { id: 'risk-edit-modal', close: () => window.PreParadaView && typeof PreParadaView.closeRiskModal === 'function' && PreParadaView.closeRiskModal() },
+      { id: 'milestone-action-modal', close: () => window.PreParadaView && typeof PreParadaView.closeActionModal === 'function' && PreParadaView.closeActionModal() },
+      { id: 'kanban-add-action-modal', close: () => window.PreParadaView && typeof PreParadaView.closeAddKanbanActionModal === 'function' && PreParadaView.closeAddKanbanActionModal() },
+      { id: 'milestone-edit-modal', close: () => window.PreParadaView && typeof PreParadaView.closeMilestoneModal === 'function' && PreParadaView.closeMilestoneModal() },
+      { id: 'order-create-modal', close: () => window.ParadaView && typeof ParadaView.closeAddOrderModal === 'function' && ParadaView.closeAddOrderModal() },
+      { id: 'loto-create-modal', close: () => window.ParadaView && typeof ParadaView.closeAddLotoModal === 'function' && ParadaView.closeAddLotoModal() },
+      { id: 'punch-create-modal', close: () => window.PosParadaView && typeof PosParadaView.closeAddPunchModal === 'function' && PosParadaView.closeAddPunchModal() },
+      { id: 'milestone-timeline-modal', close: () => window.PreParadaView && typeof PreParadaView.closeTimelineModal === 'function' && PreParadaView.closeTimelineModal() },
+      { id: 'project-edit-modal', close: () => window.ProjectsView && typeof ProjectsView.closeModal === 'function' && ProjectsView.closeModal() }
+    ];
+
+    for (const item of modalHandlers) {
+      const el = document.getElementById(item.id);
+      if (el && !el.classList.contains('hidden') && window.getComputedStyle(el).display !== 'none') {
+        try {
+          item.close();
+        } catch (err) {
+          el.classList.add('hidden');
+        }
+        return true;
+      }
+    }
+
+    // Fallback genérico para qualquer outro modal visível no DOM
+    const allModals = Array.from(document.querySelectorAll('.fixed.inset-0:not(.hidden)'));
+    for (let i = allModals.length - 1; i >= 0; i--) {
+      const modal = allModals[i];
+      if (window.getComputedStyle(modal).display !== 'none') {
+        modal.classList.add('hidden');
+        return true;
+      }
+    }
+
+    return false;
   },
 
   showToast(message, type = 'info') {

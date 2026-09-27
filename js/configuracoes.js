@@ -1139,13 +1139,61 @@ const ConfiguracoesView = {
     if (window.App) window.App.renderCurrentView();
   },
 
+  treeSearchTimer: null,
+  pendingTreeSearchQuery: null,
+
+  onEquipmentSearchInput(term) {
+    this.pendingTreeSearchQuery = term;
+    if (this.treeSearchTimer) {
+      clearTimeout(this.treeSearchTimer);
+    }
+    // Atualizar apenas após 2 segundos sem digitação
+    this.treeSearchTimer = setTimeout(() => {
+      this.applyEquipmentSearch(this.pendingTreeSearchQuery);
+    }, 2000);
+  },
+
+  onEquipmentSearchKeyDown(event, term) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (this.treeSearchTimer) {
+        clearTimeout(this.treeSearchTimer);
+        this.treeSearchTimer = null;
+      }
+      this.applyEquipmentSearch(term);
+    }
+  },
+
   onEquipmentSearch(term) {
-    this.treeSearchQuery = (term || '').trim().toLowerCase();
+    this.applyEquipmentSearch(term);
+  },
+
+  applyEquipmentSearch(term) {
+    if (this.treeSearchTimer) {
+      clearTimeout(this.treeSearchTimer);
+      this.treeSearchTimer = null;
+    }
+    const cleanTerm = (term || '').trim();
+    this.pendingTreeSearchQuery = cleanTerm;
+    this.treeSearchQuery = cleanTerm.toLowerCase();
+    
     if (this.treeSearchQuery) {
       this.treeCollapsedUnits = {};
       this.treeCollapsedSystems = {};
     }
-    if (window.App) window.App.renderCurrentView();
+
+    if (window.App) {
+      window.App.renderCurrentView();
+      // Restaurar o foco no campo de busca para o usuário não perder a digitação
+      setTimeout(() => {
+        const input = document.getElementById('treeview-search-input');
+        if (input) {
+          input.focus();
+          const valLen = input.value.length;
+          input.setSelectionRange(valLen, valLen);
+        }
+      }, 50);
+    }
   },
 
   renderEquipamentosTab() {
@@ -1158,6 +1206,8 @@ const ConfiguracoesView = {
       totalSystemsCount += (u.systems || []).length;
       (u.systems || []).forEach(s => totalTagsCount += (s.tags || []).length);
     });
+
+    const currentSearchVal = this.pendingTreeSearchQuery !== null ? this.pendingTreeSearchQuery : (this.treeSearchQuery || '');
 
     return `
       <div class="space-y-6 animate-fade-in">
@@ -1197,18 +1247,20 @@ const ConfiguracoesView = {
         <!-- Barra de Ações & Busca no TreeView -->
         <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-2xl p-3.5 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           
-          <!-- Campo de Busca em Tempo Real -->
+          <!-- Campo de Busca com Espera de 2s ou Tecla Enter -->
           <div class="relative flex-1">
             <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#707072] text-sm pointer-events-none">search</span>
             <input 
+              id="treeview-search-input"
               type="text" 
-              placeholder="Filtrar árvore por TAG, nome do equipamento, sistema ou unidade..." 
-              value="${this.treeSearchQuery || ''}" 
-              oninput="ConfiguracoesView.onEquipmentSearch(this.value)" 
+              placeholder="Filtrar árvore por TAG, nome do equipamento, sistema ou unidade... (Pressione Enter ou aguarde 2s)" 
+              value="${currentSearchVal}" 
+              oninput="ConfiguracoesView.onEquipmentSearchInput(this.value)" 
+              onkeydown="ConfiguracoesView.onEquipmentSearchKeyDown(event, this.value)"
               class="form-input pl-9 pr-8 text-xs py-2 w-full rounded-xl"
             />
-            ${this.treeSearchQuery ? `
-              <button onclick="ConfiguracoesView.onEquipmentSearch('')" class="absolute right-2.5 top-2.5 text-[#707072] hover:text-[#111111]">
+            ${currentSearchVal ? `
+              <button onclick="ConfiguracoesView.applyEquipmentSearch('')" title="Limpar busca" class="absolute right-2.5 top-2.5 text-[#707072] hover:text-[#111111]">
                 <span class="material-symbols-outlined text-sm">close</span>
               </button>
             ` : ''}

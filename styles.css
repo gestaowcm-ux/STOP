@@ -431,6 +431,26 @@ body::before {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
 }
 
+/* Kanban Card Spec */
+.kanban-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 18px !important;
+  padding: 14px 16px !important;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.kanban-card:hover {
+  border-color: #111111;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+}
+
 /* Operational Badges (Pills) */
 .status-pill {
   display: inline-flex;
