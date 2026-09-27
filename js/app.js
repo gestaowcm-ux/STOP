@@ -199,101 +199,7 @@ const App = {
   },
 
   renderConfiguracoesView() {
-    const users = UsersManager.getUsers();
-    const currentUser = UsersManager.getCurrentUser();
-
-    return `
-      <div class="p-6 md:p-10 max-w-5xl mx-auto space-y-8 animate-fade-in">
-        
-        <div class="border-b border-[#e5e5e5] pb-6">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="nike-pill bg-[#111111] text-white">CONFIGURAÇÃO</span>
-            <span class="text-xs text-[#707072] font-semibold uppercase tracking-wider">Perfis & Governança de Parada</span>
-          </div>
-          <h1 class="text-2xl font-display-title text-[#111111]">Gestão de Usuários & Permissões dos Gates</h1>
-          <p class="text-xs text-[#707072] mt-1">Configure os perfis operacionais e os níveis de alçada para aprovação e assinatura digital dos Stage-Gates 1, 2 e 3.</p>
-        </div>
-
-        <!-- Usuário Ativo Atual -->
-        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wide text-[#111111]">Seu Perfil Ativo na Sessão</h3>
-          
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5]">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold text-base shadow-sm">
-                ${currentUser.initials}
-              </div>
-              <div>
-                <h4 class="font-extrabold text-sm text-[#111111]">${currentUser.name}</h4>
-                <span class="text-xs text-[#707072] block font-medium">${currentUser.roleTitle}</span>
-                <span class="text-[10px] font-mono text-[#9e9ea0]">${currentUser.crea} • ${currentUser.email}</span>
-              </div>
-            </div>
-
-            <span class="nike-pill py-1.5 px-4 ${currentUser.canApproveGates ? 'bg-green-100 text-green-900 border-green-300 font-bold' : 'bg-gray-200 text-gray-700'}">
-              ${currentUser.canApproveGates ? '✓ Autorizado a Aprovar Gates' : '✕ Apenas Consulta / Apontamento'}
-            </span>
-          </div>
-        </div>
-
-        <!-- Lista de Perfis e Troca Rápida de Usuário -->
-        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold uppercase tracking-wide text-[#111111]">Perfis Cadastrados para Simulação Operacional</h3>
-            <span class="text-xs text-[#707072]">Alterne entre perfis para testar o comportamento de bloqueio dos Gates</span>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${users.map(u => `
-              <div class="p-4 rounded-2xl border ${u.id === currentUser.id ? 'border-[#111111] bg-[#f9f9f9]' : 'border-[#e5e5e5] bg-[#ffffff]'} space-y-3 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-mono text-xs font-bold text-[#707072]">${u.id}</span>
-                    <span class="nike-pill text-[9px] ${u.canApproveGates ? 'bg-green-50 text-green-700 border-green-200 font-bold' : 'bg-gray-100 text-gray-700'}">
-                      ${u.canApproveGates ? 'Aprova Gates (Admin/Gerente)' : 'Sem Alçada de Gate'}
-                    </span>
-                  </div>
-                  <h4 class="font-bold text-sm text-[#111111]">${u.name}</h4>
-                  <p class="text-xs text-[#707072]">${u.roleTitle}</p>
-                </div>
-
-                <div class="pt-2 border-t border-[#f0f0f0] flex items-center justify-between">
-                  <span class="text-[10px] font-mono text-[#9e9ea0]">${u.crea}</span>
-                  ${u.id === currentUser.id ? `
-                    <span class="text-xs font-bold text-[#007d48] flex items-center gap-1">
-                      <span class="material-symbols-outlined text-sm">check</span>
-                      Ativo Agora
-                    </span>
-                  ` : `
-                    <button onclick="UsersManager.setCurrentUser('${u.id}')" class="btn-pill text-xs py-1 px-3">
-                      Assumir Este Perfil
-                    </button>
-                  `}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Backup e Restauração de Dados -->
-        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wide text-[#111111]">Backup & Dados Locais</h3>
-          <p class="text-xs text-[#707072]">Faça o download do banco de dados das Paradas em formato JSON ou restaure os dados originais de fábrica.</p>
-          
-          <div class="flex flex-wrap gap-3">
-            <button onclick="App.exportDataJson()" class="btn-pill-primary text-xs flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm">download</span>
-              <span>Exportar Dados em JSON</span>
-            </button>
-            <button onclick="App.resetToFactoryData()" class="btn-ghost-pill text-xs text-[#d30005] hover:bg-red-50 hover:border-red-300 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm">restart_alt</span>
-              <span>Restaurar Dados Padrão</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-    `;
+    return ConfiguracoesView.render();
   },
 
   updateSidebarView() {
@@ -311,8 +217,8 @@ const App = {
           </a>
 
           <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'configuracoes' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
-            <span class="material-symbols-outlined text-lg">manage_accounts</span>
-            <span class="sidebar-text">Usuários & Perfis</span>
+            <span class="material-symbols-outlined text-lg">settings_suggest</span>
+            <span class="sidebar-text">Cadastros & Configurações</span>
           </a>
         </div>
       `;

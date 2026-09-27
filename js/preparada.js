@@ -311,143 +311,817 @@ const PreParadaView = {
   // 1. ABA: MILESTONES FLEXÍVEIS & DESDOBRAMENTO WBS DE AÇÕES
   // ==========================================================================
   renderMilestonesTab(parada) {
-    const milestones = parada.preParada.milestones || [];
+    const milestones = this.getSortedMilestones(parada.preParada.milestones || []);
     const totalActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.length : 0), 0);
     const completedActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0), 0);
+    const inProgressActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Em Andamento').length : 0), 0);
+    const blockedActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Bloqueada').length : 0), 0);
+    const totalHh = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.reduce((s, a) => s + (a.estimatedHh || 0), 0) : 0), 0);
     const pct = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
+    const viewMode = parada.preParada.milestonesViewMode || 'both'; // 'both', 'timeline', 'tree'
 
     return `
       <div class="space-y-6">
         
-        <!-- Topo: Resumo de Marcos & Botão para Criar Novo Milestone Flexível -->
-        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        <!-- Topo: Resumo Executivo de Marcos & Botões de Ação -->
+        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 shadow-sm">
+          <div class="space-y-1">
             <div class="flex items-center gap-2 mb-1">
-              <span class="nike-pill bg-[#111111] text-white">ÁRVORE WBS DE MARCOS</span>
-              <span class="text-xs text-[#707072] font-semibold uppercase">Marcos Flexíveis Definidos pelo Usuário</span>
+              <span class="nike-pill bg-[#111111] text-white">ÁRVORE WBS & LINHA DO TEMPO</span>
+              <span class="text-xs text-[#707072] font-semibold uppercase">Governança Temporal de Pré-Parada</span>
             </div>
-            <h3 class="text-base md:text-lg font-extrabold text-[#111111] tracking-tight">Linha do Tempo e Desdobramento de Ações</h3>
-            <p class="text-xs text-[#707072]">Defina marcos temporais customizados (Ex: D-360, D-95, D-34, D-10) e desdobre em entregáveis por área de suporte.</p>
+            <h3 class="text-base md:text-xl font-extrabold text-[#111111] tracking-tight">Linha do Tempo Cronológica & Desdobramento de Ações</h3>
+            <p class="text-xs text-[#707072]">Gerencie os marcos temporais flexíveis (D-360 a D-0) e monitore entregáveis por área técnica e de suporte.</p>
           </div>
 
-          <div class="flex items-center gap-3">
-            <div class="text-right hidden sm:block">
-              <span class="text-[10px] uppercase font-bold text-[#707072] block">Progresso dos Entregáveis</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="text-right hidden sm:block pr-2 border-r border-[#e5e5e5]">
+              <span class="text-[10px] uppercase font-bold text-[#707072] block">Progresso Global WBS</span>
               <span class="text-xl font-black font-mono text-[#111111]">${completedActions} / ${totalActions} (${pct}%)</span>
             </div>
-            <button onclick="PreParadaView.openMilestoneModal('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
-              <span class="material-symbols-outlined text-sm">add_circle</span>
-              <span>Criar Novo Milestone (D-X)</span>
+            
+            <!-- Botão de Abertura da Linha do Tempo Executiva (Popup / Relatório) -->
+            <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-2 shadow-md hover:scale-105 transition-all">
+              <span class="material-symbols-outlined text-base">timeline</span>
+              <span>Resumo Visual (Linha do Tempo)</span>
+            </button>
+
+            <!-- Botão para Criar Novo Milestone -->
+            <button onclick="PreParadaView.openMilestoneModal('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5 hover:border-[#111111]">
+              <span class="material-symbols-outlined text-base">add_circle</span>
+              <span>Novo Marco (D-X)</span>
             </button>
           </div>
         </div>
 
-        <!-- Lista / Árvore de Milestones e suas Ações Filhas -->
-        <div class="space-y-4">
-          ${milestones.map((m, mIdx) => {
-            const mTotal = m.actions ? m.actions.length : 0;
-            const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
-            const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+        <!-- ====================================================================
+             LINha DO TEMPO VISUAL CRONOLÓGICA (MINI-TRACK HORIZONTAL INTERATIVO)
+             ==================================================================== -->
+        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-5 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold shrink-0">
+                <span class="material-symbols-outlined text-base">schedule</span>
+              </div>
+              <div>
+                <h4 class="font-extrabold text-sm text-[#111111] uppercase tracking-wide">Régua Visual dos Marcos Temporais</h4>
+                <p class="text-[11px] text-[#707072]">Trajetória cronológica de preparação até o Dia D-0 (Início da Parada).</p>
+              </div>
+            </div>
 
-            return `
-              <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 hover:border-[#111111] transition-all">
-                
-                <!-- Cabeçalho do Milestone -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
-                  <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-[#111111] text-white flex flex-col items-center justify-center font-mono font-bold leading-tight shrink-0 shadow-sm">
-                      <span class="text-xs">${m.relativeDay}</span>
-                      <span class="text-[8px] uppercase tracking-wider text-zinc-400">MARCO</span>
+            <!-- Seletor de Modo de Exibição na Página -->
+            <div class="flex items-center gap-1 bg-[#f5f5f5] p-1 rounded-full border border-[#e5e5e5] text-[11px] font-bold">
+              <button onclick="PreParadaView.setMilestonesViewMode('${parada.id}', 'both')" class="px-3 py-1 rounded-full transition-all ${viewMode === 'both' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#707072] hover:text-[#111111]'}">
+                Visão Completa
+              </button>
+              <button onclick="PreParadaView.setMilestonesViewMode('${parada.id}', 'timeline')" class="px-3 py-1 rounded-full transition-all ${viewMode === 'timeline' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#707072] hover:text-[#111111]'}">
+                Linha do Tempo
+              </button>
+              <button onclick="PreParadaView.setMilestonesViewMode('${parada.id}', 'tree')" class="px-3 py-1 rounded-full transition-all ${viewMode === 'tree' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#707072] hover:text-[#111111]'}">
+                Tabela WBS
+              </button>
+            </div>
+          </div>
+
+          <!-- Trilho Horizontal de Marcos com Nós Conectados -->
+          <div class="relative pt-2 pb-3 overflow-x-auto">
+            <div class="min-w-[680px] flex items-stretch justify-between gap-3 relative">
+              
+              <!-- Linha de Fundo do Trilho -->
+              <div class="absolute top-6 left-8 right-8 h-1 bg-[#e5e5e5] -z-0"></div>
+
+              ${milestones.map((m, idx) => {
+                const mTotal = m.actions ? m.actions.length : 0;
+                const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
+                const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+                const isComplete = mTotal > 0 && mDone === mTotal;
+                const isInProgress = mDone > 0 && mDone < mTotal;
+                const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
+
+                return `
+                  <div onclick="PreParadaView.openTimelineModal('${parada.id}', 'ALL', 'ALL', '${m.id}')" title="Clique para ver detalhes do marco ${m.relativeDay}" class="flex-1 flex flex-col items-center text-center cursor-pointer group px-2 relative z-10">
+                    
+                    <!-- Nó do Marco na Linha -->
+                    <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs transition-all transform group-hover:scale-110 shadow-md ${
+                      isComplete ? 'bg-[#007d48] text-white ring-4 ring-green-100' :
+                      isBlocked ? 'bg-[#d30005] text-white ring-4 ring-red-100' :
+                      isInProgress ? 'bg-[#111111] text-white ring-4 ring-zinc-200 timeline-node-active' :
+                      'bg-[#f0f0f0] text-[#707072] border border-[#cacacb]'
+                    }">
+                      <span class="text-[11px] leading-none">${m.relativeDay}</span>
+                      <span class="text-[8px] uppercase tracking-wider font-semibold opacity-90">${m.id}</span>
                     </div>
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
-                        <h4 class="font-extrabold text-sm text-[#111111]">${m.title}</h4>
+
+                    <!-- Informações do Nó -->
+                    <div class="mt-3 space-y-1 w-full max-w-[150px]">
+                      <div class="font-extrabold text-xs text-[#111111] truncate group-hover:text-[#1151ff] transition-colors" title="${m.title}">
+                        ${m.title}
                       </div>
-                      <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-0.5">
-                        <span class="material-symbols-outlined text-xs">calendar_today</span>
-                        <span>Data Alvo: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
-                        <span>•</span>
-                        <span>${mTotal} ações vinculadas (${mPct}% concluído)</span>
+                      
+                      <div class="flex items-center justify-center gap-1 text-[10px] font-mono text-[#707072]">
+                        <span class="material-symbols-outlined text-[11px]">calendar_month</span>
+                        <span>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</span>
+                      </div>
+
+                      <!-- Mini Barra de Progresso do Nó -->
+                      <div class="w-full bg-[#f0f0f0] h-1.5 rounded-full overflow-hidden mt-1.5">
+                        <div class="h-full rounded-full transition-all ${
+                          isComplete ? 'bg-[#007d48]' :
+                          isBlocked ? 'bg-[#d30005]' :
+                          'bg-[#111111]'
+                        }" style="width: ${mPct}%;"></div>
+                      </div>
+
+                      <div class="flex items-center justify-between text-[9px] font-mono text-[#707072] pt-0.5">
+                        <span>${mDone}/${mTotal} ações</span>
+                        <span class="font-bold text-[#111111]">${mPct}%</span>
                       </div>
                     </div>
-                  </div>
 
-                  <div class="flex items-center gap-2">
-                    <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
-                      <span class="material-symbols-outlined text-sm">add</span>
-                      <span>Desdobrar Ação</span>
-                    </button>
-                    <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
-                      <span class="material-symbols-outlined text-sm">edit</span>
-                    </button>
-                    <button onclick="PreParadaView.deleteMilestone('${parada.id}', '${m.id}')" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
-                      <span class="material-symbols-outlined text-sm">delete</span>
-                    </button>
                   </div>
-                </div>
+                `;
+              }).join('')}
 
-                <!-- Tabela das Ações Filhas (Desdobramento WBS por Área de Suporte) -->
-                <div class="overflow-x-auto">
-                  <table class="w-full text-xs text-left">
-                    <thead class="bg-[#f5f5f5] text-[#707072] uppercase font-bold text-[10px] tracking-wider border-b border-[#e5e5e5]">
-                      <tr>
-                        <th class="p-2.5">Código</th>
-                        <th class="p-2.5">Entregável / Ação de Preparação</th>
-                        <th class="p-2.5">Área de Suporte</th>
-                        <th class="p-2.5">Responsável</th>
-                        <th class="p-2.5">Prazo</th>
-                        <th class="p-2.5 text-center">HH</th>
-                        <th class="p-2.5 text-center">Status</th>
-                        <th class="p-2.5 text-center">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-[#e5e5e5]">
-                      ${(m.actions || []).map(act => `
-                        <tr class="hover:bg-[#f9f9f9] transition-colors">
-                          <td class="p-2.5 font-mono font-bold text-[#111111]">${act.id}</td>
-                          <td class="p-2.5 font-bold text-[#111111] max-w-xs leading-snug">${act.title}</td>
-                          <td class="p-2.5">
-                            <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${act.area}</span>
-                          </td>
-                          <td class="p-2.5 text-[#39393b]">${act.owner}</td>
-                          <td class="p-2.5 font-mono text-[#707072]">${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}</td>
-                          <td class="p-2.5 text-center font-mono font-bold text-[#111111]">${act.estimatedHh || 0}h</td>
-                          <td class="p-2.5 text-center">
-                            <button onclick="PreParadaView.toggleActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer ${
-                              act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
-                              act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
-                              act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
+            </div>
+          </div>
+
+          <!-- Rodapé do Resumo Visual -->
+          <div class="pt-2 border-t border-[#f0f0f0] flex flex-wrap items-center justify-between gap-3 text-xs text-[#707072]">
+            <div class="flex items-center gap-4">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#007d48]"></span> 100% Concluído</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#111111]"></span> Em Andamento</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#d30005]"></span> Bloqueado / Restrição</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#cacacb]"></span> Não Iniciado</span>
+            </div>
+            
+            <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="text-xs font-bold text-[#111111] hover:underline flex items-center gap-1">
+              <span>Abrir Relatório Executivo Completo</span>
+              <span class="material-symbols-outlined text-sm">open_in_new</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ====================================================================
+             VISÃO LINHA DO TEMPO VERTICAL COMPLETA (SE SELECIONADA OU VISÃO AMBAS)
+             ==================================================================== -->
+        ${(viewMode === 'both' || viewMode === 'timeline') ? `
+          <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+            
+            <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-4">
+              <div>
+                <span class="nike-pill bg-[#111111] text-white">TIMELINE STREAM</span>
+                <h3 class="text-base md:text-lg font-extrabold text-[#111111] tracking-tight mt-1">Trilha Executiva dos Marcos & Entregáveis</h3>
+              </div>
+              <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">fullscreen</span>
+                <span>Modo Apresentação / PDF</span>
+              </button>
+            </div>
+
+            <!-- Trilha Vertical da Linha do Tempo -->
+            <div class="space-y-8 timeline-spine pl-4 sm:pl-8 relative">
+              ${milestones.map((m, mIdx) => {
+                const mTotal = m.actions ? m.actions.length : 0;
+                const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
+                const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+                const isComplete = mTotal > 0 && mDone === mTotal;
+                const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
+
+                return `
+                  <div class="relative flex items-start gap-4 sm:gap-6 group">
+                    
+                    <!-- Marcador / Ícone do Nó -->
+                    <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs shrink-0 shadow-md relative z-10 ${
+                      isComplete ? 'bg-[#007d48] text-white' :
+                      isBlocked ? 'bg-[#d30005] text-white' :
+                      mDone > 0 ? 'bg-[#111111] text-white timeline-node-active' :
+                      'bg-[#f0f0f0] text-[#707072] border border-[#cacacb]'
+                    }">
+                      <span class="text-xs leading-none">${m.relativeDay}</span>
+                      <span class="text-[8px] uppercase tracking-wider font-semibold opacity-90">MARCO</span>
+                    </div>
+
+                    <!-- Conteúdo do Card do Marco na Linha do Tempo -->
+                    <div class="flex-1 bg-[#f9f9f9] border border-[#e5e5e5] rounded-2xl p-5 hover:border-[#111111] hover:bg-[#ffffff] transition-all space-y-4">
+                      
+                      <!-- Header do Marco -->
+                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e5e5e5] pb-3">
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
+                            <h4 class="font-extrabold text-sm sm:text-base text-[#111111]">${m.title}</h4>
+                            <span class="nike-pill text-[10px] py-0.5 ${
+                              isComplete ? 'bg-green-50 text-green-800 border-green-200' :
+                              isBlocked ? 'bg-red-50 text-red-800 border-red-200' :
+                              mDone > 0 ? 'bg-blue-50 text-blue-800 border-blue-200 font-bold' :
                               'bg-gray-100 text-gray-700'
                             }">
-                              ${act.status}
-                            </button>
-                          </td>
-                          <td class="p-2.5 text-center">
-                            <button onclick="PreParadaView.deleteAction('${parada.id}', '${m.id}', '${act.id}')" class="text-[#707072] hover:text-[#d30005] p-1">
-                              <span class="material-symbols-outlined text-base">delete</span>
-                            </button>
-                          </td>
-                        </tr>
-                      `).join('')}
-                      ${(!m.actions || m.actions.length === 0) ? `
-                        <tr>
-                          <td colspan="8" class="p-4 text-center text-[#707072] italic">
-                            Nenhuma ação desdobrada para este milestone. Clique em "Desdobrar Ação" para adicionar entregáveis de SMS, Suprimentos, Contratos, etc.
-                          </td>
-                        </tr>
-                      ` : ''}
-                    </tbody>
-                  </table>
-                </div>
+                              ${isComplete ? 'CONCLUÍDO' : isBlocked ? 'BLOQUEADO' : mDone > 0 ? 'EM ANDAMENTO' : 'NÃO INICIADO'}
+                            </span>
+                          </div>
+                          <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-1">
+                            <span class="material-symbols-outlined text-xs">calendar_month</span>
+                            <span>Data Limite: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
+                            <span>•</span>
+                            <span>${mDone} de ${mTotal} ações finalizadas (${mPct}%)</span>
+                          </div>
+                        </div>
 
-              </div>
-            `;
-          }).join('')}
-        </div>
+                        <div class="flex items-center gap-2">
+                          <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1 px-2.5 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">add</span>
+                            <span>Desdobrar</span>
+                          </button>
+                          <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" title="Editar Marco" class="btn-icon-pill w-7 h-7 text-[#707072] hover:text-[#111111]">
+                            <span class="material-symbols-outlined text-xs">edit</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Grid de Ações / Entregáveis Vinculados ao Marco -->
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        ${(m.actions || []).map(act => `
+                          <div class="p-3 bg-[#ffffff] rounded-xl border border-[#e5e5e5] hover:border-[#111111] transition-all flex flex-col justify-between space-y-2 text-xs">
+                            <div>
+                              <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="font-mono text-[10px] font-bold text-[#707072]">${act.id}</span>
+                                <span class="nike-pill text-[9px] py-0 bg-[#f0f0f0] font-semibold">${act.area}</span>
+                              </div>
+                              <h5 class="font-bold text-[#111111] leading-snug">${act.title}</h5>
+                            </div>
+
+                            <div class="flex items-center justify-between border-t border-[#f0f0f0] pt-2 text-[11px]">
+                              <span class="text-[#707072]">Resp: <b class="text-[#111111]">${act.owner}</b></span>
+                              
+                              <button onclick="PreParadaView.toggleActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar status" class="nike-pill text-[10px] cursor-pointer py-0.5 ${
+                                act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
+                                act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
+                                act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
+                                'bg-gray-100 text-gray-700'
+                              }">
+                                ${act.status}
+                              </button>
+                            </div>
+                          </div>
+                        `).join('')}
+
+                        ${(!m.actions || m.actions.length === 0) ? `
+                          <div class="col-span-2 p-3 text-center text-xs text-[#707072] italic bg-[#ffffff] rounded-xl border border-dashed border-[#cacacb]">
+                            Nenhum entregável cadastrado. Clique em "Desdobrar" para adicionar ações de SMS, Suprimentos ou Execução.
+                          </div>
+                        ` : ''}
+                      </div>
+
+                    </div>
+
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+          </div>
+        ` : ''}
+
+        <!-- ====================================================================
+             LISTA / ÁRVORE WBS DE MILESTONES E SUAS AÇÕES FILHAS (TABELA CLÁSSICA)
+             ==================================================================== -->
+        ${(viewMode === 'both' || viewMode === 'tree') ? `
+          <div class="space-y-4">
+            <div class="flex items-center justify-between pt-2">
+              <h4 class="font-extrabold text-sm text-[#111111] uppercase tracking-wide">Detalhamento WBS dos Marcos e Entregáveis</h4>
+              <span class="text-xs text-[#707072] font-mono">${milestones.length} Marcos • ${totalActions} Ações • ${totalHh}h HH</span>
+            </div>
+
+            ${milestones.map((m, mIdx) => {
+              const mTotal = m.actions ? m.actions.length : 0;
+              const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
+              const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+
+              return `
+                <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 hover:border-[#111111] transition-all shadow-sm">
+                  
+                  <!-- Cabeçalho do Milestone -->
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-2xl bg-[#111111] text-white flex flex-col items-center justify-center font-mono font-bold leading-tight shrink-0 shadow-sm">
+                        <span class="text-xs">${m.relativeDay}</span>
+                        <span class="text-[8px] uppercase tracking-wider text-zinc-400">MARCO</span>
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
+                          <h4 class="font-extrabold text-sm text-[#111111]">${m.title}</h4>
+                        </div>
+                        <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-0.5">
+                          <span class="material-symbols-outlined text-xs">calendar_today</span>
+                          <span>Data Alvo: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
+                          <span>•</span>
+                          <span>${mTotal} ações vinculadas (${mPct}% concluído)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        <span>Desdobrar Ação</span>
+                      </button>
+                      <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                      </button>
+                      <button onclick="PreParadaView.deleteMilestone('${parada.id}', '${m.id}')" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Tabela das Ações Filhas (Desdobramento WBS por Área de Suporte) -->
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                      <thead class="bg-[#f5f5f5] text-[#707072] uppercase font-bold text-[10px] tracking-wider border-b border-[#e5e5e5]">
+                        <tr>
+                          <th class="p-2.5">Código</th>
+                          <th class="p-2.5">Entregável / Ação de Preparação</th>
+                          <th class="p-2.5">Área de Suporte</th>
+                          <th class="p-2.5">Responsável</th>
+                          <th class="p-2.5">Prazo</th>
+                          <th class="p-2.5 text-center">HH</th>
+                          <th class="p-2.5 text-center">Status</th>
+                          <th class="p-2.5 text-center">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-[#e5e5e5]">
+                        ${(m.actions || []).map(act => `
+                          <tr class="hover:bg-[#f9f9f9] transition-colors">
+                            <td class="p-2.5 font-mono font-bold text-[#111111]">${act.id}</td>
+                            <td class="p-2.5 font-bold text-[#111111] max-w-xs leading-snug">${act.title}</td>
+                            <td class="p-2.5">
+                              <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${act.area}</span>
+                            </td>
+                            <td class="p-2.5 text-[#39393b]">${act.owner}</td>
+                            <td class="p-2.5 font-mono text-[#707072]">${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}</td>
+                            <td class="p-2.5 text-center font-mono font-bold text-[#111111]">${act.estimatedHh || 0}h</td>
+                            <td class="p-2.5 text-center">
+                              <button onclick="PreParadaView.toggleActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer ${
+                                act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
+                                act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
+                                act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
+                                'bg-gray-100 text-gray-700'
+                              }">
+                                ${act.status}
+                              </button>
+                            </td>
+                            <td class="p-2.5 text-center">
+                              <button onclick="PreParadaView.deleteAction('${parada.id}', '${m.id}', '${act.id}')" class="text-[#707072] hover:text-[#d30005] p-1">
+                                <span class="material-symbols-outlined text-base">delete</span>
+                              </button>
+                            </td>
+                          </tr>
+                        `).join('')}
+                        ${(!m.actions || m.actions.length === 0) ? `
+                          <tr>
+                            <td colspan="8" class="p-4 text-center text-[#707072] italic">
+                              Nenhuma ação desdobrada para este milestone. Clique em "Desdobrar Ação" para adicionar entregáveis de SMS, Suprimentos, Contratos, etc.
+                            </td>
+                          </tr>
+                        ` : ''}
+                      </tbody>
+                    </table>
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
 
       </div>
     `;
+  },
+
+  setMilestonesViewMode(paradaId, mode) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    if (!parada.preParada) parada.preParada = {};
+    parada.preParada.milestonesViewMode = mode;
+    ProjectsView.updateParada(parada);
+    App.renderCurrentView();
+  },
+
+  // Helper para ordenar milestones cronologicamente (Ex: D-360 -> D-180 -> D-95 -> D-34 -> D-10 -> D-0)
+  getSortedMilestones(milestones) {
+    return [...milestones].sort((a, b) => {
+      const getVal = (rel) => {
+        if (!rel) return 999;
+        const match = rel.match(/D([+-]?\d+)/i);
+        if (match) return parseInt(match[1], 10);
+        return 0;
+      };
+      return getVal(a.relativeDay) - getVal(b.relativeDay);
+    });
+  },
+
+  // ==========================================================================
+  // RELATÓRIO EXECUTIVO & POPUP DE LINHA DO TEMPO DE MILESTONES
+  // ==========================================================================
+  timelineModalState: {
+    paradaId: null,
+    filterArea: 'ALL',
+    filterStatus: 'ALL',
+    searchQuery: ''
+  },
+
+  openTimelineModal(paradaId, filterArea = 'ALL', filterStatus = 'ALL', searchQuery = '') {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+
+    this.timelineModalState = {
+      paradaId,
+      filterArea,
+      filterStatus,
+      searchQuery
+    };
+
+    const modal = document.getElementById('milestone-timeline-modal');
+    const content = document.getElementById('milestone-timeline-modal-content');
+    if (!modal || !content) return;
+
+    content.innerHTML = this.renderTimelineModalContent(parada);
+    modal.classList.remove('hidden');
+  },
+
+  closeTimelineModal() {
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  setTimelineFilter(paradaId, filterArea, filterStatus, searchQuery = '') {
+    this.timelineModalState.filterArea = filterArea;
+    this.timelineModalState.filterStatus = filterStatus;
+    this.timelineModalState.searchQuery = searchQuery;
+
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+
+    const content = document.getElementById('milestone-timeline-modal-content');
+    if (content) {
+      content.innerHTML = this.renderTimelineModalContent(parada);
+    }
+  },
+
+  renderTimelineModalContent(parada) {
+    const milestones = this.getSortedMilestones(parada.preParada.milestones || []);
+    const { filterArea, filterStatus, searchQuery } = this.timelineModalState;
+    const gate1 = parada.gates.gate1;
+
+    // Totais e Métricas Executivas
+    const totalActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.length : 0), 0);
+    const completedActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0), 0);
+    const inProgressActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Em Andamento').length : 0), 0);
+    const blockedActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Bloqueada').length : 0), 0);
+    const notStartedActions = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.filter(a => a.status === 'Não Iniciada').length : 0), 0);
+    const totalHh = milestones.reduce((acc, m) => acc + (m.actions ? m.actions.reduce((s, a) => s + (a.estimatedHh || 0), 0) : 0), 0);
+    const pct = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
+
+    // Filtragem dos Milestones / Ações
+    const filteredMilestones = milestones.map(m => {
+      const actions = (m.actions || []).filter(a => {
+        const matchesArea = filterArea === 'ALL' || a.area.toLowerCase().includes(filterArea.toLowerCase());
+        const matchesStatus = filterStatus === 'ALL' || a.status === filterStatus;
+        const matchesSearch = !searchQuery || 
+          a.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          a.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          a.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          m.relativeDay.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          m.title.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesArea && matchesStatus && matchesSearch;
+      });
+
+      return {
+        ...m,
+        filteredActions: actions,
+        hasMatches: actions.length > 0 || (!filterArea && !filterStatus && !searchQuery) || (searchQuery && m.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      };
+    });
+
+    // Estatísticas por Área de Suporte
+    const areas = this.supportAreas;
+    const areaStats = areas.map(area => {
+      let t = 0;
+      let d = 0;
+      milestones.forEach(m => {
+        (m.actions || []).forEach(a => {
+          if (a.area.toLowerCase().includes(area.toLowerCase().split('/')[0].trim())) {
+            t++;
+            if (a.status === 'Concluída') d++;
+          }
+        });
+      });
+      const areaPct = t > 0 ? Math.round((d / t) * 100) : 100;
+      return { area, total: t, done: d, pct: areaPct };
+    }).filter(st => st.total > 0);
+
+    return `
+      <!-- Cabeçalho do Modal Executivo -->
+      <div class="p-6 md:p-8 bg-[#111111] text-white flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 no-print">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="nike-pill bg-white text-[#111111] font-extrabold text-[10px]">RELATÓRIO EXECUTIVO • LINHA DO TEMPO</span>
+            <span class="text-xs text-zinc-400 font-mono">${parada.code} • ${parada.unit}</span>
+          </div>
+          <h2 class="text-lg md:text-2xl font-extrabold tracking-tight">${parada.name}</h2>
+          <p class="text-xs text-zinc-300">Resumo visual e cronológico de prontidão pré-parada, entregáveis críticos e desdobramentos WBS até o D-0.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="PreParadaView.printTimelineReport('${parada.id}')" class="btn-ghost-pill bg-white text-[#111111] hover:bg-zinc-200 border-transparent text-xs flex items-center gap-2 font-bold shadow-md">
+            <span class="material-symbols-outlined text-base">print</span>
+            <span>Imprimir / Salvar PDF</span>
+          </button>
+          
+          <button onclick="PreParadaView.closeTimelineModal()" class="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 flex items-center justify-center transition-colors">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Corpo com Rolagem Interna -->
+      <div class="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-[#ffffff]">
+        
+        <!-- Painel de KPIs Executivos -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div class="p-4 bg-[#f9f9f9] border border-[#e5e5e5] rounded-2xl space-y-1">
+            <span class="text-[10px] uppercase font-bold text-[#707072] block">Marcos Temporais</span>
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl font-black font-mono text-[#111111]">${milestones.length}</span>
+              <span class="text-[11px] text-[#707072] font-semibold">Marcos D-X</span>
+            </div>
+            <p class="text-[10px] text-[#707072]">Trajetória de D-${milestones[0] ? milestones[0].relativeDay.replace(/\D/g,'') : '180'} até D-0</p>
+          </div>
+
+          <div class="p-4 bg-[#f9f9f9] border border-[#e5e5e5] rounded-2xl space-y-1">
+            <span class="text-[10px] uppercase font-bold text-[#707072] block">Progresso dos Entregáveis</span>
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl font-black font-mono text-[#007d48]">${pct}%</span>
+              <span class="text-[11px] text-[#707072] font-semibold">${completedActions}/${totalActions} ações</span>
+            </div>
+            <div class="w-full bg-[#e5e5e5] h-1.5 rounded-full overflow-hidden mt-1">
+              <div class="bg-[#007d48] h-full" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-[#f9f9f9] border border-[#e5e5e5] rounded-2xl space-y-1">
+            <span class="text-[10px] uppercase font-bold text-[#707072] block">Esforço Total Previsto</span>
+            <div class="flex items-baseline gap-2">
+              <span class="text-2xl font-black font-mono text-[#111111]">${totalHh}h</span>
+              <span class="text-[11px] text-[#707072] font-semibold">HH Engenharia</span>
+            </div>
+            <p class="text-[10px] text-[#707072]">${areas.length} áreas técnicas envolvidas</p>
+          </div>
+
+          <div class="p-4 bg-[#f9f9f9] border border-[#e5e5e5] rounded-2xl space-y-1">
+            <span class="text-[10px] uppercase font-bold text-[#707072] block">Gate D-0 (Prontidão)</span>
+            <div class="flex items-center gap-2">
+              <span class="nike-pill text-[11px] py-0.5 ${gate1.approved ? 'bg-[#007d48] text-white border-transparent' : 'bg-[#e5e5e5] text-[#111111] font-bold'}">
+                ${gate1.approved ? 'AUTORIZADO' : 'EM PREPARAÇÃO'}
+              </span>
+            </div>
+            <p class="text-[10px] text-[#707072]">Início D-0: ${parada.startDate ? parada.startDate.split('-').reverse().join('/') : '--'}</p>
+          </div>
+
+        </div>
+
+        <!-- Barra de Filtros e Busca Rápida -->
+        <div class="bg-[#f5f5f5] p-4 rounded-2xl border border-[#e5e5e5] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs no-print">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-bold text-[#111111] uppercase tracking-wider text-[11px] mr-1">Filtrar:</span>
+            
+            <select onchange="PreParadaView.setTimelineFilter('${parada.id}', this.value, '${filterStatus}', '${searchQuery}')" class="form-input text-xs py-1.5 px-3 rounded-full bg-white font-medium border-[#e5e5e5] w-auto">
+              <option value="ALL" ${filterArea === 'ALL' ? 'selected' : ''}>Todas as Áreas de Suporte</option>
+              ${this.supportAreas.map(a => `<option value="${a}" ${filterArea === a ? 'selected' : ''}>${a}</option>`).join('')}
+            </select>
+
+            <select onchange="PreParadaView.setTimelineFilter('${parada.id}', '${filterArea}', this.value, '${searchQuery}')" class="form-input text-xs py-1.5 px-3 rounded-full bg-white font-medium border-[#e5e5e5] w-auto">
+              <option value="ALL" ${filterStatus === 'ALL' ? 'selected' : ''}>Todos os Status</option>
+              <option value="Concluída" ${filterStatus === 'Concluída' ? 'selected' : ''}>Concluídas (${completedActions})</option>
+              <option value="Em Andamento" ${filterStatus === 'Em Andamento' ? 'selected' : ''}>Em Andamento (${inProgressActions})</option>
+              <option value="Bloqueada" ${filterStatus === 'Bloqueada' ? 'selected' : ''}>Bloqueadas (${blockedActions})</option>
+              <option value="Não Iniciada" ${filterStatus === 'Não Iniciada' ? 'selected' : ''}>Não Iniciadas (${notStartedActions})</option>
+            </select>
+          </div>
+
+          <div class="relative min-w-[220px]">
+            <input 
+              type="text" 
+              placeholder="Buscar por ação, marco ou responsável..." 
+              value="${searchQuery}" 
+              oninput="PreParadaView.setTimelineFilter('${parada.id}', '${filterArea}', '${filterStatus}', this.value)"
+              class="form-input text-xs py-1.5 pl-8 pr-3 rounded-full bg-white border-[#e5e5e5]" 
+            />
+            <span class="material-symbols-outlined absolute left-2.5 top-2 text-sm text-[#707072]">search</span>
+          </div>
+        </div>
+
+        <!-- ====================================================================
+             FLUXO DA LINHA DO TEMPO CRONOLÓGICA COM ENTREGÁVEIS DESDOBRADOS
+             ==================================================================== -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-[#111111] uppercase tracking-wider flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">timeline</span>
+              <span>Jornada Cronológica de Marcos (D-X até D-0)</span>
+            </h3>
+            <span class="text-xs text-[#707072] font-mono">Ordenação: Do primeiro marco até a data de partida</span>
+          </div>
+
+          <!-- Trilha Vertical da Linha do Tempo -->
+          <div class="timeline-spine pl-6 sm:pl-10 space-y-8 relative">
+            ${filteredMilestones.map((m, mIdx) => {
+              const mActions = m.filteredActions || [];
+              const mTotal = m.actions ? m.actions.length : 0;
+              const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
+              const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+              const isComplete = mTotal > 0 && mDone === mTotal;
+              const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
+
+              if (!m.hasMatches && (filterArea !== 'ALL' || filterStatus !== 'ALL' || searchQuery)) {
+                return '';
+              }
+
+              return `
+                <div class="relative flex items-start gap-4 sm:gap-6 group">
+                  
+                  <!-- Marcador / Ícone do Nó -->
+                  <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs shrink-0 shadow-md relative z-10 ${
+                    isComplete ? 'bg-[#007d48] text-white' :
+                    isBlocked ? 'bg-[#d30005] text-white' :
+                    mDone > 0 ? 'bg-[#111111] text-white timeline-node-active' :
+                    'bg-[#f0f0f0] text-[#707072] border border-[#cacacb]'
+                  }">
+                    <span class="text-xs leading-none">${m.relativeDay}</span>
+                    <span class="text-[8px] uppercase tracking-wider font-semibold opacity-90">MARCO</span>
+                  </div>
+
+                  <!-- Conteúdo do Card do Marco na Linha do Tempo -->
+                  <div class="flex-1 bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 shadow-sm hover:border-[#111111] transition-all space-y-4">
+                    
+                    <!-- Cabeçalho do Card -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
+                          <h4 class="font-extrabold text-sm sm:text-base text-[#111111]">${m.title}</h4>
+                          <span class="nike-pill text-[10px] py-0.5 ${
+                            isComplete ? 'bg-green-50 text-green-800 border-green-200 font-bold' :
+                            isBlocked ? 'bg-red-50 text-red-800 border-red-200 font-bold' :
+                            mDone > 0 ? 'bg-blue-50 text-blue-800 border-blue-200 font-bold' :
+                            'bg-gray-100 text-gray-700'
+                          }">
+                            ${isComplete ? 'CONCLUÍDO' : isBlocked ? 'BLOQUEADO' : mDone > 0 ? 'EM ANDAMENTO' : 'NÃO INICIADO'}
+                          </span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-1">
+                          <span class="material-symbols-outlined text-xs">calendar_month</span>
+                          <span>Data Limite: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
+                          <span>•</span>
+                          <span>${mDone} de ${mTotal} ações finalizadas (${mPct}%)</span>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-2 text-right">
+                        <div class="w-24 bg-[#f0f0f0] h-2 rounded-full overflow-hidden hidden sm:block">
+                          <div class="h-full ${isComplete ? 'bg-[#007d48]' : 'bg-[#111111]'}" style="width: ${mPct}%;"></div>
+                        </div>
+                        <span class="font-mono text-xs font-bold text-[#111111]">${mPct}%</span>
+                      </div>
+                    </div>
+
+                    <!-- Lista de Ações Desdobradas no Marco -->
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between text-[11px] text-[#707072] font-bold uppercase tracking-wider">
+                        <span>Entregáveis & Ações Vinculadas</span>
+                        <span>${mActions.length} exibidas</span>
+                      </div>
+
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${mActions.map(act => `
+                          <div class="p-3 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] hover:border-[#111111] transition-all flex flex-col justify-between space-y-2 text-xs">
+                            <div>
+                              <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="font-mono text-[10px] font-bold text-[#707072]">${act.id}</span>
+                                <span class="nike-pill text-[9px] py-0 bg-[#f0f0f0] font-semibold">${act.area}</span>
+                              </div>
+                              <h5 class="font-bold text-[#111111] leading-snug">${act.title}</h5>
+                            </div>
+
+                            <div class="flex items-center justify-between border-t border-[#e5e5e5] pt-2 text-[11px]">
+                              <div>
+                                <span class="text-[#707072] block">Resp: <b class="text-[#111111]">${act.owner}</b></span>
+                                <span class="text-[10px] font-mono text-[#707072]">Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'} • ${act.estimatedHh || 0}h</span>
+                              </div>
+                              
+                              <button onclick="PreParadaView.toggleTimelineActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer py-0.5 ${
+                                act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
+                                act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
+                                act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
+                                'bg-gray-100 text-gray-700'
+                              }">
+                                ${act.status}
+                              </button>
+                            </div>
+                          </div>
+                        `).join('')}
+
+                        ${mActions.length === 0 ? `
+                          <div class="col-span-2 p-4 text-center text-xs text-[#707072] italic bg-[#f9f9f9] rounded-2xl border border-dashed border-[#cacacb]">
+                            Nenhum entregável correspondente aos filtros atuais neste marco.
+                          </div>
+                        ` : ''}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Matriz de Prontidão por Área de Suporte -->
+        <div class="card-industrial bg-[#f9f9f9] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-[#111111] text-xs uppercase tracking-wide flex items-center gap-2">
+              <span class="material-symbols-outlined text-base">domain</span>
+              <span>Desempenho por Área de Suporte na Linha do Tempo</span>
+            </h4>
+            <span class="text-xs text-[#707072] font-mono">${areaStats.length} áreas ativas</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            ${areaStats.map(st => `
+              <div class="p-3 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] space-y-2">
+                <div class="flex items-center justify-between font-bold">
+                  <span class="text-[#111111] truncate" title="${st.area}">${st.area}</span>
+                  <span class="font-mono ${st.pct === 100 ? 'text-[#007d48]' : 'text-[#111111]'}">${st.pct}%</span>
+                </div>
+                <div class="w-full bg-[#f0f0f0] h-1.5 rounded-full overflow-hidden">
+                  <div class="${st.pct === 100 ? 'bg-[#007d48]' : 'bg-[#111111]'} h-full" style="width: ${st.pct}%;"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-[#707072] font-mono">
+                  <span>${st.done} de ${st.total} entregáveis</span>
+                  <span>${st.total - st.done} pendentes</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Rodapé do Modal -->
+      <div class="p-4 md:p-6 bg-[#ffffff] border-t border-[#e5e5e5] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 no-print">
+        <div class="text-[11px] text-[#707072]">
+          <span>STOP • Linha do Tempo & Governança de Paradas • Atualizado em <b>${new Date().toLocaleDateString('pt-BR')}</b></span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="PreParadaView.printTimelineReport('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base">print</span>
+            <span>Imprimir</span>
+          </button>
+          <button onclick="PreParadaView.closeTimelineModal()" class="btn-pill-primary text-xs px-6 shadow-md">
+            <span>Fechar Relatório</span>
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  toggleTimelineActionStatus(paradaId, milestoneId, actionId) {
+    this.toggleActionStatus(paradaId, milestoneId, actionId);
+    
+    // Atualizar o conteúdo do modal se ele estiver aberto
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      const parada = ProjectsView.getParadaById(paradaId);
+      if (parada) {
+        const content = document.getElementById('milestone-timeline-modal-content');
+        if (content) {
+          content.innerHTML = this.renderTimelineModalContent(parada);
+        }
+      }
+    }
+  },
+
+  printTimelineReport(paradaId) {
+    document.body.classList.add('printing-timeline-modal');
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-timeline-modal');
+    }, 1000);
   },
 
   openMilestoneModal(paradaId, editId = null) {
@@ -495,6 +1169,13 @@ const PreParadaView = {
     ProjectsView.updateParada(parada);
     App.showToast('Milestone salvo com sucesso!', 'success');
     App.renderCurrentView();
+
+    // Se o modal de timeline estiver aberto, atualiza também
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      const content = document.getElementById('milestone-timeline-modal-content');
+      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
+    }
   },
 
   editMilestone(paradaId, milestoneId) {
@@ -509,6 +1190,12 @@ const PreParadaView = {
       ProjectsView.updateParada(parada);
       App.showToast('Milestone removido.', 'info');
       App.renderCurrentView();
+
+      const modal = document.getElementById('milestone-timeline-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        const content = document.getElementById('milestone-timeline-modal-content');
+        if (content) content.innerHTML = this.renderTimelineModalContent(parada);
+      }
     }
   },
 
@@ -539,6 +1226,12 @@ const PreParadaView = {
     ProjectsView.updateParada(parada);
     App.showToast('Ação desdobrada com sucesso!', 'success');
     App.renderCurrentView();
+
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      const content = document.getElementById('milestone-timeline-modal-content');
+      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
+    }
   },
 
   toggleActionStatus(paradaId, milestoneId, actionId) {
@@ -568,8 +1261,15 @@ const PreParadaView = {
       ProjectsView.updateParada(parada);
       App.showToast('Ação removida.', 'info');
       App.renderCurrentView();
+
+      const modal = document.getElementById('milestone-timeline-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        const content = document.getElementById('milestone-timeline-modal-content');
+        if (content) content.innerHTML = this.renderTimelineModalContent(parada);
+      }
     }
   },
+
 
   // ==========================================================================
   // 2. ABA: ESCOPO, HH & LINHA DE CORTE ORÇAMENTÁRIA (PROBABILIDADE X SEVERIDADE)

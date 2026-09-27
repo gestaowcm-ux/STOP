@@ -270,12 +270,21 @@
     </div>
   </div>
 
-  <!-- Scripts da Aplicação STOP (Carregamento Modular) -->
+  <!-- ========================================================================
+       MODAL DE LINHA DO TEMPO & RELATÓRIO EXECUTIVO DE MILESTONES (PRÉ-PARADA)
+       ======================================================================== -->
+  <div id="milestone-timeline-modal" onclick="if(event.target === this) PreParadaView.closeTimelineModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-3 sm:p-6 hidden animate-fade-in">
+    <div id="milestone-timeline-modal-content" class="card-industrial max-w-5xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl max-h-[92vh] flex flex-col rounded-3xl overflow-hidden">
+      <!-- Injetado dinamicamente por PreParadaView.renderTimelineModalContent() -->
+    </div>
+  </div>
+
   <script src="js/users.js?v=4.0"></script>
   <script src="js/projects.js?v=4.0"></script>
   <script src="js/preparada.js?v=4.0"></script>
   <script src="js/parada.js?v=4.0"></script>
   <script src="js/posparada.js?v=4.0"></script>
+  <script src="js/configuracoes.js?v=4.0"></script>
   <script src="js/app.js?v=4.0"></script>
 </body>
 </html>

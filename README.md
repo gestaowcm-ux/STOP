@@ -72,6 +72,7 @@ Software/
 │   ├── parada.js         # Módulo Parada (Execução e Campo)
 │   ├── posparada.js      # Módulo Pós-Parada (Encerramento e Lições Aprendidas)
 │   ├── users.js          # Módulo de Gestão de Usuários e Permissões
+│   ├── configuracoes.js  # Cadastros básicos (Disciplinas, Equipamentos/TAGs, Áreas de Apoio)
 │   ├── phases.js         # Estrutura e definições de fases
 │   ├── iniciacao.js      # Módulo legado de Iniciação
 │   ├── planejamento.js   # Módulo legado de Planejamento
