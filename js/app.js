@@ -28,11 +28,15 @@ const App = {
     if (hash.startsWith('parada/')) {
       const parts = hash.split('/');
       const paradaId = parts[1];
-      const phase = parseInt(parts[2] || '1', 10);
-      this.selectParada(paradaId, phase, false);
+      const sub = parts[2] || '1';
+      if (sub === 'config' || sub === '4') {
+        this.selectParada(paradaId, 4, false);
+      } else {
+        const phase = parseInt(sub, 10);
+        this.selectParada(paradaId, phase, false);
+      }
     } else if (hash === 'configuracoes') {
-      this.currentView = 'configuracoes';
-      this.renderCurrentView();
+      this.switchToGlobalConfig(false);
     } else {
       this.switchToPortfolio(false);
     }
@@ -50,6 +54,15 @@ const App = {
     this.updateSidebarView();
   },
 
+  switchToGlobalConfig(updateHash = true) {
+    this.currentView = 'configuracoes';
+    this.activeParadaId = null;
+    if (updateHash) window.location.hash = 'configuracoes';
+    this.renderCurrentView();
+    this.updateHeaderInfo();
+    this.updateSidebarView();
+  },
+
   selectParada(paradaId, phase = 1, updateHash = true) {
     const p = ProjectsView.getParadaById(paradaId);
     if (!p) {
@@ -62,7 +75,8 @@ const App = {
     this.activePhase = phase || p.currentPhase || 1;
 
     if (updateHash) {
-      window.location.hash = `parada/${paradaId}/${this.activePhase}`;
+      const phaseSlug = this.activePhase === 4 ? 'config' : this.activePhase;
+      window.location.hash = `parada/${paradaId}/${phaseSlug}`;
     }
 
     this.renderCurrentView();
@@ -70,10 +84,16 @@ const App = {
     this.updateSidebarView();
   },
 
+  selectParadaConfig(paradaId, updateHash = true) {
+    this.selectParada(paradaId, 4, updateHash);
+  },
+
   switchPhase(phase) {
     if (!this.activeParadaId) return;
+    this.currentView = 'parada-detail';
     this.activePhase = phase;
-    window.location.hash = `parada/${this.activeParadaId}/${phase}`;
+    const phaseSlug = phase === 4 ? 'config' : phase;
+    window.location.hash = `parada/${this.activeParadaId}/${phaseSlug}`;
     this.renderCurrentView();
     this.updateHeaderInfo();
     this.updateSidebarView();
@@ -90,7 +110,7 @@ const App = {
       container.innerHTML = ProjectsView.render();
     } else if (this.currentView === 'configuracoes') {
       container.innerHTML = this.renderConfiguracoesView();
-    } else if (this.currentView === 'parada-detail') {
+    } else if (this.currentView === 'parada-detail' || this.currentView === 'parada-config') {
       container.innerHTML = this.renderParadaDetailView();
     }
 
@@ -119,12 +139,12 @@ const App = {
     const g3 = parada.gates.gate3;
 
     return `
-        <!-- BARRA INTEGRADA DE TOPO & STEPPER DAS 3 FASES (CLEAN & COMPACT) -->
+        <!-- BARRA INTEGRADA DE TOPO & STEPPER DAS 4 SEÇÕES DO PROJETO -->
         <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-2xl p-3 md:p-4 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           
           <!-- Esquerda: Voltar + Código da Parada + Unidade -->
           <div class="flex items-center gap-3">
-            <button onclick="App.switchToPortfolio()" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]" title="Voltar ao Portfólio">
+            <button onclick="App.switchToPortfolio()" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]" title="Voltar ao Portfólio de Paradas">
               <span class="material-symbols-outlined text-base">arrow_back</span>
             </button>
             <div class="flex items-center gap-2">
@@ -133,7 +153,7 @@ const App = {
             </div>
           </div>
 
-          <!-- Centro: Stepper Horizontal Compacto das 3 Fases -->
+          <!-- Centro: Stepper Horizontal das Fases & Cadastros da Parada -->
           <div class="flex items-center p-1 bg-[#f5f5f5] border border-[#e5e5e5] rounded-2xl gap-1 overflow-x-auto text-xs">
             
             <!-- Fase 1: Pré-Parada -->
@@ -164,19 +184,27 @@ const App = {
               </span>
             </button>
 
+            <span class="text-[#cacacb] text-xs font-mono">|</span>
+
+            <!-- Seção 4: Cadastros & Configurações da Parada -->
+            <button onclick="App.switchPhase(4)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${this.activePhase === 4 ? 'bg-[#111111] text-white shadow-sm' : 'text-[#4b4b4d] hover:text-[#111111] hover:bg-white/70'}">
+              <span class="material-symbols-outlined text-sm">settings_suggest</span>
+              <span>4. Cadastros da Parada</span>
+            </button>
+
           </div>
 
           <!-- Direita: Ações Rápidas -->
           <div class="flex items-center gap-2">
-            <button onclick="ProjectsView.openCreateModal('${parada.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
+            <button onclick="ProjectsView.openCreateModal('${parada.id}')" class="btn-ghost-pill text-xs py-1.5 px-3 flex items-center gap-1">
               <span class="material-symbols-outlined text-sm">edit</span>
-              <span>Editar Parada</span>
+              <span>Editar Dados da Parada</span>
             </button>
           </div>
 
         </div>
 
-        <!-- Renderizador da Fase Selecionada -->
+        <!-- Renderizador da Fase / Aba Selecionada -->
         <div id="active-phase-container">
           ${this.renderPhaseContent(parada)}
         </div>
@@ -192,6 +220,8 @@ const App = {
       return ParadaView.render(parada);
     } else if (this.activePhase === 3) {
       return PosParadaView.render(parada);
+    } else if (this.activePhase === 4) {
+      return ConfiguracoesView.renderProjectConfig(parada);
     }
     return PreParadaView.render(parada);
   },
@@ -204,23 +234,18 @@ const App = {
     const nav = document.getElementById('sidebar-nav-container');
     if (!nav) return;
 
-    if (this.currentView === 'portfolio' || this.currentView === 'configuracoes') {
+    if (this.currentView === 'portfolio') {
       nav.innerHTML = `
         <div class="space-y-1">
           <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#707072] sidebar-text">Navegação Principal</div>
           
-          <a href="#portfolio" onclick="App.switchToPortfolio()" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'portfolio' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
+          <a href="#portfolio" onclick="App.switchToPortfolio()" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-[#111111] text-white font-bold transition-all">
             <span class="material-symbols-outlined text-lg">grid_view</span>
             <span class="sidebar-text">Portfólio de Paradas</span>
           </a>
-
-          <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'configuracoes' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
-            <span class="material-symbols-outlined text-lg">settings_suggest</span>
-            <span class="sidebar-text">Cadastros & Configurações</span>
-          </a>
         </div>
       `;
-    } else if (this.currentView === 'parada-detail') {
+    } else if (this.currentView === 'parada-detail' || this.currentView === 'parada-config') {
       const parada = ProjectsView.getParadaById(this.activeParadaId);
       if (!parada) return;
 
@@ -240,7 +265,7 @@ const App = {
             <span class="text-[10px] text-[#707072] block truncate">${parada.unit}</span>
           </div>
 
-          <!-- As 3 Fases Sequenciais -->
+          <!-- As 4 Fases / Seções do Projeto -->
           <div class="space-y-1 pt-1">
             <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#707072] sidebar-text">Fases da Parada</div>
 
@@ -267,6 +292,14 @@ const App = {
               </div>
               <span class="w-2 h-2 rounded-full ${parada.gates.gate3.approved ? 'bg-emerald-500' : (parada.gates.gate2.approved ? 'bg-amber-500' : 'bg-gray-300')}"></span>
             </a>
+
+            <a href="javascript:void(0)" onclick="App.switchPhase(4)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 4 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-base">settings_suggest</span>
+                <span class="sidebar-text">4. Cadastros da Parada</span>
+              </div>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${this.activePhase === 4 ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-700'}">Isolado</span>
+            </a>
           </div>
 
         </div>
@@ -283,11 +316,13 @@ const App = {
     if (breadcrumb) {
       if (this.currentView === 'portfolio') {
         breadcrumb.innerHTML = `<span class="font-bold text-[#111111]">Portfólio de Paradas Industriais</span>`;
-      } else if (this.currentView === 'configuracoes') {
-        breadcrumb.innerHTML = `<span class="font-bold text-[#111111]">Usuários & Perfis</span>`;
-      } else if (this.currentView === 'parada-detail') {
+      } else if (this.currentView === 'parada-detail' || this.currentView === 'parada-config') {
         const p = ProjectsView.getParadaById(this.activeParadaId);
-        const phaseName = this.activePhase === 1 ? '1. Pré-Parada' : (this.activePhase === 2 ? '2. Parada' : '3. Pós-Parada');
+        let phaseName = '1. Pré-Parada';
+        if (this.activePhase === 2) phaseName = '2. Parada';
+        else if (this.activePhase === 3) phaseName = '3. Pós-Parada';
+        else if (this.activePhase === 4) phaseName = '4. Cadastros da Parada';
+
         breadcrumb.innerHTML = `
           <span class="text-[#707072] cursor-pointer hover:text-black" onclick="App.switchToPortfolio()">Paradas</span>
           <span class="text-[#cacacb]">/</span>

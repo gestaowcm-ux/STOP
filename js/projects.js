@@ -449,14 +449,30 @@ const ProjectsView = {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          return parsed.map(p => {
+          let updated = false;
+          const mapped = parsed.map(p => {
             if (p.budget !== undefined || p.budgetRaw !== undefined) {
               const raw = this.parseCurrency(p.budget !== undefined ? p.budget : p.budgetRaw);
               p.budget = this.formatCurrency(raw);
               p.budgetRaw = raw;
             }
+            if (!p.config) {
+              p.config = {
+                disciplines: JSON.parse(JSON.stringify(window.ConfiguracoesView ? window.ConfiguracoesView.defaultDisciplines : [])),
+                equipmentTree: JSON.parse(JSON.stringify(window.ConfiguracoesView ? window.ConfiguracoesView.defaultEquipmentTree : [])),
+                supportAreas: JSON.parse(JSON.stringify(window.ConfiguracoesView ? window.ConfiguracoesView.defaultSupportAreas : [])),
+                gateApprovers: {
+                  gate1: p.gates?.gate1?.approvedBy || 'Juliana Santos (Gerente Geral)',
+                  gate2: p.gates?.gate2?.approvedBy || 'Carlos Alberto Silva (Admin/Diretor)',
+                  gate3: p.gates?.gate3?.approvedBy || 'Diretoria de Operações'
+                }
+              };
+              updated = true;
+            }
             return p;
           });
+          if (updated) this.saveParadas(mapped);
+          return mapped;
         }
       }
     } catch (e) {
@@ -968,12 +984,15 @@ const ProjectsView = {
   openCreateModal(id = null) {
     const modal = document.getElementById('project-edit-modal');
     const title = document.getElementById('modal-project-title');
+    const baseWrapper = document.getElementById('wrapper-project-base-template');
+    const baseSelect = document.getElementById('form-project-base-template');
     if (!modal) return;
 
     if (id) {
       const p = this.getParadaById(id);
       if (!p) return;
       if (title) title.innerText = 'Editar Dados da Parada Industrial';
+      if (baseWrapper) baseWrapper.classList.add('hidden');
       document.getElementById('form-project-code').value = p.code || '';
       document.getElementById('form-project-name').value = p.name || '';
       document.getElementById('form-project-unit').value = p.unit || '';
@@ -990,6 +1009,18 @@ const ProjectsView = {
       this.onBudgetInput(budgetVal);
     } else {
       if (title) title.innerText = 'Cadastrar Nova Parada Industrial';
+      if (baseWrapper) baseWrapper.classList.remove('hidden');
+      
+      // Popular seletor de base/origem de cadastros
+      if (baseSelect) {
+        const paradas = this.getParadas();
+        let baseOptions = '<option value="default" selected>★ Modelos Mestres Globais (Padrão do STOP)</option>';
+        paradas.forEach(p => {
+          baseOptions += `<option value="${p.id}">Clonar cadastros de: ${p.code} — ${p.name} (${p.unit})</option>`;
+        });
+        baseSelect.innerHTML = baseOptions;
+      }
+
       const count = this.getParadas().length + 1;
       document.getElementById('form-project-code').value = `PRD-2026-U${100 + count * 10}`;
       document.getElementById('form-project-name').value = '';
@@ -1032,6 +1063,7 @@ const ProjectsView = {
     const endDate = document.getElementById('form-project-end')?.value || '';
     const durationDays = parseInt(document.getElementById('form-project-days')?.value || '30', 10);
     const description = document.getElementById('form-project-desc')?.value.trim() || 'Parada de manutenção programada.';
+    const baseTemplate = document.getElementById('form-project-base-template')?.value || 'default';
 
     if (!name || !unit) {
       alert('Por favor preencha pelo menos o Nome da Parada e a Unidade Operacional.');
@@ -1061,6 +1093,26 @@ const ProjectsView = {
     } else {
       const newId = 'prd-' + Date.now();
       targetParadaId = newId;
+
+      // Configuração clonada ou padrão mestre
+      let initialConfig = {
+        disciplines: JSON.parse(JSON.stringify(window.ConfiguracoesView ? window.ConfiguracoesView.defaultDisciplines : [])),
+        equipmentTree: JSON.parse(JSON.stringify(window.ConfiguracoesView ? window.ConfiguracoesView.defaultEquipmentTree : [])),
+        supportAreas: JSON.parse(JSON.stringify(window.ConfiguracoesView ? window.ConfiguracoesView.defaultSupportAreas : [])),
+        gateApprovers: {
+          gate1: 'Juliana Santos (Gerente Geral)',
+          gate2: 'Carlos Alberto Silva (Admin/Diretor)',
+          gate3: 'Diretoria de Operações'
+        }
+      };
+
+      if (baseTemplate !== 'default') {
+        const srcParada = this.getParadaById(baseTemplate);
+        if (srcParada && srcParada.config) {
+          initialConfig = JSON.parse(JSON.stringify(srcParada.config));
+        }
+      }
+
       const newParada = {
         id: newId,
         code: code,
@@ -1078,6 +1130,7 @@ const ProjectsView = {
         currentPhase: 1, // Pré-Parada
         status: 'Em Pré-Parada',
         createdAt: new Date().toISOString().split('T')[0],
+        config: initialConfig,
         gates: {
           gate1: { approved: false, approvedBy: null, approvedAt: null, comments: '', checklist: { scopeFrozen: false, criticalMaterialsInSite: false, risksMitigated: false, contractorsMobilized: false, lotoPermitsReady: false } },
           gate2: { approved: false, approvedBy: null, approvedAt: null, comments: '', checklist: { mechanicalCompletion: false, testHydroDone: false, cleanPlant: false, punchListALevelZero: false, blindRemovalDone: false } },
@@ -1135,7 +1188,7 @@ const ProjectsView = {
     if (typeof App !== 'undefined') {
       App.updateHeaderInfo();
       App.renderCurrentView();
-      App.showToast(`Parada "${name}" atualizada! Todo o projeto, cronograma e curvas físico-financeiras foram recalculados instantaneamente.`, 'success');
+      App.showToast(`Parada "${name}" ${editId ? 'atualizada' : 'cadastrada'} com sucesso! Cadastros e cronograma configurados.`, 'success');
     }
   },
 

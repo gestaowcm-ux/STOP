@@ -258,6 +258,20 @@
           <label class="form-label">Descrição Resumida do Escopo / Objetivos Principais</label>
           <textarea id="form-project-desc" rows="3" class="form-input text-xs leading-relaxed" placeholder="Descreva sucintamente as principais intervenções mecânicas, caldeiraria e inspeções regulatórias..."></textarea>
         </div>
+
+        <div id="wrapper-project-base-template" class="sm:col-span-2 p-3.5 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="form-label mb-0 flex items-center gap-1.5 text-[#111111] font-bold">
+              <span class="material-symbols-outlined text-base text-[#111111]">content_copy</span>
+              <span>Base Inicial de Cadastros & Configurações</span>
+            </label>
+            <span class="nike-pill text-[9px] bg-white text-[#4b4b4d]">Clonagem de Estrutura</span>
+          </div>
+          <select id="form-project-base-template" class="form-input text-xs font-semibold bg-white">
+            <option value="default" selected>★ Modelos Mestres Globais (Padrão do STOP)</option>
+          </select>
+          <p class="text-[10px] text-[#707072]">A nova Parada herdará Disciplinas, TAGs, Áreas de Suporte e Aprovadores como base individual independente.</p>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#e5e5e5]">
@@ -269,6 +283,406 @@
         </button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CÓPIA / IMPORTAÇÃO DE CADASTROS ENTRE PROJETOS
+       ======================================================================== -->
+  <div id="copy-cadastros-modal" onclick="if(event.target === this) ConfiguracoesView.closeCopyModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">content_copy</span>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Copiar Cadastros de Outro Projeto</h3>
+            <p class="text-[11px] text-[#707072]">Transfira Disciplinas, TAGs ou Equipes entre Paradas</p>
+          </div>
+        </div>
+        <button onclick="ConfiguracoesView.closeCopyModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        
+        <!-- Parada Destino -->
+        <div class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-[#707072] block">Parada de Destino (Receberá os Dados)</span>
+            <span id="copy-target-parada-label" class="font-bold text-xs text-[#111111] font-mono">--</span>
+          </div>
+          <span class="nike-pill bg-emerald-100 text-emerald-800 font-bold text-[9px]">Ativa Agora</span>
+        </div>
+
+        <!-- Parada de Origem -->
+        <div>
+          <label class="form-label font-bold">1. Selecione a Parada de Origem (Fonte dos Cadastros) *</label>
+          <select id="copy-origin-parada" class="form-input font-medium bg-white text-xs font-mono">
+            <option value="__master__">★ Modelos Mestres Globais (Padrão do STOP)</option>
+          </select>
+        </div>
+
+        <!-- Checkboxes de Seleção Granular -->
+        <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">2. Selecione os Cadastros a Copiar</span>
+            <span class="text-[10px] text-[#707072]">Granularidade</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <label class="flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-[#e5e5e5] hover:border-[#111111] cursor-pointer transition-all">
+              <input type="checkbox" id="copy-chk-disciplines" class="accent-[#111111] w-4 h-4 rounded" checked />
+              <div class="leading-tight">
+                <span class="font-bold text-[#111111] block">Disciplinas & Taxas HH</span>
+                <span class="text-[10px] text-[#707072]">Tipos de serviço e custos</span>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-[#e5e5e5] hover:border-[#111111] cursor-pointer transition-all">
+              <input type="checkbox" id="copy-chk-equipment" class="accent-[#111111] w-4 h-4 rounded" checked />
+              <div class="leading-tight">
+                <span class="font-bold text-[#111111] block">Árvore de TAGs / Ativos</span>
+                <span class="text-[10px] text-[#707072]">Equipamentos e sistemas</span>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-[#e5e5e5] hover:border-[#111111] cursor-pointer transition-all">
+              <input type="checkbox" id="copy-chk-areas" class="accent-[#111111] w-4 h-4 rounded" checked />
+              <div class="leading-tight">
+                <span class="font-bold text-[#111111] block">Áreas de Suporte & Equipes</span>
+                <span class="text-[10px] text-[#707072]">Coordenadores e contatos</span>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-[#e5e5e5] hover:border-[#111111] cursor-pointer transition-all">
+              <input type="checkbox" id="copy-chk-gates" class="accent-[#111111] w-4 h-4 rounded" checked />
+              <div class="leading-tight">
+                <span class="font-bold text-[#111111] block">Aprovadores dos Gates</span>
+                <span class="text-[10px] text-[#707072]">Designação dos 3 Gates</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Estratégia de Cópia: Substituir vs Mesclar -->
+        <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">3. Modo de Importação</span>
+            <span class="nike-pill text-[9px] bg-white text-[#4b4b4d]">Estratégia</span>
+          </div>
+
+          <div class="space-y-2">
+            <label class="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-[#e5e5e5] hover:border-[#111111] cursor-pointer transition-all">
+              <input type="radio" name="copy-mode" id="copy-mode-replace" value="replace" class="accent-[#111111] mt-0.5" checked />
+              <div class="leading-snug">
+                <span class="font-bold text-[#111111] block">Substituir Cadastros Atuais (Replace)</span>
+                <span class="text-[10px] text-[#707072]">Substitui integralmente as coleções selecionadas pelos dados da origem.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-[#e5e5e5] hover:border-[#111111] cursor-pointer transition-all">
+              <input type="radio" name="copy-mode" id="copy-mode-merge" value="merge" class="accent-[#111111] mt-0.5" />
+              <div class="leading-snug">
+                <span class="font-bold text-[#111111] block">Mesclar / Incrementar (Merge)</span>
+                <span class="text-[10px] text-[#707072]">Adiciona novos TAGs, disciplinas e colaboradores sem apagar o que já existe.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="ConfiguracoesView.closeCopyModal()" class="btn-ghost-pill text-xs">
+          Cancelar
+        </button>
+        <button onclick="ConfiguracoesView.executeCopy()" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-sm">check_circle</span>
+          <span>Confirmar Cópia de Cadastros</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE UNIDADE OPERACIONAL (PLANTA)
+       ======================================================================== -->
+  <div id="config-plant-modal" onclick="if(event.target === this) ConfiguracoesView.closePlantModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-md w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">factory</span>
+          </div>
+          <div>
+            <h3 id="config-plant-modal-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Nova Unidade Operacional</h3>
+            <p class="text-[11px] text-[#707072]">Estrutura técnica mestre da planta / refinaria</p>
+          </div>
+        </div>
+        <button type="button" onclick="ConfiguracoesView.closePlantModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="config-plant-edit-idx" value="" />
+
+      <form onsubmit="event.preventDefault(); ConfiguracoesView.savePlantModal();" class="space-y-3.5 text-xs">
+        <div>
+          <label class="form-label font-bold">Nome da Unidade Operacional / Planta *</label>
+          <input type="text" id="config-plant-name" class="form-input font-bold" placeholder="Ex: U-210 Destilação Atmosférica, U-450 Craqueamento Catalítico..." required />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+          <button type="button" onclick="ConfiguracoesView.closePlantModal()" class="btn-ghost-pill text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-sm">save</span>
+            <span>Salvar Unidade</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE SISTEMA DE PROCESSO
+       ======================================================================== -->
+  <div id="config-system-modal" onclick="if(event.target === this) ConfiguracoesView.closeSystemModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-md w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">account_tree</span>
+          </div>
+          <div>
+            <h3 id="config-system-modal-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Novo Sistema de Processo</h3>
+            <p class="text-[11px] text-[#707072]">Subsistema funcional associado à Unidade</p>
+          </div>
+        </div>
+        <button type="button" onclick="ConfiguracoesView.closeSystemModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="config-system-plant-idx" value="" />
+      <input type="hidden" id="config-system-edit-idx" value="" />
+
+      <form onsubmit="event.preventDefault(); ConfiguracoesView.saveSystemModal();" class="space-y-3.5 text-xs">
+        <div>
+          <label class="form-label">Unidade Operacional Vinculada</label>
+          <div id="config-system-parent-unit-badge" class="font-mono text-xs font-bold text-[#111111] bg-[#f5f5f5] px-3 py-2 rounded-xl border border-[#e5e5e5] block truncate">
+            Unidade: --
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label font-bold">Nome do Sistema de Processo *</label>
+          <input type="text" id="config-system-name" class="form-input font-bold" placeholder="Ex: Sistema de Carga e Pré-Aquecimento, Circuito de Topo..." required />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+          <button type="button" onclick="ConfiguracoesView.closeSystemModal()" class="btn-ghost-pill text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-sm">save</span>
+            <span>Salvar Sistema</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE TAG / EQUIPAMENTO INDUSTRIAL
+       ======================================================================== -->
+  <div id="config-tag-modal" onclick="if(event.target === this) ConfiguracoesView.closeTagModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">precision_manufacturing</span>
+          </div>
+          <div>
+            <h3 id="config-tag-modal-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastro de TAG / Ativo</h3>
+            <p class="text-[11px] text-[#707072]">Identificação técnica, criticidade e normas de inspeção</p>
+          </div>
+        </div>
+        <button type="button" onclick="ConfiguracoesView.closeTagModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="config-tag-edit-plant-idx" value="" />
+      <input type="hidden" id="config-tag-edit-system-idx" value="" />
+      <input type="hidden" id="config-tag-edit-tag-idx" value="" />
+
+      <form onsubmit="event.preventDefault(); ConfiguracoesView.saveTagModal();" class="space-y-3.5 text-xs">
+        
+        <!-- Localização Hierárquica: Unidade e Sistema -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-3.5 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5]">
+          <div>
+            <label class="form-label font-bold">1. Unidade Operacional *</label>
+            <select id="config-tag-plant-select" class="form-input font-bold" onchange="ConfiguracoesView.onTagModalPlantChange()" required>
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label font-bold">2. Sistema de Processo *</label>
+            <select id="config-tag-system-select" class="form-input font-medium" required>
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Identificação do TAG e Nome -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="form-label font-bold">Código TAG *</label>
+            <input type="text" id="config-tag-code" class="form-input font-mono font-black text-sm uppercase" placeholder="Ex: T-2101, P-2104A..." required />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="form-label font-bold">Nome / Descrição do Ativo *</label>
+            <input type="text" id="config-tag-name" class="form-input font-bold" placeholder="Ex: Torre Fracionadora Principal, Bomba de Carga..." required />
+          </div>
+        </div>
+
+        <!-- Tipo e Criticidade -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="form-label font-bold">Tipo de Equipamento / Categoria *</label>
+            <select id="config-tag-type" class="form-input font-medium">
+              <option value="Torre / Coluna de Fracionamento">Torre / Coluna de Fracionamento</option>
+              <option value="Vaso de Pressão / Separador">Vaso de Pressão / Separador</option>
+              <option value="Permutador de Calor / Reboiler">Permutador de Calor / Reboiler</option>
+              <option value="Air Cooler / Resfriador">Air Cooler / Resfriador</option>
+              <option value="Bomba Centrífuga">Bomba Centrífuga</option>
+              <option value="Bomba Alternativa / Deslocamento Positivo">Bomba Alternativa / Deslocamento Positivo</option>
+              <option value="Compressor / Turbina">Compressor / Turbina</option>
+              <option value="Forno / Caldeira / Queimador">Forno / Caldeira / Queimador</option>
+              <option value="Válvula de Segurança e Alívio (PSV)">Válvula de Segurança e Alívio (PSV)</option>
+              <option value="Tubulação / Spool / Linha">Tubulação / Spool / Linha</option>
+              <option value="Tanque de Armazenamento">Tanque de Armazenamento</option>
+              <option value="Painel Elétrico / Subestação / MCC">Painel Elétrico / Subestação / MCC</option>
+              <option value="Instrumentação / Transmissor / Malha">Instrumentação / Transmissor / Malha</option>
+              <option value="Estrutura Metálica / Suporte">Estrutura Metálica / Suporte</option>
+              <option value="Outro Ativo Industrial">Outro Ativo Industrial</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label font-bold">Criticidade Operacional *</label>
+            <select id="config-tag-criticality" class="form-input font-medium font-bold">
+              <option value="Classe A (Crítica)" selected>Classe A (Crítica / Alta)</option>
+              <option value="Classe B (Média)">Classe B (Média)</option>
+              <option value="Classe C (Normal)">Classe C (Baixa / Normal)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Norma Aplicável -->
+        <div>
+          <label class="form-label font-bold">Requisito Legal / Norma de Inspeção Aplicável *</label>
+          <select id="config-tag-standard" class="form-input font-medium">
+            <option value="NR-13" selected>NR-13 (Caldeiras, Vasos de Pressão e Tubulações de Processo)</option>
+            <option value="API 610">API 610 (Bombas Centrífugas para Indústria de Petróleo)</option>
+            <option value="API 661">API 661 (Trocadores de Calor Resfriados a Ar / Air Coolers)</option>
+            <option value="API 510 / 570">API 510 / 570 (Inspeção de Vasos e Tubulações em Serviço)</option>
+            <option value="NR-10">NR-10 (Segurança em Instalações e Serviços em Eletricidade)</option>
+            <option value="NR-12">NR-12 (Segurança no Trabalho em Máquinas e Equipamentos)</option>
+            <option value="ASME B31.3">ASME B31.3 (Tubulações de Processo em Refinarias)</option>
+            <option value="TEMA">TEMA (Normas Fabricação de Trocadores Tubulares)</option>
+            <option value="API 520 / 526">API 520 / 526 (Válvulas de Alívio e Segurança - PSV)</option>
+            <option value="N/A - Manutenção Convencional">N/A - Manutenção Convencional</option>
+          </select>
+        </div>
+
+        <!-- Descrição / Detalhes Técnicos -->
+        <div>
+          <label class="form-label">Descrição Técnica / Observações Complementares</label>
+          <textarea id="config-tag-desc" rows="2" class="form-input text-xs leading-relaxed" placeholder="Ex: Equipamento sujeito a H2S, pressão de projeto 22 kgf/cm², requer ensaio não destrutivo por ultrassom..."></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+          <button type="button" onclick="ConfiguracoesView.closeTagModal()" class="btn-ghost-pill text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-sm">save</span>
+            <span>Salvar TAG</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE DISCIPLINA DE MANUTENÇÃO
+       ======================================================================== -->
+  <div id="config-discipline-modal" onclick="if(event.target === this) ConfiguracoesView.closeDisciplineModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">engineering</span>
+          </div>
+          <div>
+            <h3 id="config-discipline-modal-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Disciplina Técnica</h3>
+            <p class="text-[11px] text-[#707072]">Tipo de serviço e tarifa base estimada (R$/HH)</p>
+          </div>
+        </div>
+        <button type="button" onclick="ConfiguracoesView.closeDisciplineModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="config-discipline-edit-id" value="" />
+
+      <form onsubmit="event.preventDefault(); ConfiguracoesView.saveDisciplineModal();" class="space-y-3.5 text-xs">
+        <div>
+          <label class="form-label font-bold">Nome da Disciplina / Categoria *</label>
+          <input type="text" id="config-discipline-name" class="form-input font-bold" placeholder="Ex: Caldeiraria Pesada, Mecânica Estática, Instrumentação..." required />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="form-label font-bold">Tarifa Padrão (R$/HH) *</label>
+            <input type="number" id="config-discipline-rate" class="form-input font-mono font-bold" min="0" step="0.01" value="150.00" required />
+          </div>
+
+          <div>
+            <label class="form-label font-bold">Cor de Identificação Visual</label>
+            <div class="flex items-center gap-2 pt-0.5">
+              <input type="color" id="config-discipline-color" value="#111111" class="w-10 h-9 p-1 rounded-xl border border-[#e5e5e5] cursor-pointer" />
+              <span class="text-[11px] text-[#707072]">Usada em gráficos e histogramas</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Descrição Técnica do Escopo de Atuação</label>
+          <textarea id="config-discipline-desc" rows="2" class="form-input text-xs leading-relaxed" placeholder="Ex: Serviços de fabricação, montagem, soldagem, torqueamento e testes..."></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+          <button type="button" onclick="ConfiguracoesView.closeDisciplineModal()" class="btn-ghost-pill text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-sm">save</span>
+            <span>Salvar Disciplina</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -641,9 +1055,10 @@
 
           <div>
             <label class="form-label">Status da Mitigação</label>
-            <select id="form-mitigation-done" class="form-input font-medium">
-              <option value="false" selected>Pendente (Em Andamento)</option>
-              <option value="true">Concluída / Mitigada</option>
+            <select id="form-mitigation-status" class="form-input font-medium">
+              <option value="Pendente" selected>Pendente</option>
+              <option value="Concluída">Concluída</option>
+              <option value="Cancelada">Cancelada</option>
             </select>
           </div>
         </div>

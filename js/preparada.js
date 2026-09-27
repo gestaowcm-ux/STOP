@@ -330,8 +330,8 @@ const PreParadaView = {
           area: 'PCM / Planejamento',
           impactDescription: 'Indisponibilidade de apontamento de ordens de serviço e requisição de materiais no sistema durante a execução.',
           mitigationActions: [
-            { title: 'Criar contingência em planilha offline pré-carregada para apontamento de OSs', owner: 'Renata Lima', deadline: '2026-09-15', done: true },
-            { title: 'Manter almoxarifado em regime de requisição manual com dupla checagem', owner: 'Marcos Souza', deadline: '2026-09-20', done: false }
+            { title: 'Criar contingência em planilha offline pré-carregada para apontamento de OSs', owner: 'Renata Lima', deadline: '2026-09-15', status: 'Concluída', done: true },
+            { title: 'Manter almoxarifado em regime de requisição manual com dupla checagem', owner: 'Marcos Souza', deadline: '2026-09-20', status: 'Pendente', done: false }
           ]
         },
         {
@@ -344,7 +344,7 @@ const PreParadaView = {
           area: 'SMS / Segurança',
           impactDescription: 'Risco grave à integridade física de montadores e atraso de 48h na liberação de espaço confinado.',
           mitigationActions: [
-            { title: 'Plano de lavagem química contínua e ventilação forçada com exaustores de alta vazão', owner: 'Coordenação SMS', deadline: '2026-10-01', done: true }
+            { title: 'Plano de lavagem química contínua e ventilação forçada com exaustores de alta vazão', owner: 'Coordenação SMS', deadline: '2026-10-01', status: 'Concluída', done: true }
           ]
         },
         {
@@ -357,7 +357,7 @@ const PreParadaView = {
           area: 'Suprimentos & Compras',
           impactDescription: 'Paralisação do caminho crítico da torre no D+5.',
           mitigationActions: [
-            { title: 'Contratação de despachante expresso com acompanhamento diário no porto', owner: 'Renata Lima', deadline: '2026-08-30', done: true }
+            { title: 'Contratação de despachante expresso com acompanhamento diário no porto', owner: 'Renata Lima', deadline: '2026-08-30', status: 'Concluída', done: true }
           ]
         }
       ];
@@ -1123,22 +1123,22 @@ const PreParadaView = {
 
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         ${mActions.map(act => `
-                          <div class="p-3 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] hover:border-[#111111] transition-all flex flex-col justify-between space-y-2 text-xs">
-                            <div>
-                              <div class="flex items-center justify-between gap-1 mb-1">
-                                <span class="font-mono text-[10px] font-bold text-[#707072]">${act.id}</span>
-                                <span class="nike-pill text-[9px] py-0 bg-[#f0f0f0] font-semibold">${act.area}</span>
+                          <div class="p-3.5 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] hover:border-[#111111] transition-all flex flex-col justify-between space-y-2.5 text-xs min-w-0 shadow-sm">
+                            <div class="min-w-0">
+                              <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                                <span class="font-mono text-[10px] font-bold text-[#707072] shrink-0">${act.id}</span>
+                                <span class="nike-pill text-[9px] py-0.5 px-2 bg-[#f0f0f0] font-semibold text-right shrink-0">${act.area}</span>
                               </div>
-                              <h5 class="font-bold text-[#111111] leading-snug">${act.title}</h5>
+                              <h5 class="font-bold text-[#111111] leading-relaxed break-words whitespace-normal">${act.title}</h5>
                             </div>
 
-                            <div class="flex items-center justify-between border-t border-[#e5e5e5] pt-2 text-[11px]">
-                              <div>
-                                <span class="text-[#707072] block">Resp: <b class="text-[#111111]">${act.owner}</b></span>
-                                <span class="text-[10px] font-mono text-[#707072]">Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'} • ${act.estimatedHh || 0}h</span>
+                            <div class="flex items-center justify-between border-t border-[#e5e5e5] pt-2 text-[11px] gap-2">
+                              <div class="min-w-0 flex-1">
+                                <span class="text-[#707072] block truncate">Resp: <b class="text-[#111111]">${act.owner}</b></span>
+                                <span class="text-[10px] font-mono text-[#707072] block">Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'} • ${act.estimatedHh || 0}h</span>
                               </div>
                               
-                              <button onclick="PreParadaView.toggleTimelineActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer py-0.5 ${
+                              <button onclick="PreParadaView.toggleTimelineActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer py-0.5 shrink-0 ${
                                 act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
                                 act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
                                 act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
@@ -1610,15 +1610,15 @@ const PreParadaView = {
     const categories = parada.preParada.laborCategories || this.defaultLaborCategories;
     let services = [...(parada.preParada.servicesList || [])];
 
-    // Calcular Score de Risco (Probabilidade 1-10 x Severidade 1-10)
+    // 1. Calcular Score de Risco (Probabilidade 1-10 x Severidade 1-10)
     services.forEach(s => {
       s.riskScore = (s.prob || 5) * (s.sev || 5); // 1 a 100
     });
 
-    // Ordenação Decrescente por Score de Risco (Maior criticidade primeiro)
+    // 2. Ordenação Decrescente por Score de Risco (Maior criticidade primeiro)
     services.sort((a, b) => b.riskScore - a.riskScore);
 
-    // Calcular Acumuladores e determinar a Linha de Corte
+    // 3. Calcular Acumuladores e determinar a Linha de Corte
     let runningCost = 0;
     let runningHh = 0;
     let cutIndex = -1;
@@ -1630,7 +1630,7 @@ const PreParadaView = {
       s.costAfter = runningCost;
       s.hhAccum = runningHh;
 
-      // Se estourou o orçamento e ainda não marcou a linha de corte
+      // Primeiro ponto onde o acumulado estourou o orçamento cadastrado
       if (runningCost > rawBudget && cutIndex === -1) {
         cutIndex = idx;
       }
@@ -1818,7 +1818,7 @@ const PreParadaView = {
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left border-collapse">
+            <table class="w-full text-xs text-left border-collapse min-w-[1050px]">
               <thead class="bg-[#f5f5f5] text-[#707072] uppercase font-bold text-[10px] tracking-wider border-b border-[#e5e5e5]">
                 <tr>
                   <th class="p-3">Item / TAG</th>
@@ -1835,139 +1835,142 @@ const PreParadaView = {
                 </tr>
               </thead>
               <tbody class="divide-y divide-[#e5e5e5]">
-                ${filteredServices.map((s, idx) => {
-                  // No modo 'all' (sem filtros que quebrem a continuidade), renderizar o divisor da Linha de Corte
-                  const isFirstCut = (filterStatus === 'all' && filterCategory === 'all' && !filterSearch && !s.inScope && (idx === 0 || filteredServices[idx - 1].inScope));
-                  let cutDividerHtml = '';
+                ${(() => {
+                  let cutLineRendered = false;
+                  return filteredServices.map((s, idx) => {
+                    // Apenas renderizar a Linha de Corte UMA ÚNICA VEZ (no primeiro ponto onde o teto orçamentário foi atingido)
+                    let cutDividerHtml = '';
+                    if (!cutLineRendered && cutIndex !== -1 && idx >= cutIndex && filterStatus === 'all' && filterCategory === 'all' && !filterSearch) {
+                      cutLineRendered = true;
+                      cutDividerHtml = `
+                        <tr class="bg-red-600 text-white font-black select-none shadow-md">
+                          <td colspan="11" class="py-3.5 px-4 text-center text-xs tracking-wider uppercase">
+                            <div class="flex items-center justify-center gap-2">
+                              <span>LINHA DE CORTE ORÇAMENTÁRIA • TETO DE ${formattedBudget} ATINGIDO</span>
+                              <span class="text-[10px] font-normal opacity-90">(Os serviços abaixo têm menor prioridade e NÃO SEGUIRÃO para o planejamento)</span>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }
 
-                  if (isFirstCut) {
-                    cutDividerHtml = `
-                      <tr class="bg-red-600 text-white font-black select-none shadow-md">
-                        <td colspan="11" class="py-3.5 px-4 text-center text-xs tracking-wider uppercase">
-                          <div class="flex items-center justify-center gap-2">
-                            <span>LINHA DE CORTE ORÇAMENTÁRIA • TETO DE ${formattedBudget} ATINGIDO</span>
-                            <span class="text-[10px] font-normal opacity-90">(Os serviços abaixo têm menor prioridade e NÃO SEGUIRÃO para o planejamento)</span>
-                          </div>
-                        </td>
-                      </tr>
-                    `;
-                  }
-
-                  if (s.inScope) {
-                    // Item APROVADO para o Planejamento
-                    return `
-                      ${cutDividerHtml}
-                      <tr class="hover:bg-[#f9f9f9] transition-colors border-l-4 border-l-[#007d48]">
-                        <td class="p-3 font-mono">
-                          <span class="font-bold text-[#111111] block">${s.id}</span>
-                          <span class="text-[10px] text-[#707072] font-semibold">${s.tag}</span>
-                        </td>
-                        <td class="p-3 font-bold text-[#111111] max-w-xs leading-snug">
-                          ${s.description}
-                          ${s.override === 'include' ? `<span class="block text-[10px] text-[#007d48] font-bold mt-0.5">[Override] Incluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` : ''}
-                        </td>
-                        <td class="p-3">
-                          <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${s.category}</span>
-                        </td>
-                        <td class="p-3 text-center font-mono font-bold text-[#111111]">${s.hh}h</td>
-                        <td class="p-3 text-right font-mono font-bold text-[#111111]">${ProjectsView.formatCurrency(s.cost)}</td>
-                        <td class="p-3 text-center font-mono font-bold">${s.prob}</td>
-                        <td class="p-3 text-center font-mono font-bold text-[#d30005]">${s.sev}</td>
-                        <td class="p-3 text-center">
-                          <span class="nike-pill text-[10px] font-mono font-bold ${s.riskScore >= 60 ? 'bg-red-100 text-red-900 border-red-300' : (s.riskScore >= 30 ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-green-100 text-green-900 border-green-300')}">
-                            ${s.riskScore} pts
-                          </span>
-                        </td>
-                        <td class="p-3 text-right font-mono font-bold text-[#007d48]">
-                          ${ProjectsView.formatCurrency(s.costAfter)}
-                        </td>
-                        <td class="p-3 text-center">
-                          <span class="nike-pill text-[10px] font-bold bg-emerald-600 text-white border-transparent shadow-sm">
-                            APROVADO P/ ESCOPO
-                          </span>
-                        </td>
-                        <td class="p-3 text-center">
-                          <div class="flex items-center justify-center gap-1.5 min-h-[28px]">
-                            <button onclick="PreParadaView.openEditServiceModal('${parada.id}', '${s.id}')" title="Editar Demanda e Ajustar Escopo" class="btn-ghost-pill text-xs py-1 px-2.5 text-[#111111] hover:bg-[#111111] hover:text-white font-bold flex items-center gap-1">
-                              <span class="material-symbols-outlined text-xs">edit</span>
-                              <span>Ajustar</span>
-                            </button>
-                            <div id="srv-actions-${s.id}" class="inline-flex items-center">
-                              <button onclick="PreParadaView.askDeleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#d30005]">
-                                Excluir
+                    if (s.inScope) {
+                      // Item APROVADO para o Planejamento
+                      return `
+                        ${cutDividerHtml}
+                        <tr class="hover:bg-[#f9f9f9] transition-colors border-l-4 border-l-[#007d48]">
+                          <td class="p-3 font-mono whitespace-nowrap">
+                            <span class="font-bold text-[#111111] block">${s.id}</span>
+                            <span class="text-[10px] text-[#707072] font-semibold">${s.tag}</span>
+                          </td>
+                          <td class="p-3 font-bold text-[#111111] max-w-xs leading-snug">
+                            ${s.description}
+                            ${s.override === 'include' ? `<span class="block text-[10px] text-[#007d48] font-bold mt-0.5">[Override] Incluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` : ''}
+                          </td>
+                          <td class="p-3 whitespace-nowrap">
+                            <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${s.category}</span>
+                          </td>
+                          <td class="p-3 text-center font-mono font-bold text-[#111111] whitespace-nowrap">${s.hh}h</td>
+                          <td class="p-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">${ProjectsView.formatCurrency(s.cost)}</td>
+                          <td class="p-3 text-center font-mono font-bold whitespace-nowrap">${s.prob}</td>
+                          <td class="p-3 text-center font-mono font-bold text-[#d30005] whitespace-nowrap">${s.sev}</td>
+                          <td class="p-3 text-center whitespace-nowrap">
+                            <span class="nike-pill text-[10px] font-mono font-bold ${s.riskScore >= 60 ? 'bg-red-100 text-red-900 border-red-300' : (s.riskScore >= 30 ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-green-100 text-green-900 border-green-300')}">
+                              ${s.riskScore} pts
+                            </span>
+                          </td>
+                          <td class="p-3 text-right font-mono font-bold text-[#007d48] whitespace-nowrap">
+                            ${ProjectsView.formatCurrency(s.costAfter)}
+                          </td>
+                          <td class="p-3 text-center whitespace-nowrap">
+                            <span class="nike-pill text-[10px] font-bold bg-emerald-600 text-white border-transparent shadow-sm">
+                              APROVADO P/ ESCOPO
+                            </span>
+                          </td>
+                          <td class="p-3 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center gap-1.5 min-h-[28px]">
+                              <button onclick="PreParadaView.openEditServiceModal('${parada.id}', '${s.id}')" title="Editar Demanda e Ajustar Escopo" class="btn-ghost-pill text-xs py-1 px-2.5 text-[#111111] hover:bg-[#111111] hover:text-white font-bold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">edit</span>
+                                <span>Ajustar</span>
                               </button>
+                              <div id="srv-actions-${s.id}" class="inline-flex items-center">
+                                <button onclick="PreParadaView.askDeleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#d30005]">
+                                  Excluir
+                                </button>
+                              </div>
+                              <div id="srv-confirm-${s.id}" class="hidden inline-confirm-box animate-fade-in">
+                                <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                                <button onclick="PreParadaView.confirmDeleteService('${parada.id}', '${s.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                                <button onclick="PreParadaView.cancelDeleteService('${s.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                              </div>
                             </div>
-                            <div id="srv-confirm-${s.id}" class="hidden inline-confirm-box animate-fade-in">
-                              <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
-                              <button onclick="PreParadaView.confirmDeleteService('${parada.id}', '${s.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
-                              <button onclick="PreParadaView.cancelDeleteService('${s.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                          </td>
+                        </tr>
+                      `;
+                    } else {
+                      // Item CORTADO DO ESCOPO (Destaque em Vermelho com avisos explícitos)
+                      const overAmount = s.costAfter - rawBudget;
+                      return `
+                        ${cutDividerHtml}
+                        <tr class="bg-red-50/80 hover:bg-red-100/90 text-red-950 transition-colors border-l-4 border-l-red-600">
+                          <td class="p-3 font-mono whitespace-nowrap">
+                            <span class="font-bold text-[#d30005] block">${s.id}</span>
+                            <span class="text-[10px] text-red-700 font-bold bg-red-100 px-1.5 py-0.5 rounded">${s.tag}</span>
+                          </td>
+                          <td class="p-3 font-bold text-red-950 max-w-xs leading-snug">
+                            <div class="text-red-700 text-[10px] uppercase font-black tracking-wider mb-0.5">
+                              <span>NÃO SEGUIRÁ PARA O PLANEJAMENTO</span>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    `;
-                  } else {
-                    // Item CORTADO DO ESCOPO (Destaque em Vermelho com avisos explícitos)
-                    const overAmount = s.costAfter - rawBudget;
-                    return `
-                      ${cutDividerHtml}
-                      <tr class="bg-red-50/80 hover:bg-red-100/90 text-red-950 transition-colors border-l-4 border-l-red-600">
-                        <td class="p-3 font-mono">
-                          <span class="font-bold text-[#d30005] block">${s.id}</span>
-                          <span class="text-[10px] text-red-700 font-bold bg-red-100 px-1.5 py-0.5 rounded">${s.tag}</span>
-                        </td>
-                        <td class="p-3 font-bold text-red-950 max-w-xs leading-snug">
-                          <div class="text-red-700 text-[10px] uppercase font-black tracking-wider mb-0.5">
-                            <span>NÃO SEGUIRÁ PARA O PLANEJAMENTO</span>
-                          </div>
-                          <span class="line-through opacity-80">${s.description}</span>
-                          <div class="text-[10px] text-[#d30005] font-semibold mt-1">
-                            Motivo: Score insuficiente (${s.riskScore} pts) • Estouro acumulado de +${ProjectsView.formatCurrency(overAmount)}
-                            ${s.override === 'exclude' ? `<span class="block text-red-800 font-bold">[Override] Excluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` : ''}
-                          </div>
-                        </td>
-                        <td class="p-3">
-                          <span class="nike-pill text-[10px] bg-red-100 text-red-900 border-red-200 font-semibold">${s.category}</span>
-                        </td>
-                        <td class="p-3 text-center font-mono font-bold text-red-800">${s.hh}h</td>
-                        <td class="p-3 text-right font-mono font-bold text-[#d30005]">${ProjectsView.formatCurrency(s.cost)}</td>
-                        <td class="p-3 text-center font-mono font-bold text-red-800">${s.prob}</td>
-                        <td class="p-3 text-center font-mono font-bold text-[#d30005]">${s.sev}</td>
-                        <td class="p-3 text-center">
-                          <span class="nike-pill text-[10px] font-mono font-bold bg-red-200 text-red-900 border-red-300">
-                            ${s.riskScore} pts
-                          </span>
-                        </td>
-                        <td class="p-3 text-right font-mono font-bold text-[#d30005]">
-                          ${ProjectsView.formatCurrency(s.costAfter)}
-                        </td>
-                        <td class="p-3 text-center">
-                          <span class="nike-pill text-[10px] font-black bg-red-600 text-white border-transparent shadow-sm">
-                            CORTADO DO ESCOPO
-                          </span>
-                        </td>
-                        <td class="p-3 text-center">
-                          <div class="flex items-center justify-center gap-1.5 min-h-[28px]">
-                            <button onclick="PreParadaView.openEditServiceModal('${parada.id}', '${s.id}')" title="Editar Demanda e Ajustar Escopo" class="btn-ghost-pill text-xs py-1 px-2.5 text-red-800 bg-red-100 hover:bg-black hover:text-white border-red-200 font-bold flex items-center gap-1">
-                              <span class="material-symbols-outlined text-xs">edit</span>
-                              <span>Ajustar</span>
-                            </button>
-                            <div id="srv-actions-${s.id}" class="inline-flex items-center">
-                              <button onclick="PreParadaView.askDeleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-[#d30005] hover:text-white border-red-200">
-                                Excluir
+                            <span class="line-through opacity-80">${s.description}</span>
+                            <div class="text-[10px] text-[#d30005] font-semibold mt-1">
+                              ${s.override === 'exclude' 
+                                ? `<span class="block text-red-800 font-bold">[Override] Excluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` 
+                                : `Motivo: Score insuficiente (${s.riskScore} pts) • Estouro acumulado de +${ProjectsView.formatCurrency(Math.max(s.cost, overAmount))}`}
+                            </div>
+                          </td>
+                          <td class="p-3 whitespace-nowrap">
+                            <span class="nike-pill text-[10px] bg-red-100 text-red-900 border-red-200 font-semibold">${s.category}</span>
+                          </td>
+                          <td class="p-3 text-center font-mono font-bold text-red-800 whitespace-nowrap">${s.hh}h</td>
+                          <td class="p-3 text-right font-mono font-bold text-[#d30005] whitespace-nowrap">${ProjectsView.formatCurrency(s.cost)}</td>
+                          <td class="p-3 text-center font-mono font-bold text-red-800 whitespace-nowrap">${s.prob}</td>
+                          <td class="p-3 text-center font-mono font-bold text-[#d30005] whitespace-nowrap">${s.sev}</td>
+                          <td class="p-3 text-center whitespace-nowrap">
+                            <span class="nike-pill text-[10px] font-mono font-bold bg-red-200 text-red-900 border-red-300">
+                              ${s.riskScore} pts
+                            </span>
+                          </td>
+                          <td class="p-3 text-right font-mono font-bold text-[#d30005] whitespace-nowrap">
+                            ${ProjectsView.formatCurrency(s.costAfter)}
+                          </td>
+                          <td class="p-3 text-center whitespace-nowrap">
+                            <span class="nike-pill text-[10px] font-black bg-red-600 text-white border-transparent shadow-sm">
+                              CORTADO DO ESCOPO
+                            </span>
+                          </td>
+                          <td class="p-3 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center gap-1.5 min-h-[28px]">
+                              <button onclick="PreParadaView.openEditServiceModal('${parada.id}', '${s.id}')" title="Editar Demanda e Ajustar Escopo" class="btn-ghost-pill text-xs py-1 px-2.5 text-red-800 bg-red-100 hover:bg-black hover:text-white border-red-200 font-bold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">edit</span>
+                                <span>Ajustar</span>
                               </button>
+                              <div id="srv-actions-${s.id}" class="inline-flex items-center">
+                                <button onclick="PreParadaView.askDeleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-[#d30005] hover:text-white border-red-200">
+                                  Excluir
+                                </button>
+                              </div>
+                              <div id="srv-confirm-${s.id}" class="hidden inline-confirm-box animate-fade-in">
+                                <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                                <button onclick="PreParadaView.confirmDeleteService('${parada.id}', '${s.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                                <button onclick="PreParadaView.cancelDeleteService('${s.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                              </div>
                             </div>
-                            <div id="srv-confirm-${s.id}" class="hidden inline-confirm-box animate-fade-in">
-                              <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
-                              <button onclick="PreParadaView.confirmDeleteService('${parada.id}', '${s.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
-                              <button onclick="PreParadaView.cancelDeleteService('${s.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    `;
-                  }
-                }).join('')}
+                          </td>
+                        </tr>
+                      `;
+                    }
+                  }).join('');
+                })()}
                 ${filteredServices.length === 0 ? `
                   <tr>
                     <td colspan="11" class="p-8 text-center text-[#707072]">
@@ -2646,37 +2649,61 @@ const PreParadaView = {
                       </div>
 
                       <div class="space-y-1.5">
-                        ${(r.mitigationActions || []).map((act, idx) => `
-                          <div class="flex items-center justify-between gap-2 p-2 bg-[#ffffff] rounded-xl border border-[#e5e5e5] hover:border-[#111111] transition-all text-xs group">
-                            <div class="flex items-center gap-2 min-w-0 pr-2">
-                              <button onclick="PreParadaView.toggleMitigationDone('${parada.id}', '${r.id}', ${idx})" title="Clique para alternar status da mitigação" class="shrink-0">
-                                <span class="material-symbols-outlined text-base ${act.done ? 'text-[#007d48]' : 'text-amber-600'}">${act.done ? 'check_circle' : 'pending'}</span>
-                              </button>
-                              <div class="min-w-0">
-                                <span class="${act.done ? 'line-through text-[#707072]' : 'font-bold text-[#111111]'} block leading-tight truncate">${act.title}</span>
-                                <span class="text-[10px] text-[#707072] block leading-tight font-mono">
-                                  ${act.area ? `<span class="font-semibold text-zinc-600">${act.area}</span> • ` : ''}Resp: <b class="text-[#111111]">${act.owner || 'Designado'}</b> • Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <div class="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100">
-                              <button onclick="PreParadaView.openAddMitigationModal('${parada.id}', '${r.id}', ${idx})" title="Editar Ação Mitigadora" class="p-1 rounded hover:bg-[#f0f0f0] text-[#707072] hover:text-[#111111]">
-                                <span class="material-symbols-outlined text-xs">edit</span>
-                              </button>
-                              <div id="mitig-actions-${r.id}-${idx}" class="inline-flex items-center">
-                                <button onclick="PreParadaView.askDeleteMitigationAction('${r.id}', ${idx})" title="Remover Ação" class="p-1 rounded hover:bg-[#f0f0f0] text-[#707072] hover:text-[#d30005]">
-                                  <span class="material-symbols-outlined text-xs">delete</span>
+                        ${(r.mitigationActions || []).map((act, idx) => {
+                          const status = act.status || (act.done ? 'Concluída' : 'Pendente');
+                          
+                          let iconName = 'schedule';
+                          let iconColor = 'text-amber-600 hover:text-amber-700';
+                          let badgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
+                          let titleClass = 'font-bold text-[#111111]';
+                          
+                          if (status === 'Concluída') {
+                            iconName = 'check_circle';
+                            iconColor = 'text-[#007d48] hover:text-[#005f36]';
+                            badgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
+                            titleClass = 'line-through text-[#707072]';
+                          } else if (status === 'Cancelada') {
+                            iconName = 'cancel';
+                            iconColor = 'text-rose-600 hover:text-rose-800';
+                            badgeClass = 'bg-zinc-200 text-zinc-700 border-zinc-300';
+                            titleClass = 'line-through text-[#8e8e93] italic';
+                          }
+
+                          return `
+                            <div class="flex items-center justify-between gap-2 p-2 bg-[#ffffff] rounded-xl border border-[#e5e5e5] hover:border-[#111111] transition-all text-xs group">
+                              <div class="flex items-center gap-2 min-w-0 pr-2">
+                                <button onclick="PreParadaView.toggleMitigationStatus('${parada.id}', '${r.id}', ${idx})" title="Clique para alternar status (Pendente > Concluída > Cancelada)" class="shrink-0 transition-transform active:scale-90">
+                                  <span class="material-symbols-outlined text-base ${iconColor}">${iconName}</span>
                                 </button>
+                                <div class="min-w-0">
+                                  <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="${titleClass} block leading-tight truncate">${act.title}</span>
+                                    <span class="nike-pill text-[9px] py-0.5 px-2 border font-bold ${badgeClass}">${status}</span>
+                                  </div>
+                                  <span class="text-[10px] text-[#707072] block leading-tight font-mono mt-0.5">
+                                    ${act.area ? `<span class="font-semibold text-zinc-600">${act.area}</span> • ` : ''}Resp: <b class="text-[#111111]">${act.owner || 'Designado'}</b> • Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}
+                                  </span>
+                                </div>
                               </div>
-                              <div id="mitig-confirm-${r.id}-${idx}" class="hidden inline-confirm-box animate-fade-in">
-                                <span class="text-[#707072] text-[9px] font-bold">Excluir?</span>
-                                <button onclick="PreParadaView.confirmDeleteMitigationAction('${parada.id}', '${r.id}', ${idx})" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
-                                <button onclick="PreParadaView.cancelDeleteMitigationAction('${r.id}', ${idx})" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                              
+                              <div class="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100">
+                                <button onclick="PreParadaView.openAddMitigationModal('${parada.id}', '${r.id}', ${idx})" title="Editar Ação Mitigadora" class="p-1 rounded hover:bg-[#f0f0f0] text-[#707072] hover:text-[#111111]">
+                                  <span class="material-symbols-outlined text-xs">edit</span>
+                                </button>
+                                <div id="mitig-actions-${r.id}-${idx}" class="inline-flex items-center">
+                                  <button onclick="PreParadaView.askDeleteMitigationAction('${r.id}', ${idx})" title="Remover Ação" class="p-1 rounded hover:bg-[#f0f0f0] text-[#707072] hover:text-[#d30005]">
+                                    <span class="material-symbols-outlined text-xs">delete</span>
+                                  </button>
+                                </div>
+                                <div id="mitig-confirm-${r.id}-${idx}" class="hidden inline-confirm-box animate-fade-in">
+                                  <span class="text-[#707072] text-[9px] font-bold">Excluir?</span>
+                                  <button onclick="PreParadaView.confirmDeleteMitigationAction('${parada.id}', '${r.id}', ${idx})" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                                  <button onclick="PreParadaView.cancelDeleteMitigationAction('${r.id}', ${idx})" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        `).join('')}
+                          `;
+                        }).join('')}
                         ${(!r.mitigationActions || r.mitigationActions.length === 0) ? `
                           <div class="p-3 bg-white rounded-xl border border-dashed border-[#d1d5db] text-center text-xs text-[#707072]">
                             <span>Nenhuma ação mitigadora cadastrada ainda.</span>
@@ -2871,7 +2898,7 @@ const PreParadaView = {
     const areaSelect = document.getElementById('form-mitigation-area');
     const ownerSelect = document.getElementById('form-mitigation-owner');
     const deadlineInput = document.getElementById('form-mitigation-deadline');
-    const doneSelect = document.getElementById('form-mitigation-done');
+    const statusSelect = document.getElementById('form-mitigation-status') || document.getElementById('form-mitigation-done');
 
     paradaIdInput.value = paradaId;
     riskIdInput.value = riskId;
@@ -2890,7 +2917,9 @@ const PreParadaView = {
       titleInput.value = act.title || '';
       areaSelect.value = act.area || defaultArea;
       deadlineInput.value = act.deadline || new Date().toISOString().split('T')[0];
-      doneSelect.value = act.done ? 'true' : 'false';
+      
+      const actStatus = act.status || (act.done ? 'Concluída' : 'Pendente');
+      if (statusSelect) statusSelect.value = actStatus;
 
       this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, act.owner);
     } else {
@@ -2899,7 +2928,7 @@ const PreParadaView = {
       titleInput.value = '';
       areaSelect.value = defaultArea;
       deadlineInput.value = new Date().toISOString().split('T')[0];
-      doneSelect.value = 'false';
+      if (statusSelect) statusSelect.value = 'Pendente';
 
       this.populateCollaboratorsSelect(ownerSelect, defaultArea, '');
     }
@@ -2928,7 +2957,9 @@ const PreParadaView = {
     const area = document.getElementById('form-mitigation-area').value;
     const owner = document.getElementById('form-mitigation-owner').value;
     const deadline = document.getElementById('form-mitigation-deadline').value;
-    const done = document.getElementById('form-mitigation-done').value === 'true';
+    const statusSelect = document.getElementById('form-mitigation-status') || document.getElementById('form-mitigation-done');
+    const status = statusSelect ? statusSelect.value : 'Pendente';
+    const done = status === 'Concluída';
 
     if (!title) {
       alert('Por favor, descreva a ação mitigadora.');
@@ -2948,6 +2979,7 @@ const PreParadaView = {
         rsk.mitigationActions[idx].area = area;
         rsk.mitigationActions[idx].owner = owner;
         rsk.mitigationActions[idx].deadline = deadline;
+        rsk.mitigationActions[idx].status = status;
         rsk.mitigationActions[idx].done = done;
         ProjectsView.updateParada(parada);
         App.showToast('Ação mitigadora atualizada!', 'success');
@@ -2958,6 +2990,7 @@ const PreParadaView = {
         area: area,
         owner: owner,
         deadline: deadline,
+        status: status,
         done: done
       });
       ProjectsView.updateParada(parada);
@@ -2968,16 +3001,27 @@ const PreParadaView = {
     App.renderCurrentView();
   },
 
-  toggleMitigationDone(paradaId, riskId, idx) {
+  toggleMitigationStatus(paradaId, riskId, idx) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
     const rsk = (parada.preParada.risks10x10 || []).find(r => r.id === riskId);
     if (!rsk || !rsk.mitigationActions || !rsk.mitigationActions[idx]) return;
 
-    rsk.mitigationActions[idx].done = !rsk.mitigationActions[idx].done;
+    const currentStatus = rsk.mitigationActions[idx].status || (rsk.mitigationActions[idx].done ? 'Concluída' : 'Pendente');
+    let nextStatus = 'Pendente';
+    if (currentStatus === 'Pendente') nextStatus = 'Concluída';
+    else if (currentStatus === 'Concluída') nextStatus = 'Cancelada';
+    else if (currentStatus === 'Cancelada') nextStatus = 'Pendente';
+
+    rsk.mitigationActions[idx].status = nextStatus;
+    rsk.mitigationActions[idx].done = (nextStatus === 'Concluída');
     ProjectsView.updateParada(parada);
-    App.showToast(`Status da mitigação alterado para: ${rsk.mitigationActions[idx].done ? 'Concluída' : 'Pendente'}`, 'info');
+    App.showToast(`Status da mitigação alterado para: ${nextStatus}`, 'info');
     App.renderCurrentView();
+  },
+
+  toggleMitigationDone(paradaId, riskId, idx) {
+    this.toggleMitigationStatus(paradaId, riskId, idx);
   },
 
   askDeleteMitigationAction(riskId, idx) {
