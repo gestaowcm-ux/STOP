@@ -107,8 +107,7 @@ const App = {
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#e5e5e5]">
           <div class="flex items-center gap-2 text-xs">
             <button onclick="App.switchToPortfolio()" class="font-bold text-[#707072] hover:text-[#111111] flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">arrow_back</span>
-              <span>Portfólio de Paradas</span>
+              <span>← Portfólio de Paradas</span>
             </button>
             <span class="text-[#cacacb]">/</span>
             <span class="font-mono font-bold text-[#111111]">${parada.code}</span>
@@ -118,7 +117,6 @@ const App = {
 
           <div class="flex items-center gap-2">
             <button onclick="ProjectsView.openCreateModal('${parada.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
-              <span class="material-symbols-outlined text-sm">edit</span>
               <span>Editar Dados</span>
             </button>
           </div>
@@ -211,14 +209,14 @@ const App = {
         <div class="space-y-1">
           <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#707072] sidebar-text">Navegação Principal</div>
           
-          <a href="#portfolio" onclick="App.switchToPortfolio()" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'portfolio' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
-            <span class="material-symbols-outlined text-lg">grid_view</span>
+          <a href="#portfolio" onclick="App.switchToPortfolio()" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.currentView === 'portfolio' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
             <span class="sidebar-text">Portfólio de Paradas</span>
+            <span class="w-1.5 h-1.5 rounded-full ${this.currentView === 'portfolio' ? 'bg-white' : 'bg-transparent'}"></span>
           </a>
 
-          <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'configuracoes' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
-            <span class="material-symbols-outlined text-lg">settings_suggest</span>
+          <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.currentView === 'configuracoes' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
             <span class="sidebar-text">Cadastros & Configurações</span>
+            <span class="w-1.5 h-1.5 rounded-full ${this.currentView === 'configuracoes' ? 'bg-white' : 'bg-transparent'}"></span>
           </a>
         </div>
       `;
@@ -231,8 +229,7 @@ const App = {
           
           <!-- Botão Voltar ao Portfólio -->
           <button onclick="App.switchToPortfolio()" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#707072] hover:text-[#111111] hover:bg-[#f5f5f5] transition-all">
-            <span class="material-symbols-outlined text-base">arrow_back</span>
-            <span class="sidebar-text">Voltar ao Portfólio</span>
+            <span class="sidebar-text">← Voltar ao Portfólio</span>
           </button>
 
           <!-- Card da Parada Ativa na Sidebar -->
@@ -247,26 +244,17 @@ const App = {
             <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#707072] sidebar-text">Fases da Parada</div>
 
             <a href="javascript:void(0)" onclick="App.switchPhase(1)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 1 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
-              <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-base">event_note</span>
-                <span class="sidebar-text">1. Pré-Parada</span>
-              </div>
+              <span class="sidebar-text font-bold">1. Pré-Parada</span>
               <span class="w-2 h-2 rounded-full ${parada.gates.gate1.approved ? 'bg-emerald-500' : 'bg-gray-300'}"></span>
             </a>
 
             <a href="javascript:void(0)" onclick="App.switchPhase(2)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 2 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
-              <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-base">precision_manufacturing</span>
-                <span class="sidebar-text">2. Parada (Execução)</span>
-              </div>
+              <span class="sidebar-text font-bold">2. Parada (Execução)</span>
               <span class="w-2 h-2 rounded-full ${parada.gates.gate2.approved ? 'bg-emerald-500' : (parada.gates.gate1.approved ? 'bg-red-500 animate-ping' : 'bg-gray-300')}"></span>
             </a>
 
             <a href="javascript:void(0)" onclick="App.switchPhase(3)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 3 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
-              <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-base">task_alt</span>
-                <span class="sidebar-text">3. Pós-Parada</span>
-              </div>
+              <span class="sidebar-text font-bold">3. Pós-Parada</span>
               <span class="w-2 h-2 rounded-full ${parada.gates.gate3.approved ? 'bg-emerald-500' : (parada.gates.gate2.approved ? 'bg-amber-500' : 'bg-gray-300')}"></span>
             </a>
           </div>
@@ -351,18 +339,16 @@ const App = {
             ${users.map(u => `
               <button onclick="UsersManager.setCurrentUser('${u.id}')" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#f5f5f5] flex items-center justify-between text-xs ${u.id === currentUser.id ? 'font-bold bg-[#f5f5f5] text-[#111111]' : 'text-[#4b4b4d]'}">
                 <span class="truncate">${u.name} (${u.role})</span>
-                ${u.id === currentUser.id ? '<span class="material-symbols-outlined text-sm text-[#007d48]">check</span>' : ''}
+                ${u.id === currentUser.id ? '<span class="text-[10px] font-bold text-[#007d48]">Ativo</span>' : ''}
               </button>
             `).join('')}
           </div>
 
           <div class="border-t border-[#e5e5e5] pt-2 space-y-1">
-            <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-[#f5f5f5] text-[#4b4b4d] hover:text-[#111111]">
-              <span class="material-symbols-outlined text-sm">manage_accounts</span>
+            <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-[#f5f5f5] text-[#4b4b4d] hover:text-[#111111] font-semibold">
               <span>Gerenciar Perfis</span>
             </a>
-            <a href="#portfolio" onclick="App.switchToPortfolio()" class="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-[#f5f5f5] text-[#4b4b4d] hover:text-[#111111]">
-              <span class="material-symbols-outlined text-sm">grid_view</span>
+            <a href="#portfolio" onclick="App.switchToPortfolio()" class="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-[#f5f5f5] text-[#4b4b4d] hover:text-[#111111] font-semibold">
               <span>Portfólio de Paradas</span>
             </a>
           </div>
@@ -386,7 +372,6 @@ const App = {
   toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const wrapper = document.getElementById('main-wrapper');
-    const icon = document.getElementById('sidebar-toggle-icon');
 
     this.sidebarCollapsed = !this.sidebarCollapsed;
 
@@ -394,11 +379,9 @@ const App = {
       if (this.sidebarCollapsed) {
         sidebar.classList.add('collapsed');
         wrapper.classList.add('sidebar-collapsed');
-        if (icon) icon.innerText = 'menu';
       } else {
         sidebar.classList.remove('collapsed');
         wrapper.classList.remove('sidebar-collapsed');
-        if (icon) icon.innerText = 'menu_open';
       }
     }
   },
@@ -449,9 +432,8 @@ const App = {
       'bg-[#111111] text-white border-zinc-700'
     }`;
 
-    const iconName = type === 'success' ? 'check_circle' : (type === 'error' ? 'error' : 'info');
     toast.innerHTML = `
-      <span class="material-symbols-outlined text-base">${iconName}</span>
+      <span class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-[#007d48]' : (type === 'error' ? 'bg-red-300' : 'bg-blue-400')} shrink-0"></span>
       <span class="leading-snug">${message}</span>
     `;
 

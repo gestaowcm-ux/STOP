@@ -69,6 +69,18 @@ const ProjectsView = {
         activeTab: 'escopo',
         scopeFrozen: false,
         scopeFreezeDate: '2026-09-30',
+        servicesList: [
+          { id: 'SRV-01', tag: 'T-2101', description: 'Troca de 28 bandejas de fracionamento e recuperação de anéis', category: 'Caldeiraria', cost: 1850000, hh: 980, prob: 9, sev: 10, override: null, overrideReason: '' },
+          { id: 'SRV-02', tag: 'P-2104A/B', description: 'Revisão completa das bombas de fundo de torre e troca de selos', category: 'Mecânica', cost: 420000, hh: 320, prob: 8, sev: 9, override: null, overrideReason: '' },
+          { id: 'SRV-03', tag: 'PSV-2101..42', description: 'Retirada, recalibração em bancada e certificação NR-13 de 42 PSVs', category: 'Instrumentação', cost: 310000, hh: 240, prob: 10, sev: 8, override: null, overrideReason: '' },
+          { id: 'SRV-04', tag: 'E-2102', description: 'Extração de feixe tubular, hidrojateamento 1000 bar e teste hidrostático', category: 'Tubulação', cost: 280000, hh: 190, prob: 7, sev: 8, override: null, overrideReason: '' },
+          { id: 'SRV-05', tag: 'MCC-210', description: 'Manutenção preventiva em barramentos e disjuntores de 4.16 kV', category: 'Elétrica', cost: 195000, hh: 150, prob: 6, sev: 8, override: null, overrideReason: '' },
+          { id: 'SRV-06', tag: 'PLC-210', description: 'Upgrade de firmware e testes de malha nos controladores de segurança ESD', category: 'Automação', cost: 160000, hh: 110, prob: 5, sev: 8, override: null, overrideReason: '' },
+          { id: 'SRV-07', tag: 'B-2101', description: 'Inspeção não destrutiva por ultrassom phased array no costado do vaso', category: 'Inspeção END', cost: 95000, hh: 80, prob: 6, sev: 6, override: null, overrideReason: '' },
+          { id: 'SRV-08', tag: 'STR-210', description: 'Reparo civil em bases de concreto e dique de contenção', category: 'Civil', cost: 120000, hh: 140, prob: 4, sev: 5, override: null, overrideReason: '' },
+          { id: 'SRV-09', tag: 'ISO-210', description: 'Renovação de isolamento térmico em lã de rocha e chapa de alumínio', category: 'Isolamento Térmico', cost: 210000, hh: 190, prob: 3, sev: 5, override: null, overrideReason: '' },
+          { id: 'SRV-10', tag: 'PNT-210', description: 'Pintura externa e proteção anticorrosiva de tubulações aéreas', category: 'Pintura Industrial', cost: 350000, hh: 300, prob: 2, sev: 4, override: null, overrideReason: '' }
+        ],
         items: [
           { id: 'SCP-101', tag: 'T-2101', discipline: 'Caldeiraria', description: 'Abertura de bocas de visita e troca de 28 bandejas de fracionamento', criticality: 'A (Crítico)', cost: 1850000, frozen: true, status: 'Aprovado' },
           { id: 'SCP-102', tag: 'P-2104A/B', discipline: 'Mecânica', description: 'Revisão completa das bombas de fundo com troca de selos mecânicos e rolamentos', criticality: 'A (Crítico)', cost: 420000, frozen: true, status: 'Aprovado' },

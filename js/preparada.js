@@ -33,6 +33,27 @@ const PreParadaView = {
     'Tubulação'
   ],
 
+  // 10 Demandas Industriais Padrão
+  defaultServicesList: [
+    { id: 'SRV-01', tag: 'T-2101', description: 'Troca de 28 bandejas de fracionamento e recuperação de anéis', category: 'Caldeiraria', cost: 1850000, hh: 980, prob: 9, sev: 10, override: null, overrideReason: '' },
+    { id: 'SRV-02', tag: 'P-2104A/B', description: 'Revisão completa das bombas de fundo de torre e troca de selos', category: 'Mecânica', cost: 420000, hh: 320, prob: 8, sev: 9, override: null, overrideReason: '' },
+    { id: 'SRV-03', tag: 'PSV-2101..42', description: 'Retirada, recalibração em bancada e certificação NR-13 de 42 PSVs', category: 'Instrumentação', cost: 310000, hh: 240, prob: 10, sev: 8, override: null, overrideReason: '' },
+    { id: 'SRV-04', tag: 'E-2102', description: 'Extração de feixe tubular, hidrojateamento 1000 bar e teste hidrostático', category: 'Tubulação', cost: 280000, hh: 190, prob: 7, sev: 8, override: null, overrideReason: '' },
+    { id: 'SRV-05', tag: 'MCC-210', description: 'Manutenção preventiva em barramentos e disjuntores de 4.16 kV', category: 'Elétrica', cost: 195000, hh: 150, prob: 6, sev: 8, override: null, overrideReason: '' },
+    { id: 'SRV-06', tag: 'PLC-210', description: 'Upgrade de firmware e testes de malha nos controladores de segurança ESD', category: 'Automação', cost: 160000, hh: 110, prob: 5, sev: 8, override: null, overrideReason: '' },
+    { id: 'SRV-07', tag: 'B-2101', description: 'Inspeção não destrutiva por ultrassom phased array no costado do vaso', category: 'Inspeção END', cost: 95000, hh: 80, prob: 6, sev: 6, override: null, overrideReason: '' },
+    { id: 'SRV-08', tag: 'STR-210', description: 'Reparo civil em bases de concreto e dique de contenção', category: 'Civil', cost: 120000, hh: 140, prob: 4, sev: 5, override: null, overrideReason: '' },
+    { id: 'SRV-09', tag: 'ISO-210', description: 'Renovação de isolamento térmico em lã de rocha e chapa de alumínio', category: 'Isolamento Térmico', cost: 210000, hh: 190, prob: 3, sev: 5, override: null, overrideReason: '' },
+    { id: 'SRV-10', tag: 'PNT-210', description: 'Pintura externa e proteção anticorrosiva de tubulações aéreas', category: 'Pintura Industrial', cost: 350000, hh: 300, prob: 2, sev: 4, override: null, overrideReason: '' }
+  ],
+
+  // Estado dos Filtros do Escopo
+  escopoFilterState: {
+    status: 'all', // 'all', 'approved', 'cut'
+    category: 'all',
+    search: ''
+  },
+
   // Áreas de suporte envolvidas na Pré-Parada
   supportAreas: [
     'SMS / Segurança',
@@ -192,19 +213,19 @@ const PreParadaView = {
       ];
     }
 
-    if (!parada.preParada.servicesList) {
-      parada.preParada.servicesList = [
-        { id: 'SRV-01', tag: 'T-2101', description: 'Troca de 28 bandejas de fracionamento e recuperação de anéis', category: 'Caldeiraria', cost: 1850000, hh: 980, prob: 9, sev: 10, override: null, overrideReason: '' },
-        { id: 'SRV-02', tag: 'P-2104A/B', description: 'Revisão completa das bombas de fundo de torre e troca de selos', category: 'Mecânica', cost: 420000, hh: 320, prob: 8, sev: 9, override: null, overrideReason: '' },
-        { id: 'SRV-03', tag: 'PSV-2101..42', description: 'Retirada, recalibração em bancada e certificação NR-13 de 42 PSVs', category: 'Instrumentação', cost: 310000, hh: 240, prob: 10, sev: 8, override: null, overrideReason: '' },
-        { id: 'SRV-04', tag: 'E-2102', description: 'Extração de feixe tubular, hidrojateamento 1000 bar e teste hidrostático', category: 'Tubulação', cost: 280000, hh: 190, prob: 7, sev: 8, override: null, overrideReason: '' },
-        { id: 'SRV-05', tag: 'MCC-210', description: 'Manutenção preventiva em barramentos e disjuntores de 4.16 kV', category: 'Elétrica', cost: 195000, hh: 150, prob: 6, sev: 8, override: null, overrideReason: '' },
-        { id: 'SRV-06', tag: 'PLC-210', description: 'Upgrade de firmware e testes de malha nos controladores de segurança ESD', category: 'Automação', cost: 160000, hh: 110, prob: 5, sev: 8, override: null, overrideReason: '' },
-        { id: 'SRV-07', tag: 'B-2101', description: 'Inspeção não destrutiva por ultrassom phased array no costado do vaso', category: 'Inspeção END', cost: 95000, hh: 80, prob: 6, sev: 6, override: null, overrideReason: '' },
-        { id: 'SRV-08', tag: 'STR-210', description: 'Reparo civil em bases de concreto e dique de contenção', category: 'Civil', cost: 120000, hh: 140, prob: 4, sev: 5, override: null, overrideReason: '' },
-        { id: 'SRV-09', tag: 'ISO-210', description: 'Renovação de isolamento térmico em lã de rocha e chapa de alumínio', category: 'Isolamento Térmico', cost: 210000, hh: 190, prob: 3, sev: 5, override: null, overrideReason: '' },
-        { id: 'SRV-10', tag: 'PNT-210', description: 'Pintura externa e proteção anticorrosiva de tubulações aéreas', category: 'Pintura Industrial', cost: 350000, hh: 300, prob: 2, sev: 4, override: null, overrideReason: '' }
-      ];
+    if (!parada.preParada.servicesList || parada.preParada.servicesList.length === 0) {
+      parada.preParada.servicesList = JSON.parse(JSON.stringify(this.defaultServicesList));
+    } else if (parada.preParada.servicesList.length < 5 && !parada.preParada.servicesList.some(s => s.tag === 'T-2101')) {
+      // Mesclar tarefas padrão mantendo intactas as tarefas adicionadas pelo usuário
+      const userItems = parada.preParada.servicesList;
+      const baseItems = JSON.parse(JSON.stringify(this.defaultServicesList));
+      userItems.forEach((u, i) => {
+        if (!baseItems.some(b => b.tag === u.tag && b.description === u.description)) {
+          u.id = `SRV-${11 + i}`;
+          baseItems.push(u);
+        }
+      });
+      parada.preParada.servicesList = baseItems;
     }
 
     if (!parada.preParada.risks10x10) {
@@ -1324,6 +1345,25 @@ const PreParadaView = {
     const totalApprovedHh = approvedServices.reduce((acc, s) => acc + (s.hh || 0), 0);
     const totalCutCost = cutServices.reduce((acc, s) => acc + (s.cost || 0), 0);
 
+    // Aplicar Filtros Ativos
+    const { status: filterStatus, category: filterCategory, search: filterSearch } = this.escopoFilterState;
+
+    const filteredServices = services.filter((s, idx) => {
+      const matchesStatus = (filterStatus === 'all') ||
+        (filterStatus === 'approved' && s.inScope) ||
+        (filterStatus === 'cut' && !s.inScope);
+
+      const matchesCat = (filterCategory === 'all') || (s.category === filterCategory);
+
+      const matchesSearch = !filterSearch ||
+        (s.tag && s.tag.toLowerCase().includes(filterSearch.toLowerCase())) ||
+        (s.description && s.description.toLowerCase().includes(filterSearch.toLowerCase())) ||
+        (s.id && s.id.toLowerCase().includes(filterSearch.toLowerCase())) ||
+        (s.category && s.category.toLowerCase().includes(filterSearch.toLowerCase()));
+
+      return matchesStatus && matchesCat && matchesSearch;
+    });
+
     return `
       <div class="space-y-6">
         
@@ -1337,15 +1377,19 @@ const PreParadaView = {
               </div>
               <h3 class="text-base md:text-lg font-extrabold text-[#111111] tracking-tight">Definição de Escopo & Corte de Serviços Fora do Teto</h3>
               <p class="text-xs text-[#707072]">
-                Os serviços cadastrados são ordenados pelo Score de Risco. Atividades que ultrapassam o teto de <b>${parada.budget}</b> são sinalizadas em <b class="text-[#d30005]">vermelho</b> e descartadas da etapa de planejamento.
+                Os serviços cadastrados são ordenados pelo Score de Risco. No modo <b>Todos</b>, todas as atividades aparecem reunidas com a Linha de Corte separando o escopo aprovado do excedente.
               </p>
             </div>
 
             <!-- Botões de Ação do Escopo -->
-            <div class="flex items-center gap-3">
-              <button onclick="PreParadaView.openManageLaborCategoriesModal('${parada.id}')" class="btn-ghost-pill text-xs py-2 px-3.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="PreParadaView.resetEscopoDefaults('${parada.id}')" title="Restaurar as 10 demandas padrão de manutenção industrial" class="btn-ghost-pill text-xs py-2 px-3 flex items-center gap-1.5 hover:border-[#111111]">
+                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                <span>Restaurar 10 Demandas</span>
+              </button>
+              <button onclick="PreParadaView.openManageLaborCategoriesModal('${parada.id}')" class="btn-ghost-pill text-xs py-2 px-3 flex items-center gap-1.5 hover:border-[#111111]">
                 <span class="material-symbols-outlined text-sm">engineering</span>
-                <span>Disciplinas de HH</span>
+                <span>Disciplinas (${categories.length})</span>
               </button>
               <button onclick="PreParadaView.openAddServiceModal('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
                 <span class="material-symbols-outlined text-sm">add</span>
@@ -1371,13 +1415,13 @@ const PreParadaView = {
               </span>
             </div>
 
-            <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-1">
+            <div onclick="PreParadaView.setEscopoStatusFilter('approved')" class="p-4 cursor-pointer bg-emerald-50/60 hover:bg-emerald-100/70 transition-all rounded-2xl border ${filterStatus === 'approved' ? 'border-[#007d48] ring-2 ring-[#007d48]/20' : 'border-emerald-200'} space-y-1">
               <span class="text-[10px] uppercase font-bold text-[#007d48] block">✓ Seguem p/ Planejamento</span>
               <span class="text-lg font-black font-mono text-[#007d48]">${approvedServices.length} serviços</span>
               <span class="text-[10px] text-[#007d48] font-mono block">R$ ${totalApprovedCost.toLocaleString('pt-BR')} (${totalApprovedHh.toLocaleString('pt-BR')} HH)</span>
             </div>
 
-            <div class="p-4 ${cutServices.length > 0 ? 'bg-red-50/80 border-red-200' : 'bg-[#f9f9f9] border-[#e5e5e5]'} rounded-2xl border space-y-1">
+            <div onclick="PreParadaView.setEscopoStatusFilter('cut')" class="p-4 cursor-pointer ${cutServices.length > 0 ? 'bg-red-50/80 hover:bg-red-100' : 'bg-[#f9f9f9]'} transition-all rounded-2xl border ${filterStatus === 'cut' ? 'border-red-600 ring-2 ring-red-600/20' : (cutServices.length > 0 ? 'border-red-200' : 'border-[#e5e5e5]')} space-y-1">
               <span class="text-[10px] uppercase font-bold ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'} block">❌ Cortados do Escopo</span>
               <span class="text-lg font-black font-mono ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'}">${cutServices.length} serviços</span>
               <span class="text-[10px] text-[#d30005] font-mono block">R$ ${totalCutCost.toLocaleString('pt-BR')} descartados</span>
@@ -1386,12 +1430,72 @@ const PreParadaView = {
           </div>
         </div>
 
+        <!-- BARRA DE FILTROS & BUSCA RÁPIDA DE ESCOPO -->
+        <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-4 md:p-5 shadow-sm space-y-3">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+            
+            <!-- Modo de Filtro: Todos / Aprovados / Cortados -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="font-bold text-[#111111] uppercase tracking-wider text-[11px] mr-1">Filtro de Escopo:</span>
+              
+              <button onclick="PreParadaView.setEscopoStatusFilter('all')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'all' ? 'active font-bold bg-[#111111] text-white border-[#111111]' : 'bg-[#f5f5f5] text-[#4b4b4d]'}">
+                <span>Todos Juntos (${services.length})</span>
+              </button>
+
+              <button onclick="PreParadaView.setEscopoStatusFilter('approved')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'approved' ? 'active font-bold bg-[#007d48] text-white border-[#007d48]' : 'bg-[#f5f5f5] text-[#007d48]'}">
+                <span>✓ Seguem p/ Planejamento (${approvedServices.length})</span>
+              </button>
+
+              <button onclick="PreParadaView.setEscopoStatusFilter('cut')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'cut' ? 'active font-bold bg-red-600 text-white border-red-600' : 'bg-[#f5f5f5] text-red-700'}">
+                <span>❌ Cortados do Escopo (${cutServices.length})</span>
+              </button>
+            </div>
+
+            <!-- Filtro de Disciplina & Campo de Busca -->
+            <div class="flex flex-wrap items-center gap-2">
+              <select onchange="PreParadaView.setEscopoCategoryFilter(this.value)" class="form-input text-xs py-1.5 px-3 rounded-full bg-[#f9f9f9] font-medium border-[#e5e5e5] w-auto">
+                <option value="all" ${filterCategory === 'all' ? 'selected' : ''}>Todas as Disciplinas (${categories.length})</option>
+                ${categories.map(c => `<option value="${c}" ${filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+
+              <div class="relative min-w-[200px]">
+                <input 
+                  type="text" 
+                  placeholder="Buscar TAG, código ou descrição..." 
+                  value="${filterSearch}" 
+                  oninput="PreParadaView.setEscopoSearch(this.value)"
+                  class="form-input text-xs py-1.5 pl-8 pr-3 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full"
+                />
+                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-[#707072]">search</span>
+                ${filterSearch ? `
+                  <button onclick="PreParadaView.setEscopoSearch('')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#707072] hover:text-[#111111]">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+          </div>
+
+          ${(filterStatus !== 'all' || filterCategory !== 'all' || filterSearch) ? `
+            <div class="pt-2 border-t border-[#f0f0f0] flex items-center justify-between text-[11px] text-[#707072]">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-[#111111]">filter_alt</span>
+                <span>Exibindo <b>${filteredServices.length}</b> de <b>${services.length}</b> serviços encontrados</span>
+              </div>
+              <button onclick="PreParadaView.clearEscopoFilters()" class="font-bold text-[#111111] hover:underline flex items-center gap-1">
+                <span>Limpar todos os filtros</span>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+
         <!-- Tabela Mestre de Serviços com Destaque em Vermelho nos Itens Cortados -->
         <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-base text-[#111111]">list_alt</span>
-              <h4 class="text-xs font-bold uppercase tracking-wider text-[#111111]">Lista de Demandas Priorizadas (${services.length} itens)</h4>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-[#111111]">Lista de Demandas Priorizadas (${filteredServices.length} itens exibidos)</h4>
             </div>
             <span class="text-[11px] text-[#707072] font-mono">Ordenação: Score de Risco (P×S) Decrescente</span>
           </div>
@@ -1414,14 +1518,15 @@ const PreParadaView = {
                 </tr>
               </thead>
               <tbody class="divide-y divide-[#e5e5e5]">
-                ${services.map((s, idx) => {
-                  const isFirstCut = (idx === cutIndex);
+                ${filteredServices.map((s, idx) => {
+                  // No modo 'all' (sem filtros que quebrem a continuidade), renderizar o divisor da Linha de Corte
+                  const isFirstCut = (filterStatus === 'all' && filterCategory === 'all' && !filterSearch && !s.inScope && (idx === 0 || filteredServices[idx - 1].inScope));
                   let cutDividerHtml = '';
 
                   if (isFirstCut) {
                     cutDividerHtml = `
                       <tr class="bg-red-600 text-white font-black select-none shadow-md">
-                        <td colspan="11" class="py-3 px-4 text-center text-xs tracking-wider uppercase">
+                        <td colspan="11" class="py-3.5 px-4 text-center text-xs tracking-wider uppercase">
                           <div class="flex items-center justify-center gap-2">
                             <span class="material-symbols-outlined text-base">content_cut</span>
                             <span>LINHA DE CORTE ORÇAMENTÁRIA • TETO DE R$ ${rawBudget.toLocaleString('pt-BR')} ATINGIDO</span>
@@ -1532,36 +1637,230 @@ const PreParadaView = {
                     `;
                   }
                 }).join('')}
+                ${filteredServices.length === 0 ? `
+                  <tr>
+                    <td colspan="11" class="p-8 text-center text-[#707072]">
+                      <span class="material-symbols-outlined text-3xl text-zinc-400 block mb-2">search_off</span>
+                      <p class="font-bold text-xs text-[#111111]">Nenhum serviço atende aos critérios de filtro aplicados.</p>
+                      <button onclick="PreParadaView.clearEscopoFilters()" class="btn-ghost-pill text-xs mt-3">
+                        Limpar Filtros e Ver Todos
+                      </button>
+                    </td>
+                  </tr>
+                ` : ''}
               </tbody>
             </table>
           </div>
         </div>
 
       </div>
+
+      <!-- MODAL DE CADASTRO DE SERVIÇO DE ESCOPO -->
+      <div id="service-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+        <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+          
+          <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[#111111] text-2xl">post_add</span>
+              <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Demanda de Manutenção</h3>
+            </div>
+            <button onclick="PreParadaView.closeAddServiceModal()" class="text-[#707072] hover:text-[#111111] p-1">
+              <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="form-label">TAG do Equipamento *</label>
+                <input type="text" id="form-srv-tag" class="form-input font-mono font-bold uppercase" placeholder="Ex: T-2101, P-2104A" />
+              </div>
+
+              <div>
+                <label class="form-label">Disciplina / Categoria *</label>
+                <select id="form-srv-category" class="form-input font-medium">
+                  ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Descrição Detalhada da Atividade *</label>
+              <textarea id="form-srv-desc" rows="2.5" class="form-input leading-relaxed" placeholder="Descreva a intervenção mecânica, caldeiraria, inspeção, troca de peças..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="form-label">Horas-Homem Estimadas (HH) *</label>
+                <input type="number" id="form-srv-hh" class="form-input font-mono font-bold" placeholder="120" value="120" />
+              </div>
+
+              <div>
+                <label class="form-label">Custo Estimado Total (R$) *</label>
+                <input type="number" id="form-srv-cost" class="form-input font-mono font-bold text-[#007d48]" placeholder="250000" value="250000" />
+              </div>
+            </div>
+
+            <!-- Parâmetros da Matriz de Risco PxS (1-10) -->
+            <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">Avaliação de Risco (Matriz P×S)</span>
+                <span id="srv-preview-score" class="nike-pill font-mono font-bold bg-[#111111] text-white">Score: 49 pts</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-[#707072]">Probabilidade de Falha (1 a 10)</span>
+                    <span id="label-prob-val" class="font-bold font-mono">7</span>
+                  </div>
+                  <input type="range" id="form-srv-prob" min="1" max="10" value="7" oninput="PreParadaView.updateServiceModalScorePreview()" class="w-full accent-[#111111]" />
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-[#707072]">Severidade / Impacto (1 a 10)</span>
+                    <span id="label-sev-val" class="font-bold font-mono text-[#d30005]">7</span>
+                  </div>
+                  <input type="range" id="form-srv-sev" min="1" max="10" value="7" oninput="PreParadaView.updateServiceModalScorePreview()" class="w-full accent-[#d30005]" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+            <button onclick="PreParadaView.closeAddServiceModal()" class="btn-ghost-pill text-xs">
+              Cancelar
+            </button>
+            <button onclick="PreParadaView.saveAddServiceModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">
+              Salvar Demanda de Escopo
+            </button>
+          </div>
+
+        </div>
+      </div>
     `;
   },
 
-  openAddServiceModal(paradaId) {
+  setEscopoStatusFilter(status) {
+    this.escopoFilterState.status = status;
+    App.renderCurrentView();
+  },
+
+  setEscopoCategoryFilter(category) {
+    this.escopoFilterState.category = category;
+    App.renderCurrentView();
+  },
+
+  setEscopoSearch(search) {
+    this.escopoFilterState.search = search;
+    App.renderCurrentView();
+  },
+
+  clearEscopoFilters() {
+    this.escopoFilterState = {
+      status: 'all',
+      category: 'all',
+      search: ''
+    };
+    App.renderCurrentView();
+  },
+
+  resetEscopoDefaults(paradaId) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
-    const categories = parada.preParada.laborCategories || this.defaultLaborCategories;
+    if (confirm('Deseja restaurar as 10 demandas padrão de manutenção industrial? Suas tarefas criadas manualmente serão preservadas.')) {
+      const userServices = (parada.preParada.servicesList || []).filter(s => !this.defaultServicesList.some(d => d.tag === s.tag && d.description === s.description));
+      const baseServices = JSON.parse(JSON.stringify(this.defaultServicesList));
+      userServices.forEach((u, i) => {
+        u.id = `SRV-${11 + i}`;
+        baseServices.push(u);
+      });
+      parada.preParada.servicesList = baseServices;
+      ProjectsView.updateParada(parada);
+      this.clearEscopoFilters();
+      App.showToast('Demandas restauradas com sucesso!', 'success');
+      App.renderCurrentView();
+    }
+  },
 
-    const tag = prompt('TAG do Equipamento (Ex: T-2101, P-2104A):');
-    if (!tag) return;
-    const desc = prompt('Descrição detalhada do serviço de manutenção:');
-    if (!desc) return;
-    const cat = prompt(`Categoria de Mão de Obra:\n(Opções em ordem alfabética: ${categories.join(', ')})`, categories[0]) || categories[0];
-    const hh = parseInt(prompt('Horas Homem Estimadas (HH):', '120') || '120', 10);
-    const cost = parseFloat(prompt('Custo Estimado em R$:', '250000') || '250000');
-    const prob = parseInt(prompt('Probabilidade de Falha sem intervenção (1 a 10):', '7') || '7', 10);
-    const sev = parseInt(prompt('Severidade / Impacto na Planta (1 a 10):', '8') || '8', 10);
+  openAddServiceModal(paradaId) {
+    const modal = document.getElementById('service-create-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      this.updateServiceModalScorePreview();
+    }
+  },
+
+  closeAddServiceModal() {
+    const modal = document.getElementById('service-create-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  updateServiceModalScorePreview() {
+    const probEl = document.getElementById('form-srv-prob');
+    const sevEl = document.getElementById('form-srv-sev');
+    const labelProb = document.getElementById('label-prob-val');
+    const labelSev = document.getElementById('label-sev-val');
+    const previewScore = document.getElementById('srv-preview-score');
+
+    if (probEl && sevEl && previewScore) {
+      const p = parseInt(probEl.value, 10) || 5;
+      const s = parseInt(sevEl.value, 10) || 5;
+      const score = p * s;
+      if (labelProb) labelProb.innerText = p;
+      if (labelSev) labelSev.innerText = s;
+      previewScore.innerText = `Score: ${score} pts (${p}×${s})`;
+      if (score >= 60) {
+        previewScore.className = 'nike-pill font-mono font-bold bg-red-600 text-white border-transparent';
+      } else if (score >= 30) {
+        previewScore.className = 'nike-pill font-mono font-bold bg-amber-500 text-white border-transparent';
+      } else {
+        previewScore.className = 'nike-pill font-mono font-bold bg-[#007d48] text-white border-transparent';
+      }
+    }
+  },
+
+  saveAddServiceModal(paradaId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+
+    const tagInput = document.getElementById('form-srv-tag');
+    const descInput = document.getElementById('form-srv-desc');
+    const catInput = document.getElementById('form-srv-category');
+    const hhInput = document.getElementById('form-srv-hh');
+    const costInput = document.getElementById('form-srv-cost');
+    const probInput = document.getElementById('form-srv-prob');
+    const sevInput = document.getElementById('form-srv-sev');
+
+    const tag = tagInput ? tagInput.value.trim() : '';
+    const desc = descInput ? descInput.value.trim() : '';
+    const cat = catInput ? catInput.value : 'Mecânica';
+    const hh = hhInput ? parseInt(hhInput.value, 10) || 0 : 0;
+    const cost = costInput ? parseFloat(costInput.value) || 0 : 0;
+    const prob = probInput ? parseInt(probInput.value, 10) || 5 : 5;
+    const sev = sevInput ? parseInt(sevInput.value, 10) || 5 : 5;
+
+    if (!tag) {
+      alert('Por favor, informe o TAG do equipamento.');
+      if (tagInput) tagInput.focus();
+      return;
+    }
+    if (!desc) {
+      alert('Por favor, informe a descrição detalhada da atividade.');
+      if (descInput) descInput.focus();
+      return;
+    }
 
     if (!parada.preParada.servicesList) parada.preParada.servicesList = [];
+    const nextNum = parada.preParada.servicesList.length + 1;
     parada.preParada.servicesList.push({
-      id: `SRV-${parada.preParada.servicesList.length + 1 < 10 ? '0' + (parada.preParada.servicesList.length + 1) : parada.preParada.servicesList.length + 1}`,
-      tag: tag.toUpperCase().trim(),
-      description: desc.trim(),
-      category: cat.trim(),
+      id: `SRV-${nextNum < 10 ? '0' + nextNum : nextNum}`,
+      tag: tag.toUpperCase(),
+      description: desc,
+      category: cat,
       hh: hh,
       cost: cost,
       prob: Math.min(10, Math.max(1, prob)),
@@ -1571,7 +1870,8 @@ const PreParadaView = {
     });
 
     ProjectsView.updateParada(parada);
-    App.showToast('Serviço adicionado e recalculado na Matriz de Priorização!', 'success');
+    this.closeAddServiceModal();
+    App.showToast(`Demanda [${tag.toUpperCase()}] cadastrada e priorizada no escopo!`, 'success');
     App.renderCurrentView();
   },
 
