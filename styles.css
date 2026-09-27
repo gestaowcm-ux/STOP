@@ -351,6 +351,22 @@ body::before {
   color: #ffffff !important;
 }
 
+/* Material Symbols Outlined - Anti-duplicação e Prevenção de Tradução */
+.material-symbols-outlined,
+.notranslate {
+  -webkit-font-feature-settings: 'liga' 1;
+  font-feature-settings: 'liga' 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+}
+
 /* Main Content Layout */
 .main-wrapper {
   margin-left: var(--sidebar-width-expanded);

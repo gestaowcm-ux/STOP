@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="notranslate" translate="no">
 <head>
   <meta charset="UTF-8" />
+  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STOP - Sistema Técnico de Operações e Paradas de Manutenção</title>
   
@@ -234,22 +235,23 @@
 
         <div>
           <label class="form-label">Orçamento Total Previsto</label>
-          <input type="text" id="form-project-budget" onblur="this.value = ProjectsView.formatCurrency(this.value)" class="form-input font-mono text-[#007d48] font-bold" placeholder="R$ 10.000.000,00" />
+          <input type="text" id="form-project-budget" oninput="ProjectsView.onBudgetInput(this.value)" onblur="ProjectsView.onBudgetBlur(this)" class="form-input font-mono text-[#007d48] font-bold" placeholder="Ex: 15M ou R$ 15.000.000" />
+          <div id="form-project-budget-hint" class="text-[11px] mt-1 font-mono text-[#707072] min-h-[18px]"></div>
         </div>
 
         <div>
           <label class="form-label">Data Prevista de Início (D-0)</label>
-          <input type="date" id="form-project-start" class="form-input font-mono" />
+          <input type="date" id="form-project-start" onchange="ProjectsView.onDateChange()" class="form-input font-mono" />
         </div>
 
         <div>
           <label class="form-label">Data Prevista de Término</label>
-          <input type="date" id="form-project-end" class="form-input font-mono" />
+          <input type="date" id="form-project-end" onchange="ProjectsView.onDateChange()" class="form-input font-mono" />
         </div>
 
         <div>
           <label class="form-label">Duração Alvo em Dias</label>
-          <input type="number" id="form-project-days" class="form-input font-bold" placeholder="30" />
+          <input type="number" id="form-project-days" oninput="ProjectsView.onDaysChange()" class="form-input font-bold" placeholder="30" />
         </div>
 
         <div class="sm:col-span-2">

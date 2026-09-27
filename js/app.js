@@ -83,6 +83,9 @@ const App = {
     const container = document.getElementById('app-content');
     if (!container) return;
 
+    const scrollX = window.scrollX || window.pageXOffset || (document.documentElement && document.documentElement.scrollLeft) || (document.body && document.body.scrollLeft) || 0;
+    const scrollY = window.scrollY || window.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || (document.body && document.body.scrollTop) || 0;
+
     if (this.currentView === 'portfolio') {
       container.innerHTML = ProjectsView.render();
     } else if (this.currentView === 'configuracoes') {
@@ -90,6 +93,21 @@ const App = {
     } else if (this.currentView === 'parada-detail') {
       container.innerHTML = this.renderParadaDetailView();
     }
+
+    const restore = () => {
+      window.scrollTo(scrollX, scrollY);
+      if (document.documentElement) {
+        document.documentElement.scrollTop = scrollY;
+        document.documentElement.scrollLeft = scrollX;
+      }
+      if (document.body) {
+        document.body.scrollTop = scrollY;
+        document.body.scrollLeft = scrollX;
+      }
+    };
+
+    restore();
+    requestAnimationFrame(restore);
   },
 
   renderParadaDetailView() {

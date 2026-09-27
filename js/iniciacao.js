@@ -226,6 +226,28 @@ const IniciacaoView = {
       this.data[section][key] = value;
     }
     this.saveData(true);
+
+    // Se alterou orçamento ou datas na Iniciação, sincronizar e recalcular parada e demais módulos
+    if (section === 'node2' && (key === 'budgetEstimated' || key === 'startDate' || key === 'endDate' || key === 'durationDays')) {
+      const activeId = App.state?.activeProjectId;
+      if (activeId && typeof ProjectsView !== 'undefined') {
+        const p = ProjectsView.getParadaById(activeId);
+        if (p) {
+          if (key === 'budgetEstimated') {
+            const raw = ProjectsView.parseCurrency(value);
+            p.budgetRaw = raw;
+            p.budget = ProjectsView.formatCurrency(raw);
+          } else if (key === 'startDate') {
+            p.startDate = value;
+          } else if (key === 'endDate') {
+            p.endDate = value;
+          } else if (key === 'durationDays') {
+            p.durationDays = parseInt(value, 10) || 30;
+          }
+          ProjectsView.recalculateProjectData(p.id, true);
+        }
+      }
+    }
   },
 
   updateChecklist(key, checked) {

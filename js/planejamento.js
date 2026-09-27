@@ -172,6 +172,25 @@ const PlanejamentoView = {
     if (saved) {
       try {
         this.data = JSON.parse(saved);
+        if (project && (project.budgetRaw !== undefined || project.budget)) {
+          const rawBudget = ProjectsView.parseCurrency(project.budgetRaw !== undefined ? project.budgetRaw : project.budget);
+          if (rawBudget > 0) {
+            const budgetFormatted = ProjectsView.formatCurrency(rawBudget).replace('R$ ', '').trim();
+            if (!this.data.pilar4) this.data.pilar4 = {};
+            this.data.pilar4.totalBaseline = budgetFormatted;
+            this.data.pilar4.tapBudget = budgetFormatted;
+            this.data.pilar4.directCosts = ProjectsView.formatCurrency(rawBudget * 0.705).replace('R$ ', '').trim();
+            this.data.pilar4.indirectCosts = ProjectsView.formatCurrency(rawBudget * 0.145).replace('R$ ', '').trim();
+            this.data.pilar4.contingencyAmount = ProjectsView.formatCurrency(rawBudget * 0.10).replace('R$ ', '').trim();
+            this.data.pilar4.managementAmount = ProjectsView.formatCurrency(rawBudget * 0.05).replace('R$ ', '').trim();
+            if (Array.isArray(this.data.pilar4.periods)) {
+              this.data.pilar4.periods.forEach(per => {
+                const accCost = rawBudget * ((per.accumPercent || 0) / 100);
+                per.accumCost = ProjectsView.formatCurrency(accCost).replace('R$ ', '').trim();
+              });
+            }
+          }
+        }
       } catch (e) {
         this.data = JSON.parse(JSON.stringify(this.defaultTemplate));
       }
@@ -184,8 +203,20 @@ const PlanejamentoView = {
         this.data.general.manager = project.manager || 'Juliana Santos';
         this.data.general.sponsor = project.sponsor || 'Dr. Roberto Albuquerque';
         if (project.budget) {
-          this.data.pilar4.totalBaseline = project.budget.replace(/[^0-9,.]/g, '');
+          const raw = ProjectsView.parseCurrency(project.budgetRaw !== undefined ? project.budgetRaw : project.budget);
+          const budgetFormatted = ProjectsView.formatCurrency(raw).replace('R$ ', '').trim();
+          this.data.pilar4.totalBaseline = budgetFormatted;
           this.data.pilar4.tapBudget = this.data.pilar4.totalBaseline;
+          this.data.pilar4.directCosts = ProjectsView.formatCurrency(raw * 0.705).replace('R$ ', '').trim();
+          this.data.pilar4.indirectCosts = ProjectsView.formatCurrency(raw * 0.145).replace('R$ ', '').trim();
+          this.data.pilar4.contingencyAmount = ProjectsView.formatCurrency(raw * 0.10).replace('R$ ', '').trim();
+          this.data.pilar4.managementAmount = ProjectsView.formatCurrency(raw * 0.05).replace('R$ ', '').trim();
+          if (Array.isArray(this.data.pilar4.periods)) {
+            this.data.pilar4.periods.forEach(per => {
+              const accCost = raw * ((per.accumPercent || 0) / 100);
+              per.accumCost = ProjectsView.formatCurrency(accCost).replace('R$ ', '').trim();
+            });
+          }
         }
         if (project.durationDays) {
           this.data.pilar2.targetDurationDays = project.durationDays;

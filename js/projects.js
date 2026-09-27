@@ -15,7 +15,7 @@ const ProjectsView = {
       manager: 'Juliana Santos',
       sponsor: 'Diretoria de Operações & Refino',
       type: 'Parada Geral Quinquenal',
-      budget: 'R$ 14.500.000,00',
+      budget: 'R$ 14.500.000',
       budgetRaw: 14500000,
       startDate: '2026-10-15',
       endDate: '2026-11-14',
@@ -183,7 +183,7 @@ const ProjectsView = {
       manager: 'Carlos Alberto Silva',
       sponsor: 'Superintendência Industrial',
       type: 'Parada Geral Programada',
-      budget: 'R$ 28.900.000,00',
+      budget: 'R$ 28.900.000',
       budgetRaw: 28900000,
       startDate: '2026-09-01',
       endDate: '2026-10-05',
@@ -309,7 +309,7 @@ const ProjectsView = {
       manager: 'Juliana Santos',
       sponsor: 'Diretoria de Segurança & Meio Ambiente',
       type: 'Parada Setorial de Confiabilidade',
-      budget: 'R$ 4.200.000,00',
+      budget: 'R$ 4.200.000',
       budgetRaw: 4200000,
       startDate: '2026-08-10',
       endDate: '2026-09-15',
@@ -376,37 +376,66 @@ const ProjectsView = {
 
   formatCurrency(val) {
     if (val === null || val === undefined || val === '') return 'R$ 0,00';
-    if (typeof val === 'number') {
-      return isNaN(val) ? 'R$ 0,00' : val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-    const str = String(val).trim();
-    if (str.startsWith('R$')) return str;
+    let num = typeof val === 'number' ? val : this.parseCurrency(val);
+    if (isNaN(num)) return 'R$ 0,00';
     
-    // Parse numeric value from string (supports "3000000", "3000000.00", "3.000.000,00")
-    let clean = str.replace(/R\$\s*/g, '').trim();
-    if (clean.includes(',') && clean.includes('.')) {
-      clean = clean.replace(/\./g, '').replace(',', '.');
-    } else if (clean.includes(',')) {
-      clean = clean.replace(',', '.');
-    } else {
-      clean = clean.replace(/[^\d.-]/g, '');
-    }
-    const num = parseFloat(clean);
-    if (!isNaN(num)) {
-      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-    return str;
+    // Regra: para milhões (>= 1.000.000) e números redondos, formata sem casas decimais redundantes
+    const isMillion = Math.abs(num) >= 1000000;
+    const isInteger = Number.isInteger(num);
+    const decimals = (isMillion && isInteger) ? 0 : 2;
+    
+    return `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
   },
 
   parseCurrency(val) {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
     if (!val) return 0;
-    const str = String(val).trim();
+    let str = String(val).trim();
+    if (!str) return 0;
+
+    // Suporte a abreviações como 15M, 14.5M, 3.5 mi, 3 milhões, 500k, 500 mil
+    const mMatch = str.match(/^([0-9.,]+)\s*(m|mi|milh[a-zõo]*)$/i);
+    if (mMatch) {
+      let baseStr = mMatch[1].trim();
+      if (baseStr.includes(',') && baseStr.includes('.')) {
+        baseStr = baseStr.replace(/\./g, '').replace(',', '.');
+      } else if (baseStr.includes(',')) {
+        baseStr = baseStr.replace(',', '.');
+      }
+      const baseNum = parseFloat(baseStr);
+      if (!isNaN(baseNum)) return baseNum * 1000000;
+    }
+    const kMatch = str.match(/^([0-9.,]+)\s*(k|mil)$/i);
+    if (kMatch) {
+      let baseStr = kMatch[1].trim();
+      if (baseStr.includes(',') && baseStr.includes('.')) {
+        baseStr = baseStr.replace(/\./g, '').replace(',', '.');
+      } else if (baseStr.includes(',')) {
+        baseStr = baseStr.replace(',', '.');
+      }
+      const baseNum = parseFloat(baseStr);
+      if (!isNaN(baseNum)) return baseNum * 1000;
+    }
+
     let clean = str.replace(/R\$\s*/g, '').trim();
     if (clean.includes(',') && clean.includes('.')) {
       clean = clean.replace(/\./g, '').replace(',', '.');
     } else if (clean.includes(',')) {
       clean = clean.replace(',', '.');
+    } else if (clean.includes('.')) {
+      const dotParts = clean.split('.');
+      if (dotParts.length > 2) {
+        // Ex: 3.000.000 ou 1.500.000
+        clean = clean.replace(/\./g, '');
+      } else if (dotParts.length === 2) {
+        // Se a parte após o ponto tem 3 dígitos (ex: 450.000 ou 3.000), é milhar pt-BR
+        if (dotParts[1].length === 3) {
+          clean = clean.replace(/\./g, '');
+        } else {
+          // Ex: 3.5 ou 10.50
+          clean = clean;
+        }
+      }
     } else {
       clean = clean.replace(/[^\d.-]/g, '');
     }
@@ -422,8 +451,8 @@ const ProjectsView = {
         if (Array.isArray(parsed)) {
           return parsed.map(p => {
             if (p.budget !== undefined || p.budgetRaw !== undefined) {
-              const raw = this.parseCurrency(p.budgetRaw !== undefined ? p.budgetRaw : p.budget);
-              p.budget = this.formatCurrency(p.budget !== undefined ? p.budget : raw);
+              const raw = this.parseCurrency(p.budget !== undefined ? p.budget : p.budgetRaw);
+              p.budget = this.formatCurrency(raw);
               p.budgetRaw = raw;
             }
             return p;
@@ -446,13 +475,18 @@ const ProjectsView = {
   },
 
   getParadaById(id) {
+    if (!id) return null;
     const list = this.getParadas();
-    return list.find(p => p.id === id) || null;
+    return list.find(p => p.id === id || p.code === id) || null;
+  },
+
+  getProjectById(id) {
+    return this.getParadaById(id);
   },
 
   updateParada(parada) {
     const list = this.getParadas();
-    const index = list.findIndex(p => p.id === parada.id);
+    const index = list.findIndex(p => p.id === parada.id || p.code === parada.id);
     if (index !== -1) {
       list[index] = parada;
       this.saveParadas(list);
@@ -727,6 +761,210 @@ const ProjectsView = {
     }
   },
 
+  onDateChange() {
+    const startEl = document.getElementById('form-project-start');
+    const endEl = document.getElementById('form-project-end');
+    const daysEl = document.getElementById('form-project-days');
+    if (!startEl || !endEl || !daysEl) return;
+
+    if (startEl.value && endEl.value) {
+      const d1 = new Date(startEl.value + 'T00:00:00');
+      const d2 = new Date(endEl.value + 'T00:00:00');
+      const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+      if (diff > 0) {
+        daysEl.value = diff;
+      }
+    }
+  },
+
+  onDaysChange() {
+    const startEl = document.getElementById('form-project-start');
+    const endEl = document.getElementById('form-project-end');
+    const daysEl = document.getElementById('form-project-days');
+    if (!startEl || !endEl || !daysEl) return;
+
+    const days = parseInt(daysEl.value, 10);
+    if (startEl.value && days > 0) {
+      const d = new Date(startEl.value + 'T00:00:00');
+      d.setDate(d.getDate() + days);
+      endEl.value = d.toISOString().split('T')[0];
+    }
+  },
+
+  onBudgetInput(val) {
+    const hint = document.getElementById('form-project-budget-hint');
+    if (!hint) return;
+    const raw = this.parseCurrency(val);
+    if (raw <= 0) {
+      hint.innerHTML = '<span class="text-[#969696]">Digite o valor total (ex: 15M ou R$ 15.000.000)</span>';
+    } else {
+      const formatted = this.formatCurrency(raw);
+      let spelled = '';
+      if (raw >= 1000000) {
+        const millions = (raw / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+        spelled = ` (~${millions} milhões)`;
+      } else if (raw < 1000) {
+        spelled = ` <span class="text-amber-600 font-semibold">⚠️ Valor em reais. Digite <strong>${raw}M</strong> para ${raw} milhões</span>`;
+      }
+      hint.innerHTML = `<span class="text-[#007d48] font-bold font-mono">${formatted}</span> <span class="text-[#707072] text-[11px]">${spelled}</span>`;
+    }
+  },
+
+  onBudgetBlur(inputEl) {
+    if (!inputEl) return;
+    const raw = this.parseCurrency(inputEl.value);
+    inputEl.value = this.formatCurrency(raw);
+    this.onBudgetInput(inputEl.value);
+  },
+
+  recalculateProjectData(paradaId, updateStorage = true) {
+    const list = this.getParadas();
+    const p = list.find(item => item.id === paradaId || item.code === paradaId);
+    if (!p) return null;
+
+    // 1. Sanitizar e sincronizar métricas base da Parada
+    const rawBudget = this.parseCurrency(p.budgetRaw !== undefined ? p.budgetRaw : p.budget);
+    p.budgetRaw = rawBudget;
+    p.budget = this.formatCurrency(rawBudget);
+
+    const durationDays = parseInt(p.durationDays, 10) || 30;
+    p.durationDays = durationDays;
+
+    if (p.startDate && durationDays > 0 && !p.endDate) {
+      const d = new Date(p.startDate + 'T00:00:00');
+      d.setDate(d.getDate() + durationDays);
+      p.endDate = d.toISOString().split('T')[0];
+    } else if (p.startDate && p.endDate) {
+      const d1 = new Date(p.startDate + 'T00:00:00');
+      const d2 = new Date(p.endDate + 'T00:00:00');
+      const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+      if (diff > 0) {
+        p.durationDays = diff;
+      }
+    }
+
+    // 2. Recalcular Execução / War Room da Parada
+    if (!p.parada) p.parada = {};
+    p.parada.totalPlannedHours = p.durationDays * 24;
+
+    const plannedProgress = typeof p.parada.plannedProgress === 'number' ? p.parada.plannedProgress : 0;
+    const realProgress = typeof p.parada.realProgress === 'number' ? p.parada.realProgress : 0;
+    p.parada.spi = plannedProgress > 0 ? Number((realProgress / plannedProgress).toFixed(2)) : 1.00;
+
+    // 3. Recalcular Pós-Parada
+    if (!p.posParada) p.posParada = {};
+    if (!p.posParada.performanceReport) p.posParada.performanceReport = {};
+    p.posParada.performanceReport.plannedBudget = p.budget;
+    p.posParada.performanceReport.plannedDays = p.durationDays;
+
+    if (updateStorage) {
+      this.saveParadas(list);
+    }
+
+    // 4. Sincronizar e Recalcular Módulo de Iniciação (TAP & Business Case)
+    const initKey = `stop_project_${p.id}_data`;
+    let initData = null;
+    try {
+      const savedInit = localStorage.getItem(initKey);
+      if (savedInit) initData = JSON.parse(savedInit);
+    } catch (e) {
+      console.warn('Erro ao ler iniciacao:', e);
+    }
+
+    if (initData) {
+      if (!initData.general) initData.general = {};
+      initData.general.turnaroundCode = p.code;
+      initData.general.turnaroundName = p.name;
+      initData.general.unit = p.unit;
+      initData.general.manager = p.manager;
+      initData.general.sponsor = p.sponsor;
+
+      if (!initData.node2) initData.node2 = {};
+      initData.node2.startDate = p.startDate;
+      initData.node2.endDate = p.endDate;
+      initData.node2.durationDays = p.durationDays;
+      initData.node2.budgetEstimated = this.formatCurrency(rawBudget).replace('R$ ', '').trim();
+      initData.node2.capexEstimated = this.formatCurrency(rawBudget * 0.75).replace('R$ ', '').trim();
+      initData.node2.opexEstimated = this.formatCurrency(rawBudget * 0.25).replace('R$ ', '').trim();
+
+      if (!initData.node6) initData.node6 = {};
+      initData.node6.planningBudget = this.formatCurrency(rawBudget * 0.05).replace('R$ ', '').trim();
+
+      localStorage.setItem(initKey, JSON.stringify(initData));
+
+      if (typeof IniciacaoView !== 'undefined' && IniciacaoView.data && (App.state?.activeProjectId === p.id || App.state?.activeProjectId === p.code)) {
+        IniciacaoView.data = initData;
+      }
+    }
+
+    // 5. Sincronizar e Recalcular Módulo de Planejamento (6 Pilares PMBOK)
+    const planKey = `stop_project_${p.id}_planning`;
+    let planData = null;
+    try {
+      const savedPlan = localStorage.getItem(planKey);
+      if (savedPlan) planData = JSON.parse(savedPlan);
+    } catch (e) {
+      console.warn('Erro ao ler planejamento:', e);
+    }
+
+    if (planData) {
+      if (!planData.general) planData.general = {};
+      planData.general.turnaroundCode = p.code;
+      planData.general.turnaroundName = p.name;
+      planData.general.unit = p.unit;
+      planData.general.manager = p.manager;
+      planData.general.sponsor = p.sponsor;
+
+      if (!planData.pilar2) planData.pilar2 = {};
+      planData.pilar2.targetDurationDays = p.durationDays;
+      planData.pilar2.startDate = p.startDate;
+      planData.pilar2.endDate = p.endDate;
+
+      if (!planData.pilar4) planData.pilar4 = {};
+      const budgetFormatted = this.formatCurrency(rawBudget).replace('R$ ', '').trim();
+      planData.pilar4.totalBaseline = budgetFormatted;
+      planData.pilar4.tapBudget = budgetFormatted;
+      planData.pilar4.directCosts = this.formatCurrency(rawBudget * 0.705).replace('R$ ', '').trim();
+      planData.pilar4.indirectCosts = this.formatCurrency(rawBudget * 0.145).replace('R$ ', '').trim();
+      planData.pilar4.contingencyPercent = 10;
+      planData.pilar4.contingencyAmount = this.formatCurrency(rawBudget * 0.10).replace('R$ ', '').trim();
+      planData.pilar4.managementPercent = 5;
+      planData.pilar4.managementAmount = this.formatCurrency(rawBudget * 0.05).replace('R$ ', '').trim();
+
+      if (Array.isArray(planData.pilar4.periods)) {
+        planData.pilar4.periods.forEach(per => {
+          const accCost = rawBudget * ((per.accumPercent || 0) / 100);
+          per.accumCost = this.formatCurrency(accCost).replace('R$ ', '').trim();
+        });
+      }
+
+      localStorage.setItem(planKey, JSON.stringify(planData));
+
+      if (typeof PlanejamentoView !== 'undefined' && PlanejamentoView.data && (App.state?.activeProjectId === p.id || App.state?.activeProjectId === p.code)) {
+        PlanejamentoView.data = planData;
+        if (typeof PlanejamentoView.calculateCPM === 'function') {
+          PlanejamentoView.calculateCPM();
+        }
+      }
+    }
+
+    // 6. Sincronizar dados de TAP e Fases
+    const tapKey = `stop_project_${p.id}_tap`;
+    try {
+      const savedTap = localStorage.getItem(tapKey);
+      if (savedTap) {
+        const tap = JSON.parse(savedTap);
+        tap.capex = p.budget;
+        tap.days = p.durationDays;
+        tap.unit = p.unit;
+        tap.name = p.name;
+        localStorage.setItem(tapKey, JSON.stringify(tap));
+      }
+    } catch (e) {}
+
+    return p;
+  },
+
   openCreateModal(id = null) {
     const modal = document.getElementById('project-edit-modal');
     const title = document.getElementById('modal-project-title');
@@ -742,12 +980,14 @@ const ProjectsView = {
       document.getElementById('form-project-manager').value = p.manager || '';
       document.getElementById('form-project-sponsor').value = p.sponsor || '';
       document.getElementById('form-project-type').value = p.type || '';
-      document.getElementById('form-project-budget').value = this.formatCurrency(p.budget || p.budgetRaw);
+      const budgetVal = this.formatCurrency(p.budget || p.budgetRaw);
+      document.getElementById('form-project-budget').value = budgetVal;
       document.getElementById('form-project-start').value = p.startDate || '';
       document.getElementById('form-project-end').value = p.endDate || '';
       document.getElementById('form-project-days').value = p.durationDays || '';
       document.getElementById('form-project-desc').value = p.description || '';
       modal.setAttribute('data-edit-id', id);
+      this.onBudgetInput(budgetVal);
     } else {
       if (title) title.innerText = 'Cadastrar Nova Parada Industrial';
       const count = this.getParadas().length + 1;
@@ -757,12 +997,14 @@ const ProjectsView = {
       document.getElementById('form-project-manager').value = UsersManager.getCurrentUser().name;
       document.getElementById('form-project-sponsor').value = 'Diretoria Industrial';
       document.getElementById('form-project-type').value = 'Parada Geral Programada';
-      document.getElementById('form-project-budget').value = 'R$ 8.000.000,00';
+      const defaultBudget = 'R$ 8.000.000,00';
+      document.getElementById('form-project-budget').value = defaultBudget;
       document.getElementById('form-project-start').value = '2026-11-01';
       document.getElementById('form-project-end').value = '2026-11-25';
       document.getElementById('form-project-days').value = '25';
       document.getElementById('form-project-desc').value = '';
       modal.removeAttribute('data-edit-id');
+      this.onBudgetInput(defaultBudget);
     }
 
     modal.classList.remove('hidden');
@@ -797,6 +1039,7 @@ const ProjectsView = {
     }
 
     const list = this.getParadas();
+    let targetParadaId = editId;
 
     if (editId) {
       const p = list.find(item => item.id === editId);
@@ -814,11 +1057,12 @@ const ProjectsView = {
         p.durationDays = durationDays;
         p.description = description;
         this.saveParadas(list);
-        App.showToast('Parada atualizada com sucesso!', 'success');
       }
     } else {
+      const newId = 'prd-' + Date.now();
+      targetParadaId = newId;
       const newParada = {
-        id: 'prd-' + Date.now(),
+        id: newId,
         code: code,
         name: name,
         unit: unit,
@@ -882,11 +1126,17 @@ const ProjectsView = {
 
       list.unshift(newParada);
       this.saveParadas(list);
-      App.showToast('Nova parada cadastrada com sucesso!', 'success');
     }
 
+    // Recalcular integral e instantaneamente todo o ecossistema do projeto
+    this.recalculateProjectData(targetParadaId, true);
+
     this.closeModal();
-    App.renderCurrentView();
+    if (typeof App !== 'undefined') {
+      App.updateHeaderInfo();
+      App.renderCurrentView();
+      App.showToast(`Parada "${name}" atualizada! Todo o projeto, cronograma e curvas físico-financeiras foram recalculados instantaneamente.`, 'success');
+    }
   },
 
   askDeleteParada(id) {

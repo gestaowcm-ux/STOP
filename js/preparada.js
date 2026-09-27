@@ -850,6 +850,30 @@ const PreParadaView = {
     if (modal) modal.classList.add('hidden');
   },
 
+  updateTimelineModalContent(parada) {
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+    const content = document.getElementById('milestone-timeline-modal-content');
+    if (!content) return;
+
+    const scrollContainer = document.getElementById('milestone-timeline-modal-scroll') || content.querySelector('.overflow-y-auto');
+    const prevScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+    const prevScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+
+    content.innerHTML = this.renderTimelineModalContent(parada);
+
+    const restoreScroll = () => {
+      const newScrollContainer = document.getElementById('milestone-timeline-modal-scroll') || content.querySelector('.overflow-y-auto');
+      if (newScrollContainer) {
+        newScrollContainer.scrollTop = prevScrollTop;
+        newScrollContainer.scrollLeft = prevScrollLeft;
+      }
+    };
+
+    restoreScroll();
+    requestAnimationFrame(restoreScroll);
+  },
+
   setTimelineFilter(paradaId, filterArea, filterStatus, searchQuery = '') {
     this.timelineModalState.filterArea = filterArea;
     this.timelineModalState.filterStatus = filterStatus;
@@ -858,10 +882,7 @@ const PreParadaView = {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
 
-    const content = document.getElementById('milestone-timeline-modal-content');
-    if (content) {
-      content.innerHTML = this.renderTimelineModalContent(parada);
-    }
+    this.updateTimelineModalContent(parada);
   },
 
   renderTimelineModalContent(parada) {
@@ -942,7 +963,7 @@ const PreParadaView = {
       </div>
 
       <!-- Corpo com Rolagem Interna -->
-      <div class="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-[#ffffff]">
+      <div id="milestone-timeline-modal-scroll" class="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-[#ffffff]">
         
         <!-- Painel de KPIs Executivos -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1198,16 +1219,10 @@ const PreParadaView = {
   toggleTimelineActionStatus(paradaId, milestoneId, actionId) {
     this.toggleActionStatus(paradaId, milestoneId, actionId);
     
-    // Atualizar o conteúdo do modal se ele estiver aberto
-    const modal = document.getElementById('milestone-timeline-modal');
-    if (modal && !modal.classList.contains('hidden')) {
-      const parada = ProjectsView.getParadaById(paradaId);
-      if (parada) {
-        const content = document.getElementById('milestone-timeline-modal-content');
-        if (content) {
-          content.innerHTML = this.renderTimelineModalContent(parada);
-        }
-      }
+    // Atualizar o conteúdo do modal se ele estiver aberto preservando o scroll
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (parada) {
+      this.updateTimelineModalContent(parada);
     }
   },
 
@@ -1265,12 +1280,8 @@ const PreParadaView = {
     App.showToast('Milestone salvo com sucesso!', 'success');
     App.renderCurrentView();
 
-    // Se o modal de timeline estiver aberto, atualiza também
-    const modal = document.getElementById('milestone-timeline-modal');
-    if (modal && !modal.classList.contains('hidden')) {
-      const content = document.getElementById('milestone-timeline-modal-content');
-      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
-    }
+    // Se o modal de timeline estiver aberto, atualiza preservando scroll
+    this.updateTimelineModalContent(parada);
   },
 
   editMilestone(paradaId, milestoneId) {
@@ -1306,11 +1317,7 @@ const PreParadaView = {
     App.showToast('Milestone removido com sucesso.', 'info');
     App.renderCurrentView();
 
-    const modal = document.getElementById('milestone-timeline-modal');
-    if (modal && !modal.classList.contains('hidden')) {
-      const content = document.getElementById('milestone-timeline-modal-content');
-      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
-    }
+    this.updateTimelineModalContent(parada);
   },
 
   deleteMilestone(paradaId, milestoneId) {
@@ -1439,11 +1446,7 @@ const PreParadaView = {
     this.closeActionModal();
     App.renderCurrentView();
 
-    const timelineModal = document.getElementById('milestone-timeline-modal');
-    if (timelineModal && !timelineModal.classList.contains('hidden')) {
-      const content = document.getElementById('milestone-timeline-modal-content');
-      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
-    }
+    this.updateTimelineModalContent(parada);
   },
 
   toggleActionStatus(paradaId, milestoneId, actionId) {
@@ -1515,11 +1518,7 @@ const PreParadaView = {
     App.showToast('Ação removida com sucesso.', 'info');
     App.renderCurrentView();
 
-    const modal = document.getElementById('milestone-timeline-modal');
-    if (modal && !modal.classList.contains('hidden')) {
-      const content = document.getElementById('milestone-timeline-modal-content');
-      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
-    }
+    this.updateTimelineModalContent(parada);
   },
 
   deleteAction(paradaId, milestoneId, actionId) {
@@ -1643,26 +1642,35 @@ const PreParadaView = {
 
             <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-1">
               <span class="text-[10px] uppercase font-bold text-[#707072] block">Demanda Total Cadastrada</span>
-              <span class="text-lg font-black font-mono text-[#111111]">R$ ${totalDemandCost.toLocaleString('pt-BR')}</span>
+              <span class="text-lg font-black font-mono text-[#111111]">${ProjectsView.formatCurrency(totalDemandCost)}</span>
               <span class="text-[10px] ${budgetOverrun > 0 ? 'text-[#d30005] font-bold' : 'text-[#007d48]'} block">
-                ${budgetOverrun > 0 ? `Estouro: +R$ ${budgetOverrun.toLocaleString('pt-BR')}` : 'Dentro do orçamento'}
+                ${budgetOverrun > 0 ? `Estouro: +${ProjectsView.formatCurrency(budgetOverrun)}` : 'Dentro do orçamento'}
               </span>
             </div>
 
             <div onclick="PreParadaView.setEscopoStatusFilter('approved')" class="p-4 cursor-pointer bg-emerald-50/60 hover:bg-emerald-100/70 transition-all rounded-2xl border ${filterStatus === 'approved' ? 'border-[#007d48] ring-2 ring-[#007d48]/20' : 'border-emerald-200'} space-y-1">
               <span class="text-[10px] uppercase font-bold text-[#007d48] block tracking-wider">Aprovados para Planejamento</span>
               <span class="text-lg font-black font-mono text-[#007d48]">${approvedServices.length} serviços</span>
-              <span class="text-[10px] text-[#007d48] font-mono block">R$ ${totalApprovedCost.toLocaleString('pt-BR')} (${totalApprovedHh.toLocaleString('pt-BR')} HH)</span>
+              <span class="text-[10px] text-[#007d48] font-mono block">${ProjectsView.formatCurrency(totalApprovedCost)} (${totalApprovedHh.toLocaleString('pt-BR')} HH)</span>
             </div>
 
             <div onclick="PreParadaView.setEscopoStatusFilter('cut')" class="p-4 cursor-pointer ${cutServices.length > 0 ? 'bg-red-50/80 hover:bg-red-100' : 'bg-[#f9f9f9]'} transition-all rounded-2xl border ${filterStatus === 'cut' ? 'border-red-600 ring-2 ring-red-600/20' : (cutServices.length > 0 ? 'border-red-200' : 'border-[#e5e5e5]')} space-y-1">
               <span class="text-[10px] uppercase font-bold ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'} block tracking-wider">Cortados do Escopo</span>
               <span class="text-lg font-black font-mono ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'}">${cutServices.length} serviços</span>
-              <span class="text-[10px] text-[#d30005] font-mono block">R$ ${totalCutCost.toLocaleString('pt-BR')} descartados</span>
+              <span class="text-[10px] text-[#d30005] font-mono block">${ProjectsView.formatCurrency(totalCutCost)} descartados</span>
             </div>
 
           </div>
         </div>
+
+        ${approvedServices.length === 0 && services.length > 0 ? `
+          <div class="p-4 bg-amber-50 border border-amber-200 rounded-3xl flex items-start sm:items-center gap-3 text-xs text-amber-900 animate-fade-in shadow-sm">
+            <span class="material-symbols-outlined notranslate text-amber-700 text-lg shrink-0 mt-0.5 sm:mt-0" translate="no">warning</span>
+            <div class="flex-1 leading-relaxed">
+              <b>Aviso de Teto Orçamentário (${formattedBudget}):</b> O orçamento total cadastrado para esta parada é inferior ao custo do serviço prioritário nº 1 (${ProjectsView.formatCurrency(services[0] ? services[0].cost : 0)}). Por isso, todos os ${services.length} serviços foram demarcados pela Linha de Corte. Para aprovar serviços, aumente o orçamento da parada ou utilize o botão <b>Ajustar</b> na tabela para forçar a inclusão manual (*Override*).
+            </div>
+          </div>
+        ` : ''}
 
         <!-- BARRA DE FILTROS & BUSCA RÁPIDA DE ESCOPO -->
         <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-4 md:p-5 shadow-sm space-y-3">
@@ -1673,15 +1681,18 @@ const PreParadaView = {
               <span class="font-bold text-[#111111] uppercase tracking-wider text-[11px] mr-1">Filtro de Escopo:</span>
               
               <button onclick="PreParadaView.setEscopoStatusFilter('all')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'all' ? 'active font-bold bg-[#111111] text-white border-[#111111]' : 'bg-[#f5f5f5] text-[#4b4b4d]'}">
-                <span class="material-symbols-outlined text-xs">list</span>\n                <span class="material-symbols-outlined text-xs">list</span>\n                <span>Todos (${services.length})</span>
+                <span class="material-symbols-outlined notranslate text-xs" translate="no">list</span>
+                <span>Todos (${services.length})</span>
               </button>
 
               <button onclick="PreParadaView.setEscopoStatusFilter('approved')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'approved' ? 'active font-bold bg-[#007d48] text-white border-[#007d48]' : 'bg-[#f5f5f5] text-[#007d48]'}">
-                <span class="material-symbols-outlined text-xs">check_circle</span>\n                <span class="material-symbols-outlined text-xs">check_circle</span>\n                <span>Aprovados (${approvedServices.length})</span>
+                <span class="material-symbols-outlined notranslate text-xs" translate="no">check_circle</span>
+                <span>Aprovados (${approvedServices.length})</span>
               </button>
 
               <button onclick="PreParadaView.setEscopoStatusFilter('cut')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'cut' ? 'active font-bold bg-red-600 text-white border-red-600' : 'bg-[#f5f5f5] text-red-700'}">
-                <span class="material-symbols-outlined text-xs">cancel</span>\n                <span class="material-symbols-outlined text-xs">cancel</span>\n                <span>Cortados (${cutServices.length})</span>
+                <span class="material-symbols-outlined notranslate text-xs" translate="no">cancel</span>
+                <span>Cortados (${cutServices.length})</span>
               </button>
             </div>
 
@@ -1784,7 +1795,7 @@ const PreParadaView = {
                           <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${s.category}</span>
                         </td>
                         <td class="p-3 text-center font-mono font-bold text-[#111111]">${s.hh}h</td>
-                        <td class="p-3 text-right font-mono font-bold text-[#111111]">R$ ${s.cost.toLocaleString('pt-BR')}</td>
+                        <td class="p-3 text-right font-mono font-bold text-[#111111]">${ProjectsView.formatCurrency(s.cost)}</td>
                         <td class="p-3 text-center font-mono font-bold">${s.prob}</td>
                         <td class="p-3 text-center font-mono font-bold text-[#d30005]">${s.sev}</td>
                         <td class="p-3 text-center">
@@ -1793,7 +1804,7 @@ const PreParadaView = {
                           </span>
                         </td>
                         <td class="p-3 text-right font-mono font-bold text-[#007d48]">
-                          R$ ${s.costAfter.toLocaleString('pt-BR')}
+                          ${ProjectsView.formatCurrency(s.costAfter)}
                         </td>
                         <td class="p-3 text-center">
                           <span class="nike-pill text-[10px] font-bold bg-emerald-600 text-white border-transparent shadow-sm">
@@ -1836,7 +1847,7 @@ const PreParadaView = {
                           </div>
                           <span class="line-through opacity-80">${s.description}</span>
                           <div class="text-[10px] text-[#d30005] font-semibold mt-1">
-                            Motivo: Score insuficiente (${s.riskScore} pts) • Estouro acumulado de +R$ ${overAmount.toLocaleString('pt-BR')}
+                            Motivo: Score insuficiente (${s.riskScore} pts) • Estouro acumulado de +${ProjectsView.formatCurrency(overAmount)}
                             ${s.override === 'exclude' ? `<span class="block text-red-800 font-bold">[Override] Excluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` : ''}
                           </div>
                         </td>
@@ -1844,7 +1855,7 @@ const PreParadaView = {
                           <span class="nike-pill text-[10px] bg-red-100 text-red-900 border-red-200 font-semibold">${s.category}</span>
                         </td>
                         <td class="p-3 text-center font-mono font-bold text-red-800">${s.hh}h</td>
-                        <td class="p-3 text-right font-mono font-bold text-[#d30005]">R$ ${s.cost.toLocaleString('pt-BR')}</td>
+                        <td class="p-3 text-right font-mono font-bold text-[#d30005]">${ProjectsView.formatCurrency(s.cost)}</td>
                         <td class="p-3 text-center font-mono font-bold text-red-800">${s.prob}</td>
                         <td class="p-3 text-center font-mono font-bold text-[#d30005]">${s.sev}</td>
                         <td class="p-3 text-center">
@@ -1853,7 +1864,7 @@ const PreParadaView = {
                           </span>
                         </td>
                         <td class="p-3 text-right font-mono font-bold text-[#d30005]">
-                          R$ ${s.costAfter.toLocaleString('pt-BR')}
+                          ${ProjectsView.formatCurrency(s.costAfter)}
                         </td>
                         <td class="p-3 text-center">
                           <span class="nike-pill text-[10px] font-black bg-red-600 text-white border-transparent shadow-sm">
