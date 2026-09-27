@@ -1,297 +1,616 @@
 /**
  * STOP - Sistema Técnico de Operações e Paradas de Manutenção
- * Módulo de Portfólio de Projetos (Tela Anterior / Hub de Seleção & Edição)
+ * js/projects.js - Portfólio de Paradas Industriais
  */
 
 const ProjectsView = {
-  defaultProjects: [
+  STORAGE_KEY: 'stop_turnarounds_data',
+
+  defaultParadas: [
     {
-      id: 'PRD-2026-U210',
+      id: 'prd-001',
       code: 'PRD-2026-U210',
-      name: 'Parada Geral Refinaria Norte 2026',
-      unit: 'U-210 Destilação Atmosférica e a Vácuo',
+      name: 'Parada Geral U-210 (Destilação Atmosférica)',
+      unit: 'U-210 Destilação Atmosférica',
       manager: 'Juliana Santos',
-      sponsor: 'Dr. Roberto Albuquerque (Diretor Industrial)',
+      sponsor: 'Diretoria de Operações & Refino',
+      type: 'Parada Geral Quinquenal',
+      budget: 'R$ 14.500.000,00',
+      budgetRaw: 14500000,
+      startDate: '2026-10-15',
+      endDate: '2026-11-14',
+      durationDays: 30,
+      description: 'Revisão geral das torres T-2101/02, substituição de bandejas, calibração de 142 PSVs e teste hidrostático em permutadores.',
+      currentPhase: 1, // 1: Pré-Parada, 2: Parada, 3: Pós-Parada
+      status: 'Em Pré-Parada',
+      createdAt: '2026-07-01',
+      gates: {
+        gate1: {
+          approved: false,
+          approvedBy: null,
+          approvedAt: null,
+          comments: '',
+          checklist: {
+            scopeFrozen: true,
+            criticalMaterialsInSite: true,
+            risksMitigated: false,
+            contractorsMobilized: false,
+            lotoPermitsReady: false
+          }
+        },
+        gate2: {
+          approved: false,
+          approvedBy: null,
+          approvedAt: null,
+          comments: '',
+          checklist: {
+            mechanicalCompletion: false,
+            testHydroDone: false,
+            cleanPlant: false,
+            punchListALevelZero: false,
+            blindRemovalDone: false
+          }
+        },
+        gate3: {
+          approved: false,
+          approvedBy: null,
+          approvedAt: null,
+          comments: '',
+          checklist: {
+            plantRampUp100: false,
+            punchListBClosed: false,
+            contractsSettled: false,
+            lessonsLearnedLogged: false,
+            finalReportPublished: false
+          }
+        }
+      },
+      preParada: {
+        activeTab: 'escopo',
+        scopeFrozen: false,
+        scopeFreezeDate: '2026-09-30',
+        items: [
+          { id: 'SCP-101', tag: 'T-2101', discipline: 'Caldeiraria', description: 'Abertura de bocas de visita e troca de 28 bandejas de fracionamento', criticality: 'A (Crítico)', cost: 1850000, frozen: true, status: 'Aprovado' },
+          { id: 'SCP-102', tag: 'P-2104A/B', discipline: 'Mecânica', description: 'Revisão completa das bombas de fundo com troca de selos mecânicos e rolamentos', criticality: 'A (Crítico)', cost: 420000, frozen: true, status: 'Aprovado' },
+          { id: 'SCP-103', tag: 'E-2102', discipline: 'Tubulação', description: 'Retirada de feixe tubular para hidrojateamento a 1000 bar e teste de estanqueidade', criticality: 'B (Médio)', cost: 280000, frozen: true, status: 'Aprovado' },
+          { id: 'SCP-104', tag: 'PSV-2101 a 2142', discipline: 'Instrumentação', description: 'Retirada, aferição em bancada e certificação de 42 válvulas de segurança', criticality: 'A (Crítico)', cost: 310000, frozen: true, status: 'Aprovado' },
+          { id: 'SCP-105', tag: 'MCC-210', discipline: 'Elétrica', description: 'Manutenção preventiva dos barramentos e disjuntores de média tensão 4.16 kV', criticality: 'B (Médio)', cost: 195000, frozen: true, status: 'Aprovado' }
+        ],
+        supplies: [
+          { id: 'MAT-01', item: 'Bandejas Fracionamento Inox 316L', leadTime: 'Long Lead (120d)', vendor: 'Sulzer Brasil', status: 'No Canteiro', deliverDate: '2026-09-10', critical: true },
+          { id: 'MAT-02', item: 'Selos Mecânicos Cartucho Plan 53A', leadTime: '60 dias', vendor: 'John Crane', status: 'No Canteiro', deliverDate: '2026-09-18', critical: true },
+          { id: 'MAT-03', item: 'Juntas Espirotálicas 300# e 600# (Lote 500 un)', leadTime: '30 dias', vendor: 'Klinger Vedantes', status: 'Em Trânsito', deliverDate: '2026-10-02', critical: false },
+          { id: 'MAT-04', item: 'Válvula Globo 10" ANSI 600 Forjada', leadTime: 'Long Lead (90d)', vendor: 'Microinox Válvulas', status: 'No Canteiro', deliverDate: '2026-09-22', critical: true }
+        ],
+        risks: [
+          { id: 'RSK-01', hazard: 'Atraso na liberação da atmosfera inerte (gás tóxico residual) da Torre T-2101', prob: 'Média', impact: 'Alta', score: 15, mitigation: 'Injeção de vapor contínua e ventilação forçada com exaustores de alta vazão desde D-1', status: 'Mitigado' },
+          { id: 'RSK-02', hazard: 'Danos no feixe tubular durante a extração com extrator hidráulico', prob: 'Baixa', impact: 'Alta', score: 10, mitigation: 'Equipe especializada de rigging e extrator dedicado com guia de rolamento', status: 'Em Tratamento' },
+          { id: 'RSK-03', hazard: 'Falta de mão de obra qualificada de soldadores de ligas especiais', prob: 'Média', impact: 'Alta', score: 12, mitigation: 'Qualificação prévia dos soldadores em EPS aprovada 20 dias antes do D-0', status: 'Mitigado' }
+        ],
+        readinessItems: [
+          { id: 'RD-01', category: 'Engenharia & Escopo', title: 'Lista de Intervenções Congelada sem pendências de projeto', weight: 20, done: true },
+          { id: 'RD-02', category: 'Suprimentos & Almoxarifado', title: '100% dos Materiais Críticos e Long Lead conferidos e no canteiro', weight: 25, done: true },
+          { id: 'RD-03', category: 'Contratos & Mão de Obra', title: 'Integração de SMS e crachás de 450 terceiros 100% liberados', weight: 20, done: false },
+          { id: 'RD-04', category: 'SMS & Segurança', title: 'APRs e Procedimentos de Bloqueio (LOTO) validados pela operação', weight: 20, done: false },
+          { id: 'RD-05', category: 'Canteiro & Logística', title: 'Montagem de andaimes de acesso pré-parada e pontos de energia', weight: 15, done: false }
+        ]
+      },
+      parada: {
+        activeTab: 'warroom',
+        dayNumber: 0,
+        totalPlannedHours: 720,
+        executedHours: 0,
+        plannedProgress: 0,
+        realProgress: 0,
+        currentShift: 'Dia (07:00 - 19:00)',
+        headcountDay: 280,
+        headcountNight: 120,
+        spi: 1.00,
+        accidentsCount: 0,
+        turnsLog: [
+          { id: 'TRN-01', shift: 'Diurno', date: '2026-10-15', supervisor: 'Marcos Souza', status: 'Programado', summary: 'Início da drenagem, despressurização e lavagem química dos sistemas.', handoffNotes: 'Aguardar liberação de bloqueio elétrico LOTO no CCM-210 para início dos andaimes internos.' }
+        ],
+        criticalTasks: [
+          { id: 'TSK-CRIT-01', code: 'WBS-2.1.1', name: 'Despressurização e Lavagem com Vapor da Torre T-2101', plannedDays: 2, progress: 0, critical: true, responsible: 'Operação / SMS', status: 'Não Iniciada' },
+          { id: 'TSK-CRIT-02', code: 'WBS-2.1.2', name: 'Abertura das BV e Teste de Atmosfera Espaço Confinado', plannedDays: 1, progress: 0, critical: true, responsible: 'Mecânica / SMS', status: 'Não Iniciada' },
+          { id: 'TSK-CRIT-03', code: 'WBS-2.1.3', name: 'Desmontagem e Extração das 28 Bandejas Danificadas', plannedDays: 8, progress: 0, critical: true, responsible: 'Caldeiraria Pesada', status: 'Não Iniciada' },
+          { id: 'TSK-CRIT-04', code: 'WBS-2.1.4', name: 'Inspeção END (Ultrassom / Partícula Magnética) do Casco', plannedDays: 3, progress: 0, critical: true, responsible: 'Inspeção de Equipamentos', status: 'Não Iniciada' },
+          { id: 'TSK-CRIT-05', code: 'WBS-2.1.5', name: 'Montagem e Alinhamento das Novas Bandejas Inox 316L', plannedDays: 9, progress: 0, critical: true, responsible: 'Caldeiraria Pesada', status: 'Não Iniciada' },
+          { id: 'TSK-CRIT-06', code: 'WBS-2.1.6', name: 'Fechamento de Bocas de Visita e Teste de Estanqueidade a Ar', plannedDays: 2, progress: 0, critical: true, responsible: 'Mecânica / Operação', status: 'Não Iniciada' }
+        ],
+        orders: [
+          { id: 'OS-5501', tag: 'T-2101', title: 'Substituição Bandejas Fracionamento', discipline: 'Caldeiraria', team: 'Consórcio MetalMax', shift: '24h', progress: 0, status: 'Aguardando Bloqueio' },
+          { id: 'OS-5502', tag: 'P-2104A', title: 'Revisão Bomba de Fundo Selo Mecânico', discipline: 'Mecânica', team: 'Equipe Própria Mecânica', shift: 'Diurno', progress: 0, status: 'Não Iniciada' },
+          { id: 'OS-5503', tag: 'E-2102', title: 'Retirada de Feixe e Teste Hidrostático', discipline: 'Tubulação', team: 'Equipe TuboServ', shift: 'Diurno', progress: 0, status: 'Não Iniciada' },
+          { id: 'OS-5504', tag: 'PSV-2101', title: 'Aferição de Válvula de Segurança', discipline: 'Instrumentação', team: 'CalibraTech', shift: 'Diurno', progress: 0, status: 'Não Iniciada' },
+          { id: 'OS-5505', tag: 'MCC-210', title: 'Manutenção Preventiva Painéis 4.16 kV', discipline: 'Elétrica', team: 'VoltEngenharia', shift: 'Noturno', progress: 0, status: 'Não Iniciada' }
+        ],
+        loto: [
+          { id: 'LOTO-01', tag: 'T-2101-ISO', point: 'Válvula de Entrada de Carga V-01 (Raquete e Cadeado Vermelho)', lockedBy: 'Operação Central', date: '2026-10-15', status: 'Pendente' },
+          { id: 'LOTO-02', tag: 'MCC-210-CB04', point: 'Disjuntor Geral da Bomba P-2104A (Extraído e Travado)', lockedBy: 'Elétrica / Operação', date: '2026-10-15', status: 'Pendente' },
+          { id: 'LOTO-03', tag: 'E-2102-STEAM', point: 'Linha de Vapor 42 kgf/cm² (Bloqueio Duplo e Dreno Aberto)', lockedBy: 'Utilidades', date: '2026-10-15', status: 'Pendente' }
+        ],
+        deviations: []
+      },
+      posParada: {
+        activeTab: 'comissionamento',
+        commissioningSteps: [
+          { id: 'COM-01', system: 'Linhas de Tocha e Alívio', title: 'Purga com Nitrogênio e Teste de Vedação da Tocha', progress: 0, status: 'Não Iniciado', owner: 'Operação / Processos' },
+          { id: 'COM-02', system: 'Torre T-2101', title: 'Inertização com N2 (O2 < 0.5%) e Teste de Estanqueidade 2.5 kgf', progress: 0, status: 'Não Iniciado', owner: 'Operação' },
+          { id: 'COM-03', system: 'Bombas P-2104A/B', title: 'Giro manual, teste de rotação em vazio e alinhamento a laser', progress: 0, status: 'Não Iniciado', owner: 'Mecânica' },
+          { id: 'COM-04', system: 'Unidade U-210', title: 'Circulação a Frio de Nafta e Aquecimento Gradual (Rampa 20°C/h)', progress: 0, status: 'Não Iniciado', owner: 'Operação' }
+        ],
+        punchList: [
+          { id: 'PCH-01', tag: 'T-2101', type: 'A (Impeditiva)', description: 'Pintura externa de isolamento térmico nos anéis de suporte', responsible: 'Consórcio Pinturas', deadline: '2026-11-10', status: 'Aberta' },
+          { id: 'PCH-02', tag: 'P-2104B', type: 'B (Não Impeditiva)', description: 'Substituição de placa de identificação inox do motor elétrico', responsible: 'Manutenção Elétrica', deadline: '2026-11-20', status: 'Aberta' }
+        ],
+        demobilization: [
+          { id: 'DMB-01', item: 'Desmontagem e Devolução de 120 Toneladas de Andaimes', company: 'ScaffoldLoc', progress: 0, status: 'Pendente' },
+          { id: 'DMB-02', item: 'Desmobilização de Guindastes Pesados 250 Ton', company: 'Guindastes Brasil', progress: 0, status: 'Pendente' },
+          { id: 'DMB-03', item: 'Encerramento de Medições e Desmobilização de Canteiro', company: 'MetalMax & Terceiros', progress: 0, status: 'Pendente' }
+        ],
+        performanceReport: {
+          plannedCost: 14500000,
+          realCost: 14200000,
+          plannedDays: 30,
+          realDays: 30,
+          totalManHours: 98500,
+          lostTimeInjuries: 0,
+          environmentalEvents: 0,
+          scheduleAdherence: '100%',
+          costVariance: '-2.07% (Economia)'
+        },
+        lessonsLearned: []
+      }
+    },
+    {
+      id: 'prd-002',
+      code: 'PRD-2026-U450',
+      name: 'Parada Programada da U-450 (Craqueamento FCC)',
+      unit: 'U-450 Craqueamento Catalítico',
+      manager: 'Carlos Alberto Silva',
+      sponsor: 'Superintendência Industrial',
       type: 'Parada Geral Programada',
-      status: 'EM ELABORAÇÃO',
-      phase: 'Fase 1: Iniciação',
-      startDate: '2026-05-10',
-      endDate: '2026-06-14',
+      budget: 'R$ 28.900.000,00',
+      budgetRaw: 28900000,
+      startDate: '2026-09-01',
+      endDate: '2026-10-05',
       durationDays: 35,
-      budget: 'R$ 48.500.000,00',
-      description: 'Inspeção mandatória NR-13 para 18 vasos de pressão, manutenção da torre Fracionadora T-201 e reforma de permutadores.'
+      description: 'Troca de ciclones do Regenerador, reforma do refratário do Riser e substituição de válvulas corrediças especiais.',
+      currentPhase: 2, // 2: Parada em Execução
+      status: 'Em Execução',
+      createdAt: '2026-05-10',
+      gates: {
+        gate1: {
+          approved: true,
+          approvedBy: 'Carlos Alberto Silva (Admin/Diretor)',
+          approvedAt: '2026-08-31 18:00',
+          comments: 'Prontidão de 96% atingida. Mão de obra 100% integrada e suprimentos no canteiro. Autorizada a parada da planta.',
+          checklist: {
+            scopeFrozen: true,
+            criticalMaterialsInSite: true,
+            risksMitigated: true,
+            contractorsMobilized: true,
+            lotoPermitsReady: true
+          }
+        },
+        gate2: {
+          approved: false,
+          approvedBy: null,
+          approvedAt: null,
+          comments: '',
+          checklist: {
+            mechanicalCompletion: false,
+            testHydroDone: false,
+            cleanPlant: false,
+            punchListALevelZero: false,
+            blindRemovalDone: false
+          }
+        },
+        gate3: {
+          approved: false,
+          approvedBy: null,
+          approvedAt: null,
+          comments: '',
+          checklist: {
+            plantRampUp100: false,
+            punchListBClosed: false,
+            contractsSettled: false,
+            lessonsLearnedLogged: false,
+            finalReportPublished: false
+          }
+        }
+      },
+      preParada: {
+        activeTab: 'escopo',
+        scopeFrozen: true,
+        scopeFreezeDate: '2026-08-15',
+        items: [
+          { id: 'SCP-201', tag: 'R-4501', discipline: 'Refratário', description: 'Aplicação de 45 toneladas de concreto refratário no Regenerador', criticality: 'A (Crítico)', cost: 5800000, frozen: true, status: 'Aprovado' },
+          { id: 'SCP-202', tag: 'CYC-01 a 08', discipline: 'Caldeiraria', description: 'Troca de 8 ciclones de 2º estágio com liga especial antiabrasão', criticality: 'A (Crítico)', cost: 8400000, frozen: true, status: 'Aprovado' }
+        ],
+        supplies: [
+          { id: 'MAT-21', item: 'Ciclones de Incoloy 800H', leadTime: 'Long Lead (180d)', vendor: 'Sandvik Special Alloys', status: 'No Canteiro', deliverDate: '2026-08-10', critical: true },
+          { id: 'MAT-22', item: 'Concreto Refratário Alta Alumina 1800°C', leadTime: '45 dias', vendor: 'RHI Magnesita', status: 'No Canteiro', deliverDate: '2026-08-20', critical: true }
+        ],
+        risks: [
+          { id: 'RSK-21', hazard: 'Queda de refratário curado durante o dry-out térmico', prob: 'Baixa', impact: 'Crítica', score: 12, mitigation: 'Controle de termopares e curva de cura lenta de 15°C/h', status: 'Mitigado' }
+        ],
+        readinessItems: [
+          { id: 'RD-21', category: 'Readiness Geral', title: '100% de Prontidão Aprovada no Gate 1', weight: 100, done: true }
+        ]
+      },
+      parada: {
+        activeTab: 'warroom',
+        dayNumber: 26,
+        totalPlannedHours: 840,
+        executedHours: 624,
+        plannedProgress: 75.0,
+        realProgress: 76.5,
+        currentShift: 'Dia (07:00 - 19:00)',
+        headcountDay: 490,
+        headcountNight: 230,
+        spi: 1.02,
+        accidentsCount: 0,
+        turnsLog: [
+          { id: 'TRN-21', shift: 'Diurno', date: '2026-09-26', supervisor: 'Marcos Souza', status: 'Concluído', summary: 'Concluída a soldagem do 7º ciclone do Regenerador. Inspeção radiográfica aprovada sem defeitos.', handoffNotes: 'Turno da noite deve iniciar o pré-aquecimento para o 8º ciclone.' },
+          { id: 'TRN-22', shift: 'Noturno', date: '2026-09-26', supervisor: 'Carlos Silva', status: 'Concluído', summary: 'Soldagem do 8º ciclone em 80%. Sem desvios de segurança.', handoffNotes: 'Liberar equipe de refratário para inspecionar ancoragens às 08h.' }
+        ],
+        criticalTasks: [
+          { id: 'TSK-CRIT-21', code: 'WBS-3.2.1', name: 'Içamento e Posicionamento dos Ciclones 1 a 8', plannedDays: 14, progress: 95, critical: true, responsible: 'Consórcio Rigging / Caldeiraria', status: 'Em Execução' },
+          { id: 'TSK-CRIT-22', code: 'WBS-3.2.2', name: 'Aplicação e Vibração do Refratário Anti-Abrasivo', plannedDays: 10, progress: 60, critical: true, responsible: 'Equipe Refratários Brasil', status: 'Em Execução' },
+          { id: 'TSK-CRIT-23', code: 'WBS-3.2.3', name: 'Fechamento dos Tampos e Teste de Pressão Pneumático', plannedDays: 3, progress: 0, critical: true, responsible: 'Operação / Mecânica', status: 'Não Iniciada' }
+        ],
+        orders: [
+          { id: 'OS-8801', tag: 'R-4501', title: 'Soldagem Ciclones 7 e 8', discipline: 'Caldeiraria', team: 'Consórcio Metalúrgico', shift: '24h', progress: 88, status: 'Em Execução' },
+          { id: 'OS-8802', tag: 'RIS-450', title: 'Aplicação de Refratário do Riser', discipline: 'Refratário', team: 'Refratários Brasil', shift: 'Diurno', progress: 65, status: 'Em Execução' },
+          { id: 'OS-8803', tag: 'SV-4501', title: 'Revisão Válvula Slide Valve de Catalisador', discipline: 'Mecânica', team: 'Equipe Especializada Válvulas', shift: 'Diurno', progress: 100, status: 'Concluída' },
+          { id: 'OS-8804', tag: 'C-4501', title: 'Inspeção do Compressor de Ar de Combustão', discipline: 'Mecânica', team: 'Manutenção Rotativa', shift: 'Diurno', progress: 100, status: 'Concluída' }
+        ],
+        loto: [
+          { id: 'LOTO-21', tag: 'R-4501-ISO', point: 'Linha de Catalisador Regenerado (Válvula Slide Valve Bloqueada)', lockedBy: 'Operação FCC', date: '2026-09-01', status: 'Bloqueado Ativo' },
+          { id: 'LOTO-22', tag: 'C-4501-ELEC', point: 'Painel 13.8 kV do Compressor de Ar (Chave Seccionadora Aberta)', lockedBy: 'Elétrica / Operação', date: '2026-09-01', status: 'Bloqueado Ativo' }
+        ],
+        deviations: [
+          { id: 'DEV-01', title: 'Desgaste imprevisto na carcaça do duto de transferência', discipline: 'Caldeiraria', impactHours: 12, cost: 45000, status: 'Aprovado / Absorvido', solution: 'Soldagem de chapa de sacrifício Hardox executada em paralelo.' }
+        ]
+      },
+      posParada: {
+        activeTab: 'comissionamento',
+        commissioningSteps: [
+          { id: 'COM-21', system: 'Soprador de Ar C-4501', title: 'Teste de intertravamento de segurança (ESD) e partida em vazio', progress: 0, status: 'Não Iniciado', owner: 'Instrumentação / Operação' },
+          { id: 'COM-22', system: 'Regenerador R-4501', title: 'Secagem térmica (Dry-out) do refratário com queimadores auxiliares', progress: 0, status: 'Não Iniciado', owner: 'Processos / Operação' }
+        ],
+        punchList: [
+          { id: 'PCH-21', tag: 'R-4501', type: 'A (Impeditiva)', description: 'Relatório radiográfico final das soldas dos ciclones 7 e 8 assinado', responsible: 'Controle de Qualidade', deadline: '2026-10-01', status: 'Aberta' }
+        ],
+        demobilization: [],
+        performanceReport: {},
+        lessonsLearned: []
+      }
     },
     {
-      id: 'PRD-2026-U340',
-      code: 'PRD-2026-U340',
-      name: 'Parada da Unidade FCC — Craqueamento Catalítico',
-      unit: 'U-340 Craqueamento Catalítico Fluido',
-      manager: 'Carlos Eduardo Mendes',
-      sponsor: 'Diretoria de Refino e Petroquímica',
-      type: 'Parada de Unidade de Conversão',
-      status: 'EM ELABORAÇÃO',
-      phase: 'Fase 1: Iniciação',
-      startDate: '2026-08-15',
-      endDate: '2026-09-12',
-      durationDays: 28,
-      budget: 'R$ 32.000.000,00',
-      description: 'Troca de ciclones do regenerador, inspeção de vasos de alta temperatura e manutenção de sopradores de ar.'
-    },
-    {
-      id: 'PRD-2027-P54',
-      code: 'PRD-2027-P54',
-      name: 'Parada de Manutenção — Plataforma Offshore P-54',
-      unit: 'Módulo M-03 Compressão de Gás e Utilidades',
+      id: 'prd-003',
+      code: 'PRD-2026-H104',
+      name: 'Parada Linha de Alta Pressão H-104 (Hidrogênio)',
+      unit: 'U-100 Geração de Hidrogênio',
       manager: 'Juliana Santos',
-      sponsor: 'Superintendência de E&P Bacia de Campos',
-      type: 'Parada Geral Offshore',
-      status: 'EM ELABORAÇÃO',
-      phase: 'Fase 1: Iniciação',
-      startDate: '2027-03-01',
-      endDate: '2027-03-25',
-      durationDays: 24,
-      budget: 'R$ 65.000.000,00',
-      description: 'Intervenção geral nos turbocompressores de alta pressão, inspeção estrutural submarina e manutenção de skids de processo.'
+      sponsor: 'Diretoria de Segurança & Meio Ambiente',
+      type: 'Parada Setorial de Confiabilidade',
+      budget: 'R$ 4.200.000,00',
+      budgetRaw: 4200000,
+      startDate: '2026-08-10',
+      endDate: '2026-09-15',
+      durationDays: 36,
+      description: 'Substituição de coletores de reforma de H2, tubos centrifugados e calibração de transmissores de pressão.',
+      currentPhase: 3, // 3: Pós-Parada
+      status: 'Em Pós-Parada',
+      createdAt: '2026-04-01',
+      gates: {
+        gate1: {
+          approved: true,
+          approvedBy: 'Juliana Santos (Gerente)',
+          approvedAt: '2026-08-09 14:00',
+          comments: 'Prontidão total validada. Liberação concedida.',
+          checklist: { scopeFrozen: true, criticalMaterialsInSite: true, risksMitigated: true, contractorsMobilized: true, lotoPermitsReady: true }
+        },
+        gate2: {
+          approved: true,
+          approvedBy: 'Carlos Alberto Silva (Admin/Diretor)',
+          approvedAt: '2026-09-15 17:30',
+          comments: 'Término mecânico aprovado. Testes hidrostáticos 100% conforme. Liberação para comissionamento e rampa de partida.',
+          checklist: { mechanicalCompletion: true, testHydroDone: true, cleanPlant: true, punchListALevelZero: true, blindRemovalDone: true }
+        },
+        gate3: {
+          approved: false,
+          approvedBy: null,
+          approvedAt: null,
+          comments: '',
+          checklist: { plantRampUp100: true, punchListBClosed: false, contractsSettled: false, lessonsLearnedLogged: false, finalReportPublished: false }
+        }
+      },
+      preParada: { activeTab: 'escopo', scopeFrozen: true, items: [], supplies: [], risks: [], readinessItems: [] },
+      parada: { activeTab: 'warroom', dayNumber: 36, totalPlannedHours: 450, executedHours: 440, plannedProgress: 100, realProgress: 100, currentShift: 'Finalizada', headcountDay: 0, headcountNight: 0, spi: 1.00, accidentsCount: 0, turnsLog: [], criticalTasks: [], orders: [], loto: [], deviations: [] },
+      posParada: {
+        activeTab: 'comissionamento',
+        commissioningSteps: [
+          { id: 'COM-31', system: 'Forno de Reforma H-104', title: 'Teste de estanqueidade com Hélio e purga com N2', progress: 100, status: 'Concluído', owner: 'Operação' },
+          { id: 'COM-32', system: 'Linha H-104', title: 'Introdução de gás de síntese e rampa de carga 100%', progress: 100, status: 'Concluído', owner: 'Operação' }
+        ],
+        punchList: [
+          { id: 'PCH-31', tag: 'H-104', type: 'B (Não Impeditiva)', description: 'Retoque de pintura térmica no coletor de saída', responsible: 'Consórcio Pintura', deadline: '2026-10-10', status: 'Em Tratamento' }
+        ],
+        demobilization: [
+          { id: 'DMB-31', item: 'Devolução de 40 carretas de andaimes tubulares', company: 'ScaffoldLoc', progress: 90, status: 'Em Andamento' },
+          { id: 'DMB-32', item: 'Fechamento de medição final da Caldeiraria', company: 'TuboServ', progress: 80, status: 'Em Andamento' }
+        ],
+        performanceReport: {
+          plannedCost: 4200000,
+          realCost: 4110000,
+          plannedDays: 36,
+          realDays: 35,
+          totalManHours: 32400,
+          lostTimeInjuries: 0,
+          environmentalEvents: 0,
+          scheduleAdherence: '102.8% (Antecipada em 1 dia)',
+          costVariance: '-2.14% (Abaixo do Orçamento)'
+        },
+        lessonsLearned: [
+          { id: 'LL-01', category: 'Inspeção & Testes', whatWentWell: 'Uso de ultrassom Phased Array reduziu o tempo de liberação das soldas em 48 horas.', whatWentWrong: 'Atraso na calibração inicial de manômetros no almoxarifado.', recommendation: 'Certificar 100% da instrumentação de teste com 30 dias de antecedência no D-30.' }
+        ]
+      }
     }
   ],
 
-  projects: [],
-  searchTerm: '',
-  modalMode: 'create', // 'create' ou 'edit'
-  editingProjectId: null,
-
-  init() {
-    const saved = localStorage.getItem('stop_projects_list');
-    if (saved) {
-      try {
-        this.projects = JSON.parse(saved);
-      } catch (e) {
-        this.projects = JSON.parse(JSON.stringify(this.defaultProjects));
+  getParadas() {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
       }
-    } else {
-      this.projects = JSON.parse(JSON.stringify(this.defaultProjects));
-      this.saveProjects();
+    } catch (e) {
+      console.warn('Erro ao ler paradas do storage:', e);
+    }
+    this.saveParadas(this.defaultParadas);
+    return this.defaultParadas;
+  },
+
+  saveParadas(paradas) {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(paradas));
+    } catch (e) {
+      console.error('Erro ao salvar paradas:', e);
     }
   },
 
-  saveProjects() {
-    localStorage.setItem('stop_projects_list', JSON.stringify(this.projects));
+  getParadaById(id) {
+    const list = this.getParadas();
+    return list.find(p => p.id === id) || null;
   },
 
-  getProjectById(id) {
-    if (!this.projects.length) this.init();
-    return this.projects.find(p => p.id === id) || this.projects[0];
-  },
-
-  handleSearch(term) {
-    this.searchTerm = term.trim().toLowerCase();
-    const grid = document.getElementById('projects-cards-grid');
-    if (grid) {
-      grid.innerHTML = this.renderCardsHtml();
+  updateParada(parada) {
+    const list = this.getParadas();
+    const index = list.findIndex(p => p.id === parada.id);
+    if (index !== -1) {
+      list[index] = parada;
+      this.saveParadas(list);
     }
   },
 
   render() {
-    if (!this.projects.length) this.init();
+    const list = this.getParadas();
+    const currentUser = UsersManager.getCurrentUser();
 
-    const totalBudget = this.projects.reduce((acc, p) => {
-      const val = parseFloat((p.budget || '').replace(/[^0-9,]/g, '').replace(',', '.')) || 0;
-      return acc + val;
-    }, 0);
+    // KPIs Globais
+    const totalParadas = list.length;
+    const preParadas = list.filter(p => p.currentPhase === 1).length;
+    const emExecucao = list.filter(p => p.currentPhase === 2).length;
+    const posParadas = list.filter(p => p.currentPhase === 3 && p.status !== 'Concluída').length;
+    const concluidas = list.filter(p => p.status === 'Concluída').length;
 
-    return `
-      <div class="p-6 lg:p-10 space-y-8 animate-fade-in max-w-[1500px] mx-auto">
+    let html = `
+      <div class="p-6 md:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in">
         
-        <!-- HERO / CABEÇALHO DO PORTFÓLIO (Ferrari Editorial Style) -->
-        <div class="card-industrial relative overflow-hidden bg-[#202020] border border-[#303030] rounded-none">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-[#da291c]"></div>
+        <!-- Header da Tela: Portfólio de Paradas Industriais -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#e5e5e5] pb-6">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="nike-pill bg-[#111111] text-white">SISTEMA STOP</span>
+              <span class="text-xs text-[#707072] font-semibold uppercase tracking-wider">Gestão Sequencial de Grandes Paradas</span>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-display-title text-[#111111] tracking-tight">Portfólio de Paradas</h1>
+            <p class="text-xs md:text-sm text-[#707072] mt-1">Controle executivo e operacional de paradas de manutenção nas 3 fases: Pré-Parada, Parada e Pós-Parada com Stage-Gates.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="ProjectsView.openCreateModal()" class="btn-pill-primary shadow-md hover:shadow-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-base">add_circle</span>
+              <span>Cadastrar Nova Parada</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Indicadores Executivos (KPI Cards) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10 pt-2">
-            <div>
-              <div class="flex items-center gap-3 mb-2 flex-wrap">
-                <span class="status-pill status-amber">
-                  <span class="status-dot"></span>
-                  PORTFÓLIO DE GRANDES PARADAS
-                </span>
-                <span class="text-xs text-[#969696] border-l border-[#303030] pl-3 uppercase tracking-wider font-semibold">
-                  STOP v2.5 • GOVERNANÇA PMBOK 8
-                </span>
-              </div>
-
-              <h1 class="text-2xl lg:text-3xl font-display-title text-white tracking-wider flex items-center gap-3">
-                SELECIONE OU CRIE UMA PARADA
-              </h1>
-              <p class="text-xs text-[#969696] mt-1.5 max-w-2xl leading-relaxed">
-                Central de governança de paradas industriais. Escolha uma parada existente para gerenciar suas <strong>5 etapas</strong> e Termo de Abertura, edite cadastros vigentes ou inicie um novo projeto.
-              </p>
+          <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
+            <div class="flex items-center justify-between text-[#707072] mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">Total de Paradas</span>
+              <span class="material-symbols-outlined text-lg text-[#111111]">fact_check</span>
             </div>
-
-            <!-- Botão de Ação Primária (Ferrari Rosso Corsa CTA) -->
-            <div class="flex items-center gap-3 shrink-0">
-              <button onclick="ProjectsView.openCreateModal()" class="btn-pill-primary px-6 py-3 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] flex items-center gap-2 shadow-lg transition-all tracking-[1.4px] uppercase">
-                <span class="material-symbols-outlined text-base">add_circle</span>
-                <span>Criar Novo Projeto de Parada</span>
-              </button>
-            </div>
+            <div class="text-2xl font-black text-[#111111]">${totalParadas}</div>
+            <span class="text-[10px] text-[#707072] mt-1 block font-medium">Em carteira industrial</span>
           </div>
 
-          <!-- Métricas Rápidas do Portfólio -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-[#303030] text-xs">
-            <div class="p-3.5 rounded-none bg-[#181818] border border-[#303030]">
-              <span class="text-[10px] text-[#666666] font-bold uppercase tracking-wider block">Total de Projetos</span>
-              <span class="text-xl font-display-title text-white font-bold">${this.projects.length}</span>
-              <span class="text-[10px] text-[#969696] block mt-0.5">Paradas cadastradas</span>
+          <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
+            <div class="flex items-center justify-between text-[#707072] mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">1. Pré-Parada</span>
+              <span class="material-symbols-outlined text-lg text-[#1151ff]">event_note</span>
             </div>
+            <div class="text-2xl font-black text-[#1151ff]">${preParadas}</div>
+            <span class="text-[10px] text-[#707072] mt-1 block font-medium">Em planejamento / Gate 1</span>
+          </div>
 
-            <div class="p-3.5 rounded-none bg-[#181818] border border-[#303030]">
-              <span class="text-[10px] text-[#f6e500] font-bold uppercase tracking-wider block">Fase 1: Iniciação</span>
-              <span class="text-xl font-display-title text-[#f6e500] font-bold">${this.projects.length}</span>
-              <span class="text-[10px] text-[#969696] block mt-0.5">Em estruturação / TAP</span>
+          <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
+            <div class="flex items-center justify-between text-[#707072] mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">2. Em Execução</span>
+              <span class="material-symbols-outlined text-lg text-[#d30005]">precision_manufacturing</span>
             </div>
+            <div class="text-2xl font-black text-[#d30005]">${emExecucao}</div>
+            <span class="text-[10px] text-[#707072] mt-1 block font-medium">War Room & Turnos ativos</span>
+          </div>
 
-            <div class="p-3.5 rounded-none bg-[#181818] border border-[#303030]">
-              <span class="text-[10px] text-[#03904a] font-bold uppercase tracking-wider block">Orçamento Consolidado</span>
-              <span class="text-lg font-display-title text-[#03904a] font-bold font-mono">R$ ${totalBudget.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M</span>
-              <span class="text-[10px] text-[#969696] block mt-0.5">Capex + Opex previsto</span>
+          <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
+            <div class="flex items-center justify-between text-[#707072] mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider">3. Pós-Parada</span>
+              <span class="material-symbols-outlined text-lg text-[#007d48]">task_alt</span>
             </div>
+            <div class="text-2xl font-black text-[#007d48]">${posParadas}</div>
+            <span class="text-[10px] text-[#707072] mt-1 block font-medium">Comissionamento & Lições</span>
+          </div>
 
-            <div class="p-3.5 rounded-none bg-[#181818] border border-[#303030]">
-              <span class="text-[10px] text-[#4c98b9] font-bold uppercase tracking-wider block">Plantas Atendidas</span>
-              <span class="text-xl font-display-title text-white font-bold">3 Polos</span>
-              <span class="text-[10px] text-[#969696] block mt-0.5">Refino, Petroquímica e Offshore</span>
-            </div>
+        </div>
+
+        <!-- Filtros e Barra de Pesquisa -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f5f5f5] p-3 rounded-2xl border border-[#e5e5e5]">
+          <div class="flex items-center gap-2 flex-1 max-w-md bg-[#ffffff] px-3 py-2 rounded-xl border border-[#e5e5e5] focus-within:border-[#111111]">
+            <span class="material-symbols-outlined text-[#707072] text-lg">search</span>
+            <input type="text" id="search-turnarounds-input" oninput="ProjectsView.filterParadas()" placeholder="Filtrar por nome, código ou unidade operacional..." class="w-full text-xs outline-none bg-transparent text-[#111111]" />
+          </div>
+
+          <div class="flex items-center gap-2 overflow-x-auto text-xs">
+            <button onclick="ProjectsView.setFilter('todos')" id="filter-btn-todos" class="filter-tab active px-4 py-2 rounded-full font-bold bg-[#111111] text-white text-xs">Todos (${totalParadas})</button>
+            <button onclick="ProjectsView.setFilter('pre')" id="filter-btn-pre" class="filter-tab px-4 py-2 rounded-full font-bold bg-[#ffffff] text-[#4b4b4d] border border-[#e5e5e5] text-xs hover:border-[#111111]">Pré-Parada (${preParadas})</button>
+            <button onclick="ProjectsView.setFilter('exec')" id="filter-btn-exec" class="filter-tab px-4 py-2 rounded-full font-bold bg-[#ffffff] text-[#4b4b4d] border border-[#e5e5e5] text-xs hover:border-[#111111]">Em Execução (${emExecucao})</button>
+            <button onclick="ProjectsView.setFilter('pos')" id="filter-btn-pos" class="filter-tab px-4 py-2 rounded-full font-bold bg-[#ffffff] text-[#4b4b4d] border border-[#e5e5e5] text-xs hover:border-[#111111]">Pós-Parada (${posParadas})</button>
           </div>
         </div>
 
-        <!-- BARRA DE FILTRO E PESQUISA -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="relative flex-1 max-w-md">
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#666666] text-lg">search</span>
-            <input 
-              type="text" 
-              placeholder="Buscar por código, nome da parada ou unidade..." 
-              oninput="ProjectsView.handleSearch(this.value)"
-              class="form-input pl-10 text-xs py-2 bg-[#181818] border-[#303030] rounded-sm focus:border-white"
-            />
-          </div>
-
-          <div class="text-xs text-[#969696] font-medium flex items-center gap-2">
-            <span>Clique em <strong>Acessar Projeto</strong> para carregar as 5 etapas da parada</span>
-          </div>
-        </div>
-
-        <!-- GRID DE CARDS DOS PROJETOS -->
-        <div id="projects-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          ${this.renderCardsHtml()}
+        <!-- Grid de Cards das Paradas -->
+        <div id="paradas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${this.renderCardsHtml(list)}
         </div>
 
       </div>
     `;
+
+    return html;
   },
 
-  renderCardsHtml() {
-    let filtered = this.projects;
-    if (this.searchTerm) {
-      filtered = filtered.filter(p => 
-        (p.name && p.name.toLowerCase().includes(this.searchTerm)) ||
-        (p.code && p.code.toLowerCase().includes(this.searchTerm)) ||
-        (p.unit && p.unit.toLowerCase().includes(this.searchTerm)) ||
-        (p.manager && p.manager.toLowerCase().includes(this.searchTerm))
-      );
-    }
-
-    if (!filtered.length) {
+  renderCardsHtml(list) {
+    if (!list || list.length === 0) {
       return `
-        <div class="col-span-full p-12 text-center card-industrial border-dashed border-[#303030] rounded-none bg-[#181818]">
-          <span class="material-symbols-outlined text-4xl text-[#666666] mb-2">search_off</span>
-          <p class="text-sm font-bold text-white uppercase tracking-wider">Nenhum projeto encontrado</p>
-          <p class="text-xs text-[#969696] mt-1">Tente outros termos de pesquisa ou crie um novo projeto de parada.</p>
+        <div class="col-span-full p-12 text-center bg-[#f5f5f5] rounded-3xl border border-dashed border-[#cacacb]">
+          <span class="material-symbols-outlined text-4xl text-[#707072] mb-2">folder_off</span>
+          <h3 class="text-sm font-bold text-[#111111] uppercase tracking-wider">Nenhuma Parada Encontrada</h3>
+          <p class="text-xs text-[#707072] mt-1">Cadastre uma nova parada industrial para iniciar o ciclo sequencial de gestão.</p>
+          <button onclick="ProjectsView.openCreateModal()" class="btn-pill-primary mt-4 text-xs">
+            <span>Cadastrar Primeira Parada</span>
+          </button>
         </div>
       `;
     }
 
-    return filtered.map(p => {
-      // Verificar se este projeto tem Gate 1 homologado no localStorage
-      let isHomologated = false;
-      const savedTap = localStorage.getItem(`stop_project_${p.id}_data`);
-      if (savedTap) {
-        try {
-          const parsed = JSON.parse(savedTap);
-          if (parsed.node5 && parsed.node5.signed) isHomologated = true;
-        } catch(e) {}
+    return list.map(p => {
+      // Determinar badges e cores da fase
+      let phaseBadge = '';
+      let phaseColor = '#111111';
+      let progressPercent = 0;
+
+      if (p.currentPhase === 1) {
+        phaseBadge = `<span class="nike-pill bg-blue-50 text-blue-700 border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block mr-1"></span>Fase 1: Pré-Parada</span>`;
+        progressPercent = 33;
+      } else if (p.currentPhase === 2) {
+        phaseBadge = `<span class="nike-pill bg-red-50 text-red-700 border-red-200 animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-red-600 inline-block mr-1"></span>Fase 2: Execução / Parada</span>`;
+        progressPercent = 66;
+      } else {
+        phaseBadge = `<span class="nike-pill bg-emerald-50 text-emerald-700 border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block mr-1"></span>Fase 3: Pós-Parada</span>`;
+        progressPercent = 100;
       }
 
+      // Status dos Gates
+      const g1Status = p.gates.gate1.approved ? '<span class="text-[#007d48] font-bold">Aprovado</span>' : '<span class="text-[#707072]">Pendente</span>';
+      const g2Status = p.gates.gate2.approved ? '<span class="text-[#007d48] font-bold">Aprovado</span>' : '<span class="text-[#707072]">Pendente</span>';
+
       return `
-        <div class="card-industrial border border-[#303030] hover:border-[#da291c] transition-all flex flex-col justify-between group relative overflow-hidden bg-[#202020] rounded-none">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-transparent group-hover:bg-[#da291c] transition-colors"></div>
+        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 hover:border-[#111111] hover:shadow-xl transition-all flex flex-col justify-between group">
           
-          <div>
-            <!-- Topo do Card: Código e Status -->
-            <div class="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-[#303030]">
-              <span class="text-[11px] font-mono font-bold text-[#da291c] bg-[#181818] px-2.5 py-1 rounded-none border border-[#303030]">
-                ${p.code}
-              </span>
-
-              <span class="status-pill ${isHomologated ? 'status-emerald' : 'status-amber'} text-[9px]">
-                <span class="status-dot"></span>
-                ${isHomologated ? 'GATE 1 HOMOLOGADO' : 'INICIAÇÃO • EM ELABORAÇÃO'}
-              </span>
-            </div>
-
-            <!-- Título da Parada e Unidade -->
-            <h3 class="text-base font-bold text-white group-hover:text-[#da291c] transition-colors leading-snug">
-              ${p.name}
-            </h3>
+          <div class="space-y-4">
             
-            <div class="flex items-center gap-1.5 text-xs text-[#969696] mt-1.5 font-medium">
-              <span class="material-symbols-outlined text-sm text-[#666666]">precision_manufacturing</span>
-              <span>${p.unit}</span>
+            <!-- Topo do Card: Código & Badge de Fase -->
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono text-xs font-bold text-[#707072] bg-[#f5f5f5] px-2.5 py-1 rounded-lg border border-[#e5e5e5]">${p.code}</span>
+              ${phaseBadge}
             </div>
 
-            <p class="text-xs text-[#969696] mt-3 line-clamp-2 leading-relaxed">
-              ${p.description || 'Intervenção industrial programada para restauração da confiabilidade e inspeções mandatórias.'}
-            </p>
-
-            <!-- Metadados Operacionais -->
-            <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-[#303030] text-[11px]">
-              <div>
-                <span class="text-[#666666] block text-[10px] uppercase font-bold tracking-wider">Janela Prevista</span>
-                <span class="font-semibold text-white">${p.durationDays} dias (${p.startDate ? p.startDate.split('-').reverse().slice(0, 2).join('/') : 'A definir'})</span>
-              </div>
-              <div>
-                <span class="text-[#666666] block text-[10px] uppercase font-bold tracking-wider">Orçamento Total</span>
-                <span class="font-semibold text-[#03904a] font-mono">${p.budget || 'R$ 0,00'}</span>
-              </div>
-              <div class="col-span-2 mt-1">
-                <span class="text-[#666666] block text-[10px] uppercase font-bold tracking-wider">Gerente Designado</span>
-                <span class="text-white">${p.manager}</span>
+            <!-- Título e Unidade -->
+            <div>
+              <h3 class="text-base font-extrabold text-[#111111] tracking-tight group-hover:text-black leading-snug">${p.name}</h3>
+              <div class="flex items-center gap-1.5 text-xs text-[#707072] mt-1 font-medium">
+                <span class="material-symbols-outlined text-sm text-[#111111]">factory</span>
+                <span>${p.unit}</span>
               </div>
             </div>
+
+            <!-- Descrição resumida -->
+            <p class="text-xs text-[#4b4b4d] leading-relaxed line-clamp-2">${p.description}</p>
+
+            <!-- Stepper Visual Mini das 3 Fases com Indicador de Gates -->
+            <div class="bg-[#f9f9f9] p-3 rounded-2xl border border-[#e5e5e5] space-y-2">
+              <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#707072]">
+                <span class="${p.currentPhase >= 1 ? 'text-[#111111]' : ''}">1. Pré-Parada</span>
+                <span class="text-center ${p.currentPhase >= 2 ? 'text-[#111111]' : ''}">2. Parada</span>
+                <span class="text-right ${p.currentPhase === 3 ? 'text-[#111111]' : ''}">3. Pós-Parada</span>
+              </div>
+
+              <div class="w-full bg-[#e5e5e5] h-2 rounded-full overflow-hidden flex">
+                <div class="h-full ${p.currentPhase >= 1 ? 'bg-[#111111]' : 'bg-transparent'}" style="width: 33.33%;"></div>
+                <div class="h-full ${p.currentPhase >= 2 ? (p.currentPhase === 2 ? 'bg-[#d30005]' : 'bg-[#111111]') : 'bg-transparent'}" style="width: 33.33%;"></div>
+                <div class="h-full ${p.currentPhase === 3 ? 'bg-[#007d48]' : 'bg-transparent'}" style="width: 33.34%;"></div>
+              </div>
+
+              <div class="flex items-center justify-between text-[10px] text-[#707072] pt-1">
+                <span class="flex items-center gap-1">Gate 1: ${g1Status}</span>
+                <span class="flex items-center gap-1">Gate 2: ${g2Status}</span>
+              </div>
+            </div>
+
+            <!-- Metadados em Grid -->
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-[#f0f0f0]">
+              <div>
+                <span class="text-[10px] uppercase font-bold text-[#707072] block">Gerente Responsável</span>
+                <span class="font-bold text-[#111111] truncate block">${p.manager}</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-[#707072] block">Orçamento Alvo</span>
+                <span class="font-mono font-bold text-[#007d48] truncate block">${p.budget}</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-[#707072] block">Data Início (D-0)</span>
+                <span class="font-mono font-medium text-[#111111] block">${p.startDate ? p.startDate.split('-').reverse().join('/') : '--'}</span>
+              </div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-[#707072] block">Duração Estimada</span>
+                <span class="font-bold text-[#111111] block">${p.durationDays} dias</span>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Rodapé com Botões de Ação -->
-          <div class="mt-6 pt-4 border-t border-[#303030] flex items-center justify-between gap-2">
-            <div class="flex items-center gap-1.5 min-h-[32px]">
-              <div id="prj-actions-${p.id}" class="flex items-center gap-1.5">
-                <button onclick="ProjectsView.openEditModal('${p.id}')" class="btn-icon-pill w-8 h-8 text-[#969696] hover:text-white border-[#303030] hover:border-[#da291c] rounded-none" title="Editar Metadados do Projeto">
-                  <span class="material-symbols-outlined text-sm">edit</span>
-                </button>
-                
-                <button onclick="ProjectsView.askDeleteProject('${p.id}')" class="btn-icon-pill w-8 h-8 text-[#969696] hover:text-[#da291c] border-[#303030] hover:border-[#da291c]" title="Excluir Parada">
-                  <span class="material-symbols-outlined text-sm">delete</span>
-                </button>
-              </div>
-
-              <div id="prj-confirm-${p.id}" class="hidden inline-confirm-box animate-fade-in py-1">
-                <span class="text-[#969696] text-[10px] font-medium">Excluir?</span>
-                <button onclick="ProjectsView.confirmDeleteProject('${p.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão da parada">SIM</button>
-                <button onclick="ProjectsView.cancelDeleteProject('${p.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">NÃO</button>
-              </div>
+          <!-- Ações do Card -->
+          <div class="flex items-center justify-between gap-2 pt-4 border-t border-[#e5e5e5] mt-4">
+            <div class="flex items-center gap-1">
+              <button onclick="ProjectsView.openCreateModal('${p.id}')" title="Editar Informações da Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111] border-[#e5e5e5]">
+                <span class="material-symbols-outlined text-sm">edit</span>
+              </button>
+              <button onclick="ProjectsView.deleteParada('${p.id}')" title="Excluir Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005] border-[#e5e5e5]">
+                <span class="material-symbols-outlined text-sm">delete</span>
+              </button>
             </div>
 
-            <button onclick="App.selectProject('${p.id}')" class="btn-pill-primary px-5 py-2 rounded-none font-bold text-xs bg-[#da291c] text-white hover:bg-[#9d2211] transition-all flex items-center gap-1.5 shrink-0 shadow-md uppercase tracking-[1.4px]">
-              <span>Acessar Projeto</span>
-              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            <button onclick="App.selectParada('${p.id}', ${p.currentPhase})" class="btn-pill-primary py-2 px-5 text-xs flex items-center gap-1.5 shadow-sm group-hover:bg-black">
+              <span>Acessar Parada</span>
+              <span class="material-symbols-outlined text-xs">arrow_forward</span>
             </button>
           </div>
 
@@ -300,47 +619,82 @@ const ProjectsView = {
     }).join('');
   },
 
-  openCreateModal() {
-    this.modalMode = 'create';
-    this.editingProjectId = null;
-    const modal = document.getElementById('project-edit-modal');
-    if (!modal) return;
+  setFilter(type) {
+    const list = this.getParadas();
+    document.querySelectorAll('.filter-tab').forEach(b => {
+      b.classList.remove('bg-[#111111]', 'text-white');
+      b.classList.add('bg-[#ffffff]', 'text-[#4b4b4d]');
+    });
 
-    document.getElementById('modal-project-title').textContent = 'Cadastrar Novo Projeto de Parada';
-    document.getElementById('form-project-code').value = 'PRD-' + new Date().getFullYear() + '-U' + Math.floor(100 + Math.random() * 900);
-    document.getElementById('form-project-name').value = '';
-    document.getElementById('form-project-unit').value = '';
-    document.getElementById('form-project-manager').value = 'Juliana Santos';
-    document.getElementById('form-project-sponsor').value = 'Diretoria Industrial';
-    document.getElementById('form-project-type').value = 'Parada Geral Programada';
-    document.getElementById('form-project-start').value = '2026-09-01';
-    document.getElementById('form-project-end').value = '2026-10-05';
-    document.getElementById('form-project-days').value = '35';
-    document.getElementById('form-project-budget').value = 'R$ 45.000.000,00';
-    document.getElementById('form-project-desc').value = '';
+    const activeBtn = document.getElementById(`filter-btn-${type}`);
+    if (activeBtn) {
+      activeBtn.classList.remove('bg-[#ffffff]', 'text-[#4b4b4d]');
+      activeBtn.classList.add('bg-[#111111]', 'text-white');
+    }
 
-    modal.classList.remove('hidden');
+    let filtered = list;
+    if (type === 'pre') filtered = list.filter(p => p.currentPhase === 1);
+    else if (type === 'exec') filtered = list.filter(p => p.currentPhase === 2);
+    else if (type === 'pos') filtered = list.filter(p => p.currentPhase === 3);
+
+    const grid = document.getElementById('paradas-grid');
+    if (grid) {
+      grid.innerHTML = this.renderCardsHtml(filtered);
+    }
   },
 
-  openEditModal(id) {
-    this.modalMode = 'edit';
-    this.editingProjectId = id;
-    const p = this.getProjectById(id);
-    const modal = document.getElementById('project-edit-modal');
-    if (!modal || !p) return;
+  filterParadas() {
+    const term = (document.getElementById('search-turnarounds-input')?.value || '').toLowerCase().trim();
+    const list = this.getParadas();
+    const filtered = list.filter(p => 
+      p.name.toLowerCase().includes(term) ||
+      p.code.toLowerCase().includes(term) ||
+      p.unit.toLowerCase().includes(term) ||
+      p.manager.toLowerCase().includes(term)
+    );
+    const grid = document.getElementById('paradas-grid');
+    if (grid) {
+      grid.innerHTML = this.renderCardsHtml(filtered);
+    }
+  },
 
-    document.getElementById('modal-project-title').textContent = 'Editar Metadados da Parada';
-    document.getElementById('form-project-code').value = p.code || '';
-    document.getElementById('form-project-name').value = p.name || '';
-    document.getElementById('form-project-unit').value = p.unit || '';
-    document.getElementById('form-project-manager').value = p.manager || '';
-    document.getElementById('form-project-sponsor').value = p.sponsor || '';
-    document.getElementById('form-project-type').value = p.type || 'Parada Geral Programada';
-    document.getElementById('form-project-start').value = p.startDate || '';
-    document.getElementById('form-project-end').value = p.endDate || '';
-    document.getElementById('form-project-days').value = p.durationDays || 30;
-    document.getElementById('form-project-budget').value = p.budget || '';
-    document.getElementById('form-project-desc').value = p.description || '';
+  openCreateModal(id = null) {
+    const modal = document.getElementById('project-edit-modal');
+    const title = document.getElementById('modal-project-title');
+    if (!modal) return;
+
+    if (id) {
+      const p = this.getParadaById(id);
+      if (!p) return;
+      if (title) title.innerText = 'Editar Dados da Parada Industrial';
+      document.getElementById('form-project-code').value = p.code || '';
+      document.getElementById('form-project-name').value = p.name || '';
+      document.getElementById('form-project-unit').value = p.unit || '';
+      document.getElementById('form-project-manager').value = p.manager || '';
+      document.getElementById('form-project-sponsor').value = p.sponsor || '';
+      document.getElementById('form-project-type').value = p.type || '';
+      document.getElementById('form-project-budget').value = p.budget || '';
+      document.getElementById('form-project-start').value = p.startDate || '';
+      document.getElementById('form-project-end').value = p.endDate || '';
+      document.getElementById('form-project-days').value = p.durationDays || '';
+      document.getElementById('form-project-desc').value = p.description || '';
+      modal.setAttribute('data-edit-id', id);
+    } else {
+      if (title) title.innerText = 'Cadastrar Nova Parada Industrial';
+      const count = this.getParadas().length + 1;
+      document.getElementById('form-project-code').value = `PRD-2026-U${100 + count * 10}`;
+      document.getElementById('form-project-name').value = '';
+      document.getElementById('form-project-unit').value = '';
+      document.getElementById('form-project-manager').value = UsersManager.getCurrentUser().name;
+      document.getElementById('form-project-sponsor').value = 'Diretoria Industrial';
+      document.getElementById('form-project-type').value = 'Parada Geral Programada';
+      document.getElementById('form-project-budget').value = 'R$ 8.000.000,00';
+      document.getElementById('form-project-start').value = '2026-11-01';
+      document.getElementById('form-project-end').value = '2026-11-25';
+      document.getElementById('form-project-days').value = '25';
+      document.getElementById('form-project-desc').value = '';
+      modal.removeAttribute('data-edit-id');
+    }
 
     modal.classList.remove('hidden');
   },
@@ -351,43 +705,30 @@ const ProjectsView = {
   },
 
   saveModal() {
-    const name = document.getElementById('form-project-name').value.trim();
-    const code = document.getElementById('form-project-code').value.trim();
-    if (!name || !code) {
-      alert('Por favor, informe ao menos o Código e o Nome da Parada.');
+    const modal = document.getElementById('project-edit-modal');
+    const editId = modal?.getAttribute('data-edit-id');
+
+    const code = document.getElementById('form-project-code')?.value.trim() || 'PRD-2026-NOVA';
+    const name = document.getElementById('form-project-name')?.value.trim();
+    const unit = document.getElementById('form-project-unit')?.value.trim();
+    const manager = document.getElementById('form-project-manager')?.value.trim() || UsersManager.getCurrentUser().name;
+    const sponsor = document.getElementById('form-project-sponsor')?.value.trim() || 'Diretoria Executiva';
+    const type = document.getElementById('form-project-type')?.value.trim() || 'Parada Geral';
+    const budget = document.getElementById('form-project-budget')?.value.trim() || 'R$ 0,00';
+    const startDate = document.getElementById('form-project-start')?.value || '';
+    const endDate = document.getElementById('form-project-end')?.value || '';
+    const durationDays = parseInt(document.getElementById('form-project-days')?.value || '30', 10);
+    const description = document.getElementById('form-project-desc')?.value.trim() || 'Parada de manutenção programada.';
+
+    if (!name || !unit) {
+      alert('Por favor preencha pelo menos o Nome da Parada e a Unidade Operacional.');
       return;
     }
 
-    const unit = document.getElementById('form-project-unit').value.trim();
-    const manager = document.getElementById('form-project-manager').value.trim();
-    const sponsor = document.getElementById('form-project-sponsor').value.trim();
-    const type = document.getElementById('form-project-type').value.trim();
-    const startDate = document.getElementById('form-project-start').value;
-    const endDate = document.getElementById('form-project-end').value;
-    const durationDays = parseInt(document.getElementById('form-project-days').value) || 30;
-    const budget = document.getElementById('form-project-budget').value.trim();
-    const desc = document.getElementById('form-project-desc').value.trim();
+    const list = this.getParadas();
 
-    if (this.modalMode === 'create') {
-      const newP = {
-        id: code,
-        code: code,
-        name: name,
-        unit: unit,
-        manager: manager,
-        sponsor: sponsor,
-        type: type,
-        status: 'EM ELABORAÇÃO',
-        phase: 'Fase 1: Iniciação',
-        startDate: startDate,
-        endDate: endDate,
-        durationDays: durationDays,
-        budget: budget,
-        description: desc
-      };
-      this.projects.push(newP);
-    } else {
-      const p = this.getProjectById(this.editingProjectId);
+    if (editId) {
+      const p = list.find(item => item.id === editId);
       if (p) {
         p.code = code;
         p.name = name;
@@ -395,81 +736,97 @@ const ProjectsView = {
         p.manager = manager;
         p.sponsor = sponsor;
         p.type = type;
+        p.budget = budget;
         p.startDate = startDate;
         p.endDate = endDate;
         p.durationDays = durationDays;
-        p.budget = budget;
-        p.description = desc;
-
-        // Se o projeto editado estiver ativo no momento, sincronizar com o TAP
-        if (App.state.activeProjectId === p.id && IniciacaoView.data) {
-          IniciacaoView.data.general.turnaroundName = name;
-          IniciacaoView.data.general.turnaroundCode = code;
-          IniciacaoView.data.general.unit = unit;
-          IniciacaoView.data.general.manager = manager;
-          IniciacaoView.data.general.sponsor = sponsor;
-          IniciacaoView.saveData(false);
+        p.description = description;
+        this.saveParadas(list);
+        App.showToast('Parada atualizada com sucesso!', 'success');
+      }
+    } else {
+      const newParada = {
+        id: 'prd-' + Date.now(),
+        code: code,
+        name: name,
+        unit: unit,
+        manager: manager,
+        sponsor: sponsor,
+        type: type,
+        budget: budget,
+        budgetRaw: 8000000,
+        startDate: startDate,
+        endDate: endDate,
+        durationDays: durationDays,
+        description: description,
+        currentPhase: 1, // Pré-Parada
+        status: 'Em Pré-Parada',
+        createdAt: new Date().toISOString().split('T')[0],
+        gates: {
+          gate1: { approved: false, approvedBy: null, approvedAt: null, comments: '', checklist: { scopeFrozen: false, criticalMaterialsInSite: false, risksMitigated: false, contractorsMobilized: false, lotoPermitsReady: false } },
+          gate2: { approved: false, approvedBy: null, approvedAt: null, comments: '', checklist: { mechanicalCompletion: false, testHydroDone: false, cleanPlant: false, punchListALevelZero: false, blindRemovalDone: false } },
+          gate3: { approved: false, approvedBy: null, approvedAt: null, comments: '', checklist: { plantRampUp100: false, punchListBClosed: false, contractsSettled: false, lessonsLearnedLogged: false, finalReportPublished: false } }
+        },
+        preParada: {
+          activeTab: 'escopo',
+          scopeFrozen: false,
+          items: [],
+          supplies: [],
+          risks: [],
+          readinessItems: [
+            { id: 'RD-01', category: 'Engenharia & Escopo', title: 'Lista de Intervenções Congelada', weight: 25, done: false },
+            { id: 'RD-02', category: 'Suprimentos', title: 'Materiais Críticos no Canteiro', weight: 25, done: false },
+            { id: 'RD-03', category: 'Mão de Obra', title: 'Terceiros Integrados e Credenciados', weight: 25, done: false },
+            { id: 'RD-04', category: 'SMS & LOTO', title: 'Procedimentos de Bloqueio Aprovados', weight: 25, done: false }
+          ]
+        },
+        parada: {
+          activeTab: 'warroom',
+          dayNumber: 0,
+          totalPlannedHours: durationDays * 24,
+          executedHours: 0,
+          plannedProgress: 0,
+          realProgress: 0,
+          currentShift: 'Dia (07:00 - 19:00)',
+          headcountDay: 150,
+          headcountNight: 60,
+          spi: 1.00,
+          accidentsCount: 0,
+          turnsLog: [],
+          criticalTasks: [],
+          orders: [],
+          loto: [],
+          deviations: []
+        },
+        posParada: {
+          activeTab: 'comissionamento',
+          commissioningSteps: [],
+          punchList: [],
+          demobilization: [],
+          performanceReport: {},
+          lessonsLearned: []
         }
-      }
+      };
+
+      list.unshift(newParada);
+      this.saveParadas(list);
+      App.showToast('Nova parada cadastrada com sucesso!', 'success');
     }
 
-    this.saveProjects();
     this.closeModal();
-    App.navigateTo('projetos');
+    App.renderCurrentView();
   },
 
-  askDeleteProject(id) {
-    document.querySelectorAll('[id^="prj-confirm-"]').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('[id^="prj-actions-"]').forEach(el => el.classList.remove('hidden'));
-
-    const actions = document.getElementById(`prj-actions-${id}`);
-    const confirmBox = document.getElementById(`prj-confirm-${id}`);
-    if (actions && confirmBox) {
-      actions.classList.add('hidden');
-      confirmBox.classList.remove('hidden');
-    }
-  },
-
-  cancelDeleteProject(id) {
-    const actions = document.getElementById(`prj-actions-${id}`);
-    const confirmBox = document.getElementById(`prj-confirm-${id}`);
-    if (actions && confirmBox) {
-      confirmBox.classList.add('hidden');
-      actions.classList.remove('hidden');
-    }
-  },
-
-  confirmDeleteProject(id) {
-    this.deleteProject(id, false);
-  },
-
-  deleteProject(id, askConfirm = false) {
-    const p = this.getProjectById(id);
+  deleteParada(id) {
+    const p = this.getParadaById(id);
     if (!p) return;
-
-    if (this.projects.length <= 1) {
-      alert('Não é possível excluir o único projeto cadastrado.');
-      return;
+    if (confirm(`Tem certeza que deseja excluir a parada "${p.name}"? Esta ação não pode ser desfeita.`)) {
+      const list = this.getParadas().filter(item => item.id !== id);
+      this.saveParadas(list);
+      App.showToast('Parada removida do portfólio.', 'info');
+      App.renderCurrentView();
     }
-
-    if (askConfirm && !confirm(`Tem certeza que deseja excluir o projeto "${p.name}" (${p.code})? Todos os dados de Termo de Abertura e Stakeholders vinculados serão apagados.`)) {
-      return;
-    }
-
-    this.projects = this.projects.filter(item => item.id !== id);
-    localStorage.removeItem(`stop_project_${id}_data`);
-    this.saveProjects();
-
-    if (App.state.activeProjectId === id) {
-      App.state.activeProjectId = this.projects[0] ? this.projects[0].id : null;
-      if (App.state.activeProjectId) {
-        localStorage.setItem('stop_active_project_id', App.state.activeProjectId);
-        if (typeof IniciacaoView !== 'undefined') IniciacaoView.initData();
-      } else {
-        localStorage.removeItem('stop_active_project_id');
-      }
-    }
-
-    App.navigateTo('projetos');
   }
 };
+
+window.ProjectsView = ProjectsView;

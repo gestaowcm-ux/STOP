@@ -1,297 +1,370 @@
 /**
  * STOP - Sistema Técnico de Operações e Paradas de Manutenção
- * Arquitetura Central da Aplicação (SPA Controller & UI State)
+ * js/app.js - Orquestrador Central da Aplicação SPA
  */
 
 const App = {
-  state: {
-    sidebarCollapsed: false,
-    currentRoute: 'projetos',
-    activeProjectId: null,
-    userMenuOpen: false,
-    notificationsOpen: false
-  },
+  currentView: 'portfolio', // 'portfolio', 'parada-detail', 'configuracoes'
+  activeParadaId: null,
+  activePhase: 1, // 1: Pré-Parada, 2: Parada, 3: Pós-Parada
+  sidebarCollapsed: false,
 
   init() {
-    // Restaurar preferência de colapso da sidebar
-    const savedSidebarState = localStorage.getItem('stop_sidebar_collapsed');
-    if (savedSidebarState === 'true') {
-      this.setSidebarCollapsed(true);
-    }
-
-    // Inicializar projetos
-    ProjectsView.init();
-
-    // Restaurar projeto ativo anterior (se houver)
-    const savedActiveProject = localStorage.getItem('stop_active_project_id');
-    if (savedActiveProject && ProjectsView.getProjectById(savedActiveProject)) {
-      this.state.activeProjectId = savedActiveProject;
-    } else {
-      this.state.activeProjectId = null;
-    }
-
-    // Ouvir mudanças de hash para roteamento
-    window.addEventListener('hashchange', () => {
-      this.handleHashChange();
-    });
-
-    // Fechar dropdowns ao clicar fora
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('#user-wrapper') && this.state.userMenuOpen) {
-        this.toggleUserMenu(false);
-      }
-      if (!e.target.closest('#notifications-wrapper') && this.state.notificationsOpen) {
-        this.toggleNotifications(false);
-      }
-
-      // Fechar confirmações inline de exclusão ao clicar fora delas
-      if (!e.target.closest('[id^="stk-confirm-"]') && !e.target.closest('[onclick*="askDeleteStakeholder"]')) {
-        document.querySelectorAll('[id^="stk-confirm-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('[id^="stk-actions-"]').forEach(el => el.classList.remove('hidden'));
-      }
-      if (!e.target.closest('[id^="prj-confirm-"]') && !e.target.closest('[onclick*="askDeleteProject"]')) {
-        document.querySelectorAll('[id^="prj-confirm-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('[id^="prj-actions-"]').forEach(el => el.classList.remove('hidden'));
-      }
-      if (!e.target.closest('[id^="wbs-confirm-"]') && !e.target.closest('[onclick*="askDeleteWbs"]')) {
-        document.querySelectorAll('[id^="wbs-confirm-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('[id^="wbs-actions-"]').forEach(el => el.classList.remove('hidden'));
-      }
-      if (!e.target.closest('[id^="act-confirm-"]') && !e.target.closest('[onclick*="askDeleteActivity"]')) {
-        document.querySelectorAll('[id^="act-confirm-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('[id^="act-actions-"]').forEach(el => el.classList.remove('hidden'));
-      }
-      if (!e.target.closest('[id^="rsk-confirm-"]') && !e.target.closest('[onclick*="askDeleteRisk"]')) {
-        document.querySelectorAll('[id^="rsk-confirm-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('[id^="rsk-actions-"]').forEach(el => el.classList.remove('hidden'));
-      }
-    });
-
-    // Fechar modais e confirmações com tecla ESC
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (typeof ProjectsView !== 'undefined' && ProjectsView.closeModal) ProjectsView.closeModal();
-        if (typeof IniciacaoView !== 'undefined' && IniciacaoView.closeStakeholderModal) IniciacaoView.closeStakeholderModal();
-        if (typeof PlanejamentoView !== 'undefined' && PlanejamentoView.closeModals) PlanejamentoView.closeModals();
-        document.querySelectorAll('[id^="stk-confirm-"], [id^="prj-confirm-"], [id^="wbs-confirm-"], [id^="act-confirm-"], [id^="rsk-confirm-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('[id^="stk-actions-"], [id^="prj-actions-"], [id^="wbs-actions-"], [id^="act-actions-"], [id^="rsk-actions-"]').forEach(el => el.classList.remove('hidden'));
-      }
-    });
-
-    // Rota inicial
-    this.handleHashChange();
-  },
-
-  handleHashChange() {
-    let hash = window.location.hash.replace('#', '').trim();
+    console.log('Inicializando STOP - Sistema Técnico de Operações e Paradas de Manutenção');
     
-    // Se não há projeto selecionado e a rota não for configurações, forçar para 'projetos'
-    if (!this.state.activeProjectId && hash !== 'configuracoes') {
-      hash = 'projetos';
-    } else if (!hash) {
-      hash = this.state.activeProjectId ? 'iniciacao' : 'projetos';
-    }
+    // Configurar listener para hash change e cliques externos
+    window.addEventListener('hashchange', () => this.handleRouting());
+    document.addEventListener('click', (e) => this.handleGlobalClick(e));
 
-    this.navigateTo(hash, false);
+    // Inicializar rota
+    this.handleRouting();
+    this.updateHeaderInfo();
+    this.updateSidebarView();
   },
 
-  navigateTo(route, updateHash = true) {
-    this.state.currentRoute = route;
-    if (updateHash && window.location.hash !== '#' + route) {
-      window.location.hash = '#' + route;
+  handleRouting() {
+    const hash = window.location.hash.replace('#', '') || 'portfolio';
+    
+    if (hash.startsWith('parada/')) {
+      const parts = hash.split('/');
+      const paradaId = parts[1];
+      const phase = parseInt(parts[2] || '1', 10);
+      this.selectParada(paradaId, phase, false);
+    } else if (hash === 'configuracoes') {
+      this.currentView = 'configuracoes';
+      this.renderCurrentView();
+    } else {
+      this.switchToPortfolio(false);
+    }
+
+    this.updateHeaderInfo();
+    this.updateSidebarView();
+  },
+
+  switchToPortfolio(updateHash = true) {
+    this.currentView = 'portfolio';
+    this.activeParadaId = null;
+    if (updateHash) window.location.hash = 'portfolio';
+    this.renderCurrentView();
+    this.updateHeaderInfo();
+    this.updateSidebarView();
+  },
+
+  selectParada(paradaId, phase = 1, updateHash = true) {
+    const p = ProjectsView.getParadaById(paradaId);
+    if (!p) {
+      this.switchToPortfolio();
       return;
     }
 
-    // Atualizar visual da Sidebar e Header
-    this.updateSidebarView();
+    this.currentView = 'parada-detail';
+    this.activeParadaId = paradaId;
+    this.activePhase = phase || p.currentPhase || 1;
+
+    if (updateHash) {
+      window.location.hash = `parada/${paradaId}/${this.activePhase}`;
+    }
+
+    this.renderCurrentView();
     this.updateHeaderInfo();
-
-    // Renderizar o conteúdo
-    const appContent = document.getElementById('app-content');
-    if (!appContent) return;
-
-    if (route === 'projetos') {
-      appContent.innerHTML = ProjectsView.render();
-    } else if (route === 'iniciacao') {
-      if (!this.state.activeProjectId) {
-        this.navigateTo('projetos');
-        return;
-      }
-      appContent.innerHTML = IniciacaoView.render();
-      IniciacaoView.checkGateEligibility();
-    } else if (route === 'planejamento') {
-      if (!this.state.activeProjectId) {
-        this.navigateTo('projetos');
-        return;
-      }
-      appContent.innerHTML = PlanejamentoView.render();
-      PlanejamentoView.checkGate2Eligibility();
-      if (typeof PlanejamentoView.afterRender === 'function') {
-        PlanejamentoView.afterRender();
-      }
-    } else {
-      appContent.innerHTML = ModulesView.render(route);
-    }
-
-    // Scroll suave para o topo
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.updateSidebarView();
   },
 
-  selectProject(projectId) {
-    const project = ProjectsView.getProjectById(projectId);
-    if (!project) return;
-
-    this.state.activeProjectId = projectId;
-    localStorage.setItem('stop_active_project_id', projectId);
-
-    // Carregar dados específicos deste projeto
-    IniciacaoView.initData();
-    if (typeof PlanejamentoView !== 'undefined' && PlanejamentoView.initData) {
-      PlanejamentoView.initData();
-    }
-
-    // Entrar na Fase 1: Iniciação
-    this.navigateTo('iniciacao');
+  switchPhase(phase) {
+    if (!this.activeParadaId) return;
+    this.activePhase = phase;
+    window.location.hash = `parada/${this.activeParadaId}/${phase}`;
+    this.renderCurrentView();
+    this.updateHeaderInfo();
+    this.updateSidebarView();
   },
 
-  switchToProjects() {
-    this.state.activeProjectId = null;
-    localStorage.removeItem('stop_active_project_id');
-    this.navigateTo('projetos');
+  renderCurrentView() {
+    const container = document.getElementById('app-content');
+    if (!container) return;
+
+    if (this.currentView === 'portfolio') {
+      container.innerHTML = ProjectsView.render();
+    } else if (this.currentView === 'configuracoes') {
+      container.innerHTML = this.renderConfiguracoesView();
+    } else if (this.currentView === 'parada-detail') {
+      container.innerHTML = this.renderParadaDetailView();
+    }
+  },
+
+  renderParadaDetailView() {
+    const parada = ProjectsView.getParadaById(this.activeParadaId);
+    if (!parada) return ProjectsView.render();
+
+    const g1 = parada.gates.gate1;
+    const g2 = parada.gates.gate2;
+    const g3 = parada.gates.gate3;
+
+    return `
+      <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-fade-in">
+        
+        <!-- Breadcrumb & Top Action Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#e5e5e5]">
+          <div class="flex items-center gap-2 text-xs">
+            <button onclick="App.switchToPortfolio()" class="font-bold text-[#707072] hover:text-[#111111] flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">arrow_back</span>
+              <span>Portfólio de Paradas</span>
+            </button>
+            <span class="text-[#cacacb]">/</span>
+            <span class="font-mono font-bold text-[#111111]">${parada.code}</span>
+            <span class="text-[#cacacb]">/</span>
+            <span class="text-[#707072]">${parada.name}</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="ProjectsView.openCreateModal('${parada.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
+              <span class="material-symbols-outlined text-sm">edit</span>
+              <span>Editar Dados</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEPPER DE FASES PRINCIPAL COM STAGE-GATES (NIKE MONOCHROME ACCENT) -->
+        <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-4 md:p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-display-title text-base text-[#111111]">${parada.code}</span>
+              <span class="nike-pill text-[10px] bg-[#f5f5f5]">${parada.unit}</span>
+            </div>
+            <div class="text-xs text-[#707072] font-medium hidden sm:block">
+              Metodologia de 3 Fases Sequenciais com Stage-Gates
+            </div>
+          </div>
+
+          <!-- Stepper 3 Fases com conectores de Gates -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            
+            <!-- Fase 1: Pré-Parada -->
+            <div onclick="App.switchPhase(1)" class="cursor-pointer p-4 rounded-2xl border transition-all ${this.activePhase === 1 ? 'border-[#111111] bg-[#111111] text-white shadow-md' : 'border-[#e5e5e5] bg-[#f9f9f9] hover:border-[#111111]'}">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[10px] uppercase font-bold tracking-wider ${this.activePhase === 1 ? 'text-zinc-400' : 'text-[#707072]'}">Fase 1</span>
+                <span class="nike-pill text-[9px] py-0.5 ${g1.approved ? 'bg-[#007d48] text-white border-transparent' : (this.activePhase === 1 ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-white text-black')}">
+                  ${g1.approved ? 'Gate 1 OK' : 'Em Aberto'}
+                </span>
+              </div>
+              <h3 class="font-bold text-sm leading-tight ${this.activePhase === 1 ? 'text-white' : 'text-[#111111]'}">1. Pré-Parada</h3>
+              <p class="text-[11px] mt-1 line-clamp-1 ${this.activePhase === 1 ? 'text-zinc-400' : 'text-[#707072]'}">Escopo, Cronograma, Materiais & Gate 1 (Go/No-Go)</p>
+            </div>
+
+            <!-- Fase 2: Parada / Execução -->
+            <div onclick="App.switchPhase(2)" class="cursor-pointer p-4 rounded-2xl border transition-all ${this.activePhase === 2 ? 'border-[#111111] bg-[#111111] text-white shadow-md' : 'border-[#e5e5e5] bg-[#f9f9f9] hover:border-[#111111]'}">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[10px] uppercase font-bold tracking-wider ${this.activePhase === 2 ? 'text-zinc-400' : 'text-[#707072]'}">Fase 2</span>
+                <span class="nike-pill text-[9px] py-0.5 ${g2.approved ? 'bg-[#007d48] text-white border-transparent' : (!g1.approved ? 'bg-amber-100 text-amber-900 border-amber-300' : (this.activePhase === 2 ? 'bg-zinc-800 text-white' : 'bg-white text-black'))}">
+                  ${!g1.approved ? 'Bloqueada (Gate 1)' : (g2.approved ? 'Gate 2 OK' : 'War Room Ativo')}
+                </span>
+              </div>
+              <h3 class="font-bold text-sm leading-tight ${this.activePhase === 2 ? 'text-white' : 'text-[#111111]'}">2. Parada (Execução)</h3>
+              <p class="text-[11px] mt-1 line-clamp-1 ${this.activePhase === 2 ? 'text-zinc-400' : 'text-[#707072]'}">War Room, Turnos, OSs, LOTO & Término Mecânico</p>
+            </div>
+
+            <!-- Fase 3: Pós-Parada -->
+            <div onclick="App.switchPhase(3)" class="cursor-pointer p-4 rounded-2xl border transition-all ${this.activePhase === 3 ? 'border-[#111111] bg-[#111111] text-white shadow-md' : 'border-[#e5e5e5] bg-[#f9f9f9] hover:border-[#111111]'}">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[10px] uppercase font-bold tracking-wider ${this.activePhase === 3 ? 'text-zinc-400' : 'text-[#707072]'}">Fase 3</span>
+                <span class="nike-pill text-[9px] py-0.5 ${g3.approved ? 'bg-[#007d48] text-white border-transparent' : (!g2.approved ? 'bg-amber-100 text-amber-900 border-amber-300' : (this.activePhase === 3 ? 'bg-zinc-800 text-white' : 'bg-white text-black'))}">
+                  ${!g2.approved ? 'Bloqueada (Gate 2)' : (g3.approved ? 'Concluída' : 'Em Fechamento')}
+                </span>
+              </div>
+              <h3 class="font-bold text-sm leading-tight ${this.activePhase === 3 ? 'text-white' : 'text-[#111111]'}">3. Pós-Parada</h3>
+              <p class="text-[11px] mt-1 line-clamp-1 ${this.activePhase === 3 ? 'text-zinc-400' : 'text-[#707072]'}">Startup, Punch List, Desmobilização & Lições</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Renderizador da Fase Selecionada -->
+        <div id="active-phase-container">
+          ${this.renderPhaseContent(parada)}
+        </div>
+
+      </div>
+    `;
+  },
+
+  renderPhaseContent(parada) {
+    if (this.activePhase === 1) {
+      return PreParadaView.render(parada);
+    } else if (this.activePhase === 2) {
+      return ParadaView.render(parada);
+    } else if (this.activePhase === 3) {
+      return PosParadaView.render(parada);
+    }
+    return PreParadaView.render(parada);
+  },
+
+  renderConfiguracoesView() {
+    const users = UsersManager.getUsers();
+    const currentUser = UsersManager.getCurrentUser();
+
+    return `
+      <div class="p-6 md:p-10 max-w-5xl mx-auto space-y-8 animate-fade-in">
+        
+        <div class="border-b border-[#e5e5e5] pb-6">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="nike-pill bg-[#111111] text-white">CONFIGURAÇÃO</span>
+            <span class="text-xs text-[#707072] font-semibold uppercase tracking-wider">Perfis & Governança de Parada</span>
+          </div>
+          <h1 class="text-2xl font-display-title text-[#111111]">Gestão de Usuários & Permissões dos Gates</h1>
+          <p class="text-xs text-[#707072] mt-1">Configure os perfis operacionais e os níveis de alçada para aprovação e assinatura digital dos Stage-Gates 1, 2 e 3.</p>
+        </div>
+
+        <!-- Usuário Ativo Atual -->
+        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wide text-[#111111]">Seu Perfil Ativo na Sessão</h3>
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5]">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                ${currentUser.initials}
+              </div>
+              <div>
+                <h4 class="font-extrabold text-sm text-[#111111]">${currentUser.name}</h4>
+                <span class="text-xs text-[#707072] block font-medium">${currentUser.roleTitle}</span>
+                <span class="text-[10px] font-mono text-[#9e9ea0]">${currentUser.crea} • ${currentUser.email}</span>
+              </div>
+            </div>
+
+            <span class="nike-pill py-1.5 px-4 ${currentUser.canApproveGates ? 'bg-green-100 text-green-900 border-green-300 font-bold' : 'bg-gray-200 text-gray-700'}">
+              ${currentUser.canApproveGates ? '✓ Autorizado a Aprovar Gates' : '✕ Apenas Consulta / Apontamento'}
+            </span>
+          </div>
+        </div>
+
+        <!-- Lista de Perfis e Troca Rápida de Usuário -->
+        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold uppercase tracking-wide text-[#111111]">Perfis Cadastrados para Simulação Operacional</h3>
+            <span class="text-xs text-[#707072]">Alterne entre perfis para testar o comportamento de bloqueio dos Gates</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${users.map(u => `
+              <div class="p-4 rounded-2xl border ${u.id === currentUser.id ? 'border-[#111111] bg-[#f9f9f9]' : 'border-[#e5e5e5] bg-[#ffffff]'} space-y-3 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-mono text-xs font-bold text-[#707072]">${u.id}</span>
+                    <span class="nike-pill text-[9px] ${u.canApproveGates ? 'bg-green-50 text-green-700 border-green-200 font-bold' : 'bg-gray-100 text-gray-700'}">
+                      ${u.canApproveGates ? 'Aprova Gates (Admin/Gerente)' : 'Sem Alçada de Gate'}
+                    </span>
+                  </div>
+                  <h4 class="font-bold text-sm text-[#111111]">${u.name}</h4>
+                  <p class="text-xs text-[#707072]">${u.roleTitle}</p>
+                </div>
+
+                <div class="pt-2 border-t border-[#f0f0f0] flex items-center justify-between">
+                  <span class="text-[10px] font-mono text-[#9e9ea0]">${u.crea}</span>
+                  ${u.id === currentUser.id ? `
+                    <span class="text-xs font-bold text-[#007d48] flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm">check</span>
+                      Ativo Agora
+                    </span>
+                  ` : `
+                    <button onclick="UsersManager.setCurrentUser('${u.id}')" class="btn-pill text-xs py-1 px-3">
+                      Assumir Este Perfil
+                    </button>
+                  `}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Backup e Restauração de Dados -->
+        <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wide text-[#111111]">Backup & Dados Locais</h3>
+          <p class="text-xs text-[#707072]">Faça o download do banco de dados das Paradas em formato JSON ou restaure os dados originais de fábrica.</p>
+          
+          <div class="flex flex-wrap gap-3">
+            <button onclick="App.exportDataJson()" class="btn-pill-primary text-xs flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm">download</span>
+              <span>Exportar Dados em JSON</span>
+            </button>
+            <button onclick="App.resetToFactoryData()" class="btn-ghost-pill text-xs text-[#d30005] hover:bg-red-50 hover:border-red-300 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm">restart_alt</span>
+              <span>Restaurar Dados Padrão</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    `;
   },
 
   updateSidebarView() {
     const nav = document.getElementById('sidebar-nav-container');
     if (!nav) return;
 
-    const insideProject = !!this.state.activeProjectId;
-    const currentProject = insideProject ? ProjectsView.getProjectById(this.state.activeProjectId) : null;
-
-    if (!insideProject) {
-      // VISÃO 1: FORA DO PROJETO (TELA ANTERIOR / HUB DE PROJETOS)
+    if (this.currentView === 'portfolio' || this.currentView === 'configuracoes') {
       nav.innerHTML = `
-        <div class="pt-2 pb-1 px-3 sidebar-text">
-          <span class="font-eyebrow text-[10px] text-[#666666] tracking-widest">Navegação Principal</span>
-        </div>
-
-        <div class="sidebar-item-wrapper" data-tooltip="Portfólio de Projetos">
-          <a data-path="projetos" href="#projetos" onclick="App.navigateTo('projetos')" class="sidebar-item active">
-            <span class="material-symbols-outlined text-xl text-[#da291c]">grid_view</span>
-            <div class="flex flex-col sidebar-text">
-              <span class="font-semibold text-white">Portfólio de Projetos</span>
-              <span class="text-[10px] text-[#da291c] font-bold">${ProjectsView.projects.length} Paradas</span>
-            </div>
+        <div class="space-y-1">
+          <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#707072] sidebar-text">Navegação Principal</div>
+          
+          <a href="#portfolio" onclick="App.switchToPortfolio()" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'portfolio' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
+            <span class="material-symbols-outlined text-lg">grid_view</span>
+            <span class="sidebar-text">Portfólio de Paradas</span>
           </a>
-        </div>
 
-        <div class="p-3 my-3 mx-2 rounded-none bg-[#202020] border border-[#303030] text-xs text-[#969696] sidebar-text leading-relaxed">
-          <span class="text-white font-bold block mb-1 uppercase tracking-wider text-[11px]">Selecione uma Parada</span>
-          Escolha ou cadastre um projeto no painel para acessar o ciclo de <strong>5 etapas</strong> de governança.
-        </div>
-
-        <div class="pt-4 pb-1 px-3 sidebar-text">
-          <span class="font-eyebrow text-[10px] text-[#666666] tracking-widest">Sistema</span>
-        </div>
-
-        <div class="sidebar-item-wrapper" data-tooltip="Perfil do Usuário">
-          <a data-path="configuracoes" href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item">
-            <span class="material-symbols-outlined text-xl text-neutral-400">person</span>
-            <span class="sidebar-text">Perfil do Usuário</span>
+          <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-2xl ${this.currentView === 'configuracoes' ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5] hover:text-[#111111]'} transition-all">
+            <span class="material-symbols-outlined text-lg">manage_accounts</span>
+            <span class="sidebar-text">Usuários & Perfis</span>
           </a>
         </div>
       `;
-    } else {
-      // VISÃO 2: DENTRO DO PROJETO SELECIONADO — APARECEM AS 5 ETAPAS
+    } else if (this.currentView === 'parada-detail') {
+      const parada = ProjectsView.getParadaById(this.activeParadaId);
+      if (!parada) return;
+
       nav.innerHTML = `
-        <!-- Mini Card do Projeto Ativo na Sidebar -->
-        <div class="p-2.5 mx-2 my-2 rounded-none bg-[#202020] border border-[#303030] sidebar-text">
-          <div class="flex items-center justify-between gap-1 mb-1">
-            <span class="text-[10px] font-mono text-[#da291c] font-bold">${currentProject.code}</span>
-            <button onclick="App.switchToProjects()" class="text-[10px] text-[#969696] hover:text-white flex items-center gap-0.5 uppercase tracking-wider" title="Voltar ao Portfólio de Projetos">
-              <span>Trocar</span>
-              <span class="material-symbols-outlined text-xs">swap_horiz</span>
-            </button>
+        <div class="space-y-3">
+          
+          <!-- Botão Voltar ao Portfólio -->
+          <button onclick="App.switchToPortfolio()" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#707072] hover:text-[#111111] hover:bg-[#f5f5f5] transition-all">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            <span class="sidebar-text">Voltar ao Portfólio</span>
+          </button>
+
+          <!-- Card da Parada Ativa na Sidebar -->
+          <div class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] sidebar-text space-y-1">
+            <span class="font-mono text-[10px] font-bold text-[#707072]">${parada.code}</span>
+            <h4 class="font-bold text-xs text-[#111111] leading-tight truncate">${parada.name}</h4>
+            <span class="text-[10px] text-[#707072] block truncate">${parada.unit}</span>
           </div>
-          <span class="font-bold text-white text-[11px] block truncate" title="${currentProject.name}">${currentProject.name}</span>
-          <span class="text-[9px] text-[#666666] block truncate">${currentProject.unit}</span>
-        </div>
 
-        <div class="pt-2 pb-1 px-3 sidebar-text">
-          <span class="font-eyebrow text-[10px] text-[#666666] tracking-widest">Ciclo da Parada (5 Etapas)</span>
-        </div>
+          <!-- As 3 Fases Sequenciais -->
+          <div class="space-y-1 pt-1">
+            <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#707072] sidebar-text">Fases da Parada</div>
 
-        <!-- FASE 1: INICIAÇÃO (TAP) — ATIVA -->
-        <div class="sidebar-item-wrapper" data-tooltip="Fase 1: Iniciação (TAP)">
-          <a data-path="iniciacao" href="#iniciacao" onclick="App.navigateTo('iniciacao')" class="sidebar-item ${this.state.currentRoute === 'iniciacao' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-xl text-[#da291c]">flag</span>
-            <div class="flex flex-col sidebar-text">
-              <span class="font-semibold text-white">1. Iniciação (TAP)</span>
-              <span class="text-[10px] text-[#da291c] font-bold">6 Nós Ativos • Gate 1</span>
-            </div>
-          </a>
-        </div>
+            <a href="javascript:void(0)" onclick="App.switchPhase(1)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 1 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-base">event_note</span>
+                <span class="sidebar-text">1. Pré-Parada</span>
+              </div>
+              <span class="w-2 h-2 rounded-full ${parada.gates.gate1.approved ? 'bg-emerald-500' : 'bg-gray-300'}"></span>
+            </a>
 
-        <!-- FASE 2: PLANEJAMENTO — ATIVA -->
-        <div class="sidebar-item-wrapper" data-tooltip="Fase 2: Planejamento Integrado">
-          <a data-path="planejamento" href="#planejamento" onclick="App.navigateTo('planejamento')" class="sidebar-item ${this.state.currentRoute === 'planejamento' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-xl text-[#da291c]">account_tree</span>
-            <div class="flex flex-col sidebar-text">
-              <span class="font-semibold text-white">2. Planejamento</span>
-              <span class="text-[10px] text-[#da291c] font-bold">6 Pilares • Gate 2</span>
-            </div>
-          </a>
-        </div>
+            <a href="javascript:void(0)" onclick="App.switchPhase(2)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 2 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-base">precision_manufacturing</span>
+                <span class="sidebar-text">2. Parada (Execução)</span>
+              </div>
+              <span class="w-2 h-2 rounded-full ${parada.gates.gate2.approved ? 'bg-emerald-500' : (parada.gates.gate1.approved ? 'bg-red-500 animate-ping' : 'bg-gray-300')}"></span>
+            </a>
 
-        <!-- FASE 3: EXECUÇÃO (SEM SUBTELA) -->
-        <div class="sidebar-item-wrapper" data-tooltip="Fase 3: Execução">
-          <a data-path="execucao" href="#execucao" onclick="App.navigateTo('execucao')" class="sidebar-item opacity-40 hover:opacity-100 ${this.state.currentRoute === 'execucao' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-xl text-neutral-400">engineering</span>
-            <div class="flex flex-col sidebar-text">
-              <span>3. Execução</span>
-              <span class="text-[9px] text-[#666666]">Bloqueado</span>
-            </div>
-          </a>
-        </div>
+            <a href="javascript:void(0)" onclick="App.switchPhase(3)" class="sidebar-item flex items-center justify-between px-3 py-2.5 rounded-2xl ${this.activePhase === 3 ? 'bg-[#111111] text-white font-bold' : 'text-[#4b4b4d] hover:bg-[#f5f5f5]'} transition-all">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-base">task_alt</span>
+                <span class="sidebar-text">3. Pós-Parada</span>
+              </div>
+              <span class="w-2 h-2 rounded-full ${parada.gates.gate3.approved ? 'bg-emerald-500' : (parada.gates.gate2.approved ? 'bg-amber-500' : 'bg-gray-300')}"></span>
+            </a>
+          </div>
 
-        <!-- FASE 4: MONITORAMENTO & CONTROLE (SEM SUBTELA) -->
-        <div class="sidebar-item-wrapper" data-tooltip="Fase 4: Controle & KPIs">
-          <a data-path="controle" href="#controle" onclick="App.navigateTo('controle')" class="sidebar-item opacity-40 hover:opacity-100 ${this.state.currentRoute === 'controle' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-xl text-neutral-400">query_stats</span>
-            <div class="flex flex-col sidebar-text">
-              <span>4. Controle & KPIs</span>
-              <span class="text-[9px] text-[#666666]">Bloqueado</span>
-            </div>
-          </a>
-        </div>
-
-        <!-- FASE 5: PÓS-PARADA & LIÇÕES (SEM SUBTELA) -->
-        <div class="sidebar-item-wrapper" data-tooltip="Fase 5: Pós-Parada & Lições">
-          <a data-path="pos-parada" href="#pos-parada" onclick="App.navigateTo('pos-parada')" class="sidebar-item opacity-40 hover:opacity-100 ${this.state.currentRoute === 'pos-parada' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-xl text-neutral-400">history_edu</span>
-            <div class="flex flex-col sidebar-text">
-              <span>5. Pós-Parada & Lições</span>
-              <span class="text-[9px] text-[#666666]">Bloqueado</span>
-            </div>
-          </a>
-        </div>
-
-        <!-- Divisor -->
-        <div class="pt-4 pb-1 px-3 sidebar-text">
-          <span class="font-eyebrow text-[10px] text-[#666666] tracking-widest">Sistema</span>
-        </div>
-
-        <div class="sidebar-item-wrapper" data-tooltip="Portfólio de Projetos">
-          <a data-path="projetos" href="#projetos" onclick="App.switchToProjects()" class="sidebar-item">
-            <span class="material-symbols-outlined text-xl text-neutral-400">grid_view</span>
-            <span class="sidebar-text">Trocar de Projeto</span>
-          </a>
-        </div>
-
-        <div class="sidebar-item-wrapper" data-tooltip="Perfil do Usuário">
-          <a data-path="configuracoes" href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="sidebar-item ${this.state.currentRoute === 'configuracoes' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-xl text-neutral-400">person</span>
-            <span class="sidebar-text">Perfil do Usuário</span>
-          </a>
         </div>
       `;
     }
@@ -299,90 +372,223 @@ const App = {
 
   updateHeaderInfo() {
     const breadcrumb = document.getElementById('breadcrumb-container');
-    const turnaroundBadge = document.getElementById('header-active-turnaround-badge');
-
-    const insideProject = !!this.state.activeProjectId;
-    const currentProject = insideProject ? ProjectsView.getProjectById(this.state.activeProjectId) : null;
+    const badge = document.getElementById('header-active-turnaround-badge');
+    const userWrapper = document.getElementById('user-wrapper');
+    const currentUser = UsersManager.getCurrentUser();
 
     if (breadcrumb) {
-      if (!insideProject) {
+      if (this.currentView === 'portfolio') {
+        breadcrumb.innerHTML = `<span class="font-bold text-[#111111]">Portfólio de Paradas Industriais</span>`;
+      } else if (this.currentView === 'configuracoes') {
+        breadcrumb.innerHTML = `<span class="font-bold text-[#111111]">Usuários & Perfis</span>`;
+      } else if (this.currentView === 'parada-detail') {
+        const p = ProjectsView.getParadaById(this.activeParadaId);
+        const phaseName = this.activePhase === 1 ? '1. Pré-Parada' : (this.activePhase === 2 ? '2. Parada' : '3. Pós-Parada');
         breadcrumb.innerHTML = `
-          <span class="text-[#969696]">STOP</span>
-          <span class="text-[#303030]">/</span>
-          <span class="text-white font-semibold uppercase tracking-wider">Portfólio de Projetos</span>
-        `;
-      } else {
-        breadcrumb.innerHTML = `
-          <a href="#projetos" onclick="App.switchToProjects()" class="text-[#969696] hover:text-white transition-colors uppercase tracking-wider">Portfólio</a>
-          <span class="text-[#303030]">/</span>
-          <span class="text-[#da291c] font-mono font-bold">${currentProject.code}</span>
-          <span class="text-[#303030]">/</span>
-          <span class="text-white font-semibold uppercase tracking-wider">${this.state.currentRoute === 'iniciacao' ? '1. Iniciação (TAP)' : this.state.currentRoute === 'planejamento' ? '2. Planejamento Integrado' : 'Projeto'}</span>
+          <span class="text-[#707072] cursor-pointer hover:text-black" onclick="App.switchToPortfolio()">Paradas</span>
+          <span class="text-[#cacacb]">/</span>
+          <span class="font-mono font-bold text-[#111111]">${p ? p.code : ''}</span>
+          <span class="text-[#cacacb]">/</span>
+          <span class="font-bold text-[#111111]">${phaseName}</span>
         `;
       }
     }
 
-    if (turnaroundBadge) {
-      if (insideProject) {
-        turnaroundBadge.innerHTML = `
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-none bg-[#202020] border border-[#303030] text-xs">
-            <span class="status-dot bg-[#da291c] shadow-[0_0_8px_#da291c]"></span>
-            <span class="font-bold text-white tracking-wide truncate max-w-[220px]">${currentProject.name}</span>
-            <button onclick="App.switchToProjects()" class="ml-1 px-2 py-0.5 rounded-none bg-[#da291c]/20 hover:bg-[#da291c] text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors" title="Trocar de Parada">
-              <span>Trocar</span>
-              <span class="material-symbols-outlined text-xs">swap_horiz</span>
-            </button>
-          </div>
-        `;
+    if (badge) {
+      if (this.currentView === 'parada-detail') {
+        const p = ProjectsView.getParadaById(this.activeParadaId);
+        if (p) {
+          badge.innerHTML = `
+            <div class="flex items-center gap-2 bg-[#f5f5f5] px-3 py-1.5 rounded-full border border-[#e5e5e5] text-xs">
+              <span class="w-2 h-2 rounded-full ${p.currentPhase === 2 ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}"></span>
+              <span class="font-bold text-[#111111]">${p.code}</span>
+              <span class="text-[#707072] font-medium hidden lg:inline">(${p.unit})</span>
+            </div>
+          `;
+        }
       } else {
-        turnaroundBadge.innerHTML = `
-          <div class="flex items-center gap-2 px-3 py-1 rounded-none bg-[#202020] border border-[#303030] text-xs text-[#969696]">
-            <span class="status-dot bg-[#da291c]"></span>
-            <span class="uppercase tracking-wider font-semibold">Visão de Portfólio</span>
+        badge.innerHTML = `
+          <div class="flex items-center gap-2 bg-[#f5f5f5] px-3 py-1.5 rounded-full border border-[#e5e5e5] text-xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="font-bold text-[#111111]">STOP 2.0 Operacional</span>
           </div>
         `;
       }
+    }
+
+    // Atualizar Usuário no Canto Superior Direito
+    if (userWrapper) {
+      const users = UsersManager.getUsers();
+      userWrapper.innerHTML = `
+        <button onclick="App.toggleUserMenu()" class="flex items-center gap-3 p-1.5 pl-3 rounded-full hover:bg-[#f5f5f5] border border-transparent hover:border-[#e5e5e5] transition-all">
+          <div class="text-right hidden sm:block leading-tight">
+            <span class="text-xs font-bold text-[#111111] block">${currentUser.name}</span>
+            <span class="text-[10px] text-[#707072] block font-medium">${currentUser.roleTitle}</span>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm">
+            ${currentUser.initials}
+          </div>
+        </button>
+
+        <!-- Dropdown com Seleção Rápida de Perfis -->
+        <div id="user-dropdown-menu" class="absolute top-12 right-0 w-72 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl shadow-2xl p-3 hidden z-50 text-xs animate-fade-in">
+          <div class="px-2 py-2 border-b border-[#e5e5e5] mb-2">
+            <span class="text-[#111111] font-bold block">${currentUser.name}</span>
+            <span class="text-[10px] text-[#707072] font-mono block">${currentUser.crea}</span>
+            <span class="nike-pill text-[9px] mt-1 ${currentUser.canApproveGates ? 'bg-green-100 text-green-900 border-green-300' : 'bg-gray-100 text-gray-700'}">
+              ${currentUser.canApproveGates ? '✓ Autorizado a Assinar Gates' : 'Sem alçada para Gates'}
+            </span>
+          </div>
+
+          <div class="space-y-1 mb-2">
+            <span class="text-[10px] uppercase font-bold text-[#707072] px-2 block">Simular Troca de Usuário:</span>
+            ${users.map(u => `
+              <button onclick="UsersManager.setCurrentUser('${u.id}')" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#f5f5f5] flex items-center justify-between text-xs ${u.id === currentUser.id ? 'font-bold bg-[#f5f5f5] text-[#111111]' : 'text-[#4b4b4d]'}">
+                <span class="truncate">${u.name} (${u.role})</span>
+                ${u.id === currentUser.id ? '<span class="material-symbols-outlined text-sm text-[#007d48]">check</span>' : ''}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="border-t border-[#e5e5e5] pt-2 space-y-1">
+            <a href="#configuracoes" onclick="App.navigateTo('configuracoes')" class="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-[#f5f5f5] text-[#4b4b4d] hover:text-[#111111]">
+              <span class="material-symbols-outlined text-sm">manage_accounts</span>
+              <span>Gerenciar Perfis</span>
+            </a>
+            <a href="#portfolio" onclick="App.switchToPortfolio()" class="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-[#f5f5f5] text-[#4b4b4d] hover:text-[#111111]">
+              <span class="material-symbols-outlined text-sm">grid_view</span>
+              <span>Portfólio de Paradas</span>
+            </a>
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  navigateTo(route) {
+    if (route === 'configuracoes') {
+      window.location.hash = 'configuracoes';
+      this.currentView = 'configuracoes';
+      this.renderCurrentView();
+      this.updateHeaderInfo();
+      this.updateSidebarView();
+    } else if (route === 'portfolio') {
+      this.switchToPortfolio();
     }
   },
 
   toggleSidebar() {
-    this.setSidebarCollapsed(!this.state.sidebarCollapsed);
-  },
-
-  setSidebarCollapsed(collapsed) {
-    this.state.sidebarCollapsed = collapsed;
     const sidebar = document.getElementById('sidebar');
+    const wrapper = document.getElementById('main-wrapper');
     const icon = document.getElementById('sidebar-toggle-icon');
 
-    if (sidebar) {
-      sidebar.classList.toggle('collapsed', collapsed);
-    }
+    this.sidebarCollapsed = !this.sidebarCollapsed;
 
-    if (icon) {
-      icon.textContent = collapsed ? 'menu' : 'menu_open';
-    }
-
-    localStorage.setItem('stop_sidebar_collapsed', collapsed ? 'true' : 'false');
-  },
-
-  toggleUserMenu(forceState) {
-    this.state.userMenuOpen = forceState !== undefined ? forceState : !this.state.userMenuOpen;
-    const menu = document.getElementById('user-dropdown-menu');
-    if (menu) {
-      menu.classList.toggle('hidden', !this.state.userMenuOpen);
+    if (sidebar && wrapper) {
+      if (this.sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        wrapper.classList.add('sidebar-collapsed');
+        if (icon) icon.innerText = 'menu';
+      } else {
+        sidebar.classList.remove('collapsed');
+        wrapper.classList.remove('sidebar-collapsed');
+        if (icon) icon.innerText = 'menu_open';
+      }
     }
   },
 
-  toggleNotifications(forceState) {
-    this.state.notificationsOpen = forceState !== undefined ? forceState : !this.state.notificationsOpen;
+  toggleNotifications(force) {
     const drawer = document.getElementById('notifications-drawer');
-    if (drawer) {
-      drawer.classList.toggle('hidden', !this.state.notificationsOpen);
+    if (!drawer) return;
+    if (typeof force === 'boolean') {
+      if (force) drawer.classList.remove('hidden');
+      else drawer.classList.add('hidden');
+    } else {
+      drawer.classList.toggle('hidden');
+    }
+  },
+
+  toggleUserMenu(force) {
+    const menu = document.getElementById('user-dropdown-menu');
+    if (!menu) return;
+    if (typeof force === 'boolean') {
+      if (force) menu.classList.remove('hidden');
+      else menu.classList.add('hidden');
+    } else {
+      menu.classList.toggle('hidden');
+    }
+  },
+
+  handleGlobalClick(e) {
+    const notifWrapper = document.getElementById('notifications-wrapper');
+    const userWrapper = document.getElementById('user-wrapper');
+
+    if (notifWrapper && !notifWrapper.contains(e.target)) {
+      this.toggleNotifications(false);
+    }
+    if (userWrapper && !userWrapper.contains(e.target)) {
+      this.toggleUserMenu(false);
+    }
+  },
+
+  showToast(message, type = 'info') {
+    const existing = document.getElementById('stop-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'stop-toast';
+    toast.className = `fixed bottom-6 right-6 z-[300] max-w-md p-4 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold transition-all transform duration-300 animate-slide-up border ${
+      type === 'success' ? 'bg-[#111111] text-white border-zinc-700' :
+      type === 'error' ? 'bg-red-600 text-white border-red-700' :
+      'bg-[#111111] text-white border-zinc-700'
+    }`;
+
+    const iconName = type === 'success' ? 'check_circle' : (type === 'error' ? 'error' : 'info');
+    toast.innerHTML = `
+      <span class="material-symbols-outlined text-base">${iconName}</span>
+      <span class="leading-snug">${message}</span>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast && toast.parentElement) {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }
+    }, 4000);
+  },
+
+  exportDataJson() {
+    const data = {
+      paradas: ProjectsView.getParadas(),
+      users: UsersManager.getUsers(),
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `STOP_Backup_Paradas_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showToast('Backup JSON exportado com sucesso!', 'success');
+  },
+
+  resetToFactoryData() {
+    if (confirm('Tem certeza que deseja restaurar as paradas industriais e configurações de fábrica? Seus dados salvos no navegador serão redefinidos.')) {
+      localStorage.removeItem(ProjectsView.STORAGE_KEY);
+      localStorage.removeItem(UsersManager.STORAGE_KEY);
+      localStorage.removeItem(UsersManager.CURRENT_USER_KEY);
+      this.showToast('Dados restaurados com sucesso!', 'success');
+      setTimeout(() => window.location.reload(), 500);
     }
   }
 };
 
-// Inicialização automática quando o DOM estiver pronto
+window.App = App;
+
+// Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
 });
