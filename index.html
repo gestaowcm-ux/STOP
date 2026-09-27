@@ -189,7 +189,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE PARADA INDUSTRIAL
        ======================================================================== -->
-  <div id="project-edit-modal" onclick="if(event.target === this) ProjectsView.closeModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="project-edit-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto rounded-3xl p-6 md:p-8">
       
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-4">
@@ -289,7 +289,7 @@
   <!-- ========================================================================
        MODAL DE CÓPIA / IMPORTAÇÃO DE CADASTROS ENTRE PROJETOS
        ======================================================================== -->
-  <div id="copy-cadastros-modal" onclick="if(event.target === this) ConfiguracoesView.closeCopyModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="copy-cadastros-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
       
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
@@ -412,7 +412,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE UNIDADE OPERACIONAL (PLANTA)
        ======================================================================== -->
-  <div id="config-plant-modal" onclick="if(event.target === this) ConfiguracoesView.closePlantModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="config-plant-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-md w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <div class="flex items-center gap-2.5">
@@ -453,7 +453,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE SISTEMA DE PROCESSO
        ======================================================================== -->
-  <div id="config-system-modal" onclick="if(event.target === this) ConfiguracoesView.closeSystemModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="config-system-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-md w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <div class="flex items-center gap-2.5">
@@ -502,7 +502,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE TAG / EQUIPAMENTO INDUSTRIAL
        ======================================================================== -->
-  <div id="config-tag-modal" onclick="if(event.target === this) ConfiguracoesView.closeTagModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="config-tag-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <div class="flex items-center gap-2.5">
@@ -628,7 +628,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE DISCIPLINA DE MANUTENÇÃO
        ======================================================================== -->
-  <div id="config-discipline-modal" onclick="if(event.target === this) ConfiguracoesView.closeDisciplineModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="config-discipline-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8">
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
         <div class="flex items-center gap-2.5">
@@ -689,7 +689,7 @@
   <!-- ========================================================================
        MODAL DE LINHA DO TEMPO & RELATÓRIO EXECUTIVO DE MILESTONES (PRÉ-PARADA)
        ======================================================================== -->
-  <div id="milestone-timeline-modal" onclick="if(event.target === this) PreParadaView.closeTimelineModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-3 sm:p-6 hidden animate-fade-in">
+  <div id="milestone-timeline-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-3 sm:p-6 hidden animate-fade-in">
     <div id="milestone-timeline-modal-content" class="card-industrial max-w-5xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl max-h-[92vh] flex flex-col rounded-3xl overflow-hidden">
       <!-- Injetado dinamicamente por PreParadaView.renderTimelineModalContent() -->
     </div>
@@ -698,7 +698,7 @@
   <!-- ========================================================================
        MODAL DE CADASTRO / EDIÇÃO DE MARCO TEMPORAL (MILESTONE)
        ======================================================================== -->
-  <div id="milestone-edit-modal" onclick="if(event.target === this) PreParadaView.closeMilestoneModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+  <div id="milestone-edit-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
     <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
       
       <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
