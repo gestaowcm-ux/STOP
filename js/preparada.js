@@ -1369,15 +1369,12 @@ const PreParadaView = {
             <!-- Botões de Ação do Escopo -->
             <div class="flex flex-wrap items-center gap-2">
               <button onclick="PreParadaView.resetEscopoDefaults('${parada.id}')" title="Restaurar as 10 demandas padrão de manutenção industrial" class="btn-ghost-pill text-xs py-2 px-3 flex items-center gap-1.5 hover:border-[#111111]">
-                <span class="material-symbols-outlined text-sm">restart_alt</span>
                 <span>Restaurar 10 Demandas</span>
               </button>
               <button onclick="PreParadaView.openManageLaborCategoriesModal('${parada.id}')" class="btn-ghost-pill text-xs py-2 px-3 flex items-center gap-1.5 hover:border-[#111111]">
-                <span class="material-symbols-outlined text-sm">engineering</span>
                 <span>Disciplinas (${categories.length})</span>
               </button>
               <button onclick="PreParadaView.openAddServiceModal('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
-                <span class="material-symbols-outlined text-sm">add</span>
                 <span>Cadastrar Serviço</span>
               </button>
             </div>
@@ -1449,12 +1446,11 @@ const PreParadaView = {
                   placeholder="Buscar TAG, código ou descrição..." 
                   value="${filterSearch}" 
                   oninput="PreParadaView.setEscopoSearch(this.value)"
-                  class="form-input text-xs py-1.5 pl-8 pr-3 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full"
+                  class="form-input text-xs py-1.5 px-3 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full"
                 />
-                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-[#707072]">search</span>
                 ${filterSearch ? `
-                  <button onclick="PreParadaView.setEscopoSearch('')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#707072] hover:text-[#111111]">
-                    <span class="material-symbols-outlined text-sm">close</span>
+                  <button onclick="PreParadaView.setEscopoSearch('')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#707072] hover:text-[#111111]">
+                    Limpar
                   </button>
                 ` : ''}
               </div>
@@ -1465,7 +1461,6 @@ const PreParadaView = {
           ${(filterStatus !== 'all' || filterCategory !== 'all' || filterSearch) ? `
             <div class="pt-2 border-t border-[#f0f0f0] flex items-center justify-between text-[11px] text-[#707072]">
               <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm text-[#111111]">filter_alt</span>
                 <span>Exibindo <b>${filteredServices.length}</b> de <b>${services.length}</b> serviços encontrados</span>
               </div>
               <button onclick="PreParadaView.clearEscopoFilters()" class="font-bold text-[#111111] hover:underline flex items-center gap-1">
@@ -1479,7 +1474,6 @@ const PreParadaView = {
         <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-base text-[#111111]">list_alt</span>
               <h4 class="text-xs font-bold uppercase tracking-wider text-[#111111]">Lista de Demandas Priorizadas (${filteredServices.length} itens exibidos)</h4>
             </div>
             <span class="text-[11px] text-[#707072] font-mono">Ordenação: Score de Risco (P×S) Decrescente</span>
@@ -1513,7 +1507,6 @@ const PreParadaView = {
                       <tr class="bg-red-600 text-white font-black select-none shadow-md">
                         <td colspan="11" class="py-3.5 px-4 text-center text-xs tracking-wider uppercase">
                           <div class="flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined text-base">content_cut</span>
                             <span>LINHA DE CORTE ORÇAMENTÁRIA • TETO DE R$ ${rawBudget.toLocaleString('pt-BR')} ATINGIDO</span>
                             <span class="text-[10px] font-normal opacity-90">(Os serviços abaixo têm menor prioridade e NÃO SEGUIRÃO para o planejamento)</span>
                           </div>
@@ -1556,12 +1549,12 @@ const PreParadaView = {
                           </span>
                         </td>
                         <td class="p-3 text-center">
-                          <div class="flex items-center justify-center gap-1">
-                            <button onclick="PreParadaView.toggleOverride('${parada.id}', '${s.id}')" title="Forçar Inclusão / Exclusão (Override)" class="btn-icon-pill w-7 h-7 text-xs text-[#707072] hover:text-[#111111]">
-                              <span class="material-symbols-outlined text-sm">tune</span>
+                          <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="PreParadaView.toggleOverride('${parada.id}', '${s.id}')" title="Forçar Inclusão / Exclusão (Override)" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#111111]">
+                              Ajustar
                             </button>
-                            <button onclick="PreParadaView.deleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-icon-pill w-7 h-7 text-xs text-[#707072] hover:text-[#d30005]">
-                              <span class="material-symbols-outlined text-sm">delete</span>
+                            <button onclick="PreParadaView.deleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#d30005]">
+                              Excluir
                             </button>
                           </div>
                         </td>
@@ -1578,8 +1571,7 @@ const PreParadaView = {
                           <span class="text-[10px] text-red-700 font-bold bg-red-100 px-1.5 py-0.5 rounded">${s.tag}</span>
                         </td>
                         <td class="p-3 font-bold text-red-950 max-w-xs leading-snug">
-                          <div class="flex items-center gap-1.5 text-red-700 text-[10px] uppercase font-black tracking-wider mb-0.5">
-                            <span class="material-symbols-outlined text-xs">block</span>
+                          <div class="text-red-700 text-[10px] uppercase font-black tracking-wider mb-0.5">
                             <span>NÃO SEGUIRÁ PARA O PLANEJAMENTO</span>
                           </div>
                           <span class="line-through opacity-80">${s.description}</span>
@@ -1609,12 +1601,12 @@ const PreParadaView = {
                           </span>
                         </td>
                         <td class="p-3 text-center">
-                          <div class="flex items-center justify-center gap-1">
-                            <button onclick="PreParadaView.toggleOverride('${parada.id}', '${s.id}')" title="Forçar Inclusão (Override)" class="btn-icon-pill w-7 h-7 text-xs text-red-700 bg-red-100 hover:bg-black hover:text-white border-red-200">
-                              <span class="material-symbols-outlined text-sm">tune</span>
+                          <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="PreParadaView.toggleOverride('${parada.id}', '${s.id}')" title="Forçar Inclusão (Override)" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-black hover:text-white border-red-200">
+                              Ajustar
                             </button>
-                            <button onclick="PreParadaView.deleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-icon-pill w-7 h-7 text-xs text-red-700 bg-red-100 hover:bg-[#d30005] hover:text-white border-red-200">
-                              <span class="material-symbols-outlined text-sm">delete</span>
+                            <button onclick="PreParadaView.deleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-[#d30005] hover:text-white border-red-200">
+                              Excluir
                             </button>
                           </div>
                         </td>
@@ -1625,7 +1617,6 @@ const PreParadaView = {
                 ${filteredServices.length === 0 ? `
                   <tr>
                     <td colspan="11" class="p-8 text-center text-[#707072]">
-                      <span class="material-symbols-outlined text-3xl text-zinc-400 block mb-2">search_off</span>
                       <p class="font-bold text-xs text-[#111111]">Nenhum serviço atende aos critérios de filtro aplicados.</p>
                       <button onclick="PreParadaView.clearEscopoFilters()" class="btn-ghost-pill text-xs mt-3">
                         Limpar Filtros e Ver Todos
@@ -1646,11 +1637,10 @@ const PreParadaView = {
           
           <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-[#111111] text-2xl">post_add</span>
               <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Demanda de Manutenção</h3>
             </div>
-            <button onclick="PreParadaView.closeAddServiceModal()" class="text-[#707072] hover:text-[#111111] p-1">
-              <span class="material-symbols-outlined text-xl">close</span>
+            <button onclick="PreParadaView.closeAddServiceModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">
+              Fechar
             </button>
           </div>
 
