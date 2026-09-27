@@ -54,6 +54,15 @@ const PreParadaView = {
     search: ''
   },
 
+  // Estado dos Filtros do Kanban de Entregas & Áreas
+  kanbanFilterState: {
+    area: 'ALL',
+    milestone: 'ALL',
+    owner: 'ALL',
+    deadline: 'ALL', // 'ALL', 'atrasadas', 'proximas', 'em_dia', 'concluidas'
+    search: ''
+  },
+
   // Áreas de suporte envolvidas na Pré-Parada
   supportAreas: [
     'SMS / Segurança',
@@ -91,8 +100,8 @@ const PreParadaView = {
 
           <!-- Banner de Status do Gate 1 -->
           <div class="bg-[#f5f5f5] p-3.5 rounded-2xl border ${gate1.approved ? 'border-[#007d48] bg-green-50/50' : 'border-[#e5e5e5]'} flex items-center gap-3 shrink-0">
-            <div class="w-10 h-10 rounded-xl ${gate1.approved ? 'bg-[#007d48] text-white' : 'bg-[#111111] text-white'} flex items-center justify-center font-bold shrink-0">
-              <span class="material-symbols-outlined text-xl">${gate1.approved ? 'verified' : 'lock_clock'}</span>
+            <div class="w-10 h-10 rounded-xl ${gate1.approved ? 'bg-[#007d48] text-white' : 'bg-[#111111] text-white'} flex items-center justify-center font-bold text-xs font-mono shrink-0">
+              G1
             </div>
             <div class="text-xs">
               <div class="flex items-center gap-2">
@@ -109,32 +118,26 @@ const PreParadaView = {
         <!-- Sub-navegação das 6 Abas Especialistas de Pré-Parada -->
         <div class="flex items-center gap-2 border-b border-[#e5e5e5] pb-2 overflow-x-auto text-xs">
           <button onclick="PreParadaView.switchTab('${parada.id}', 'milestones')" class="tab-pill ${activeTab === 'milestones' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-sm">flag</span>
             <span>1. Milestones & WBS de Ações</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'escopo')" class="tab-pill ${activeTab === 'escopo' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-sm">filter_alt</span>
             <span>2. Escopo, HH & Linha de Corte</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'riscos')" class="tab-pill ${activeTab === 'riscos' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-sm">grid_view</span>
             <span>3. Matriz de Riscos 10x10</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'kanban')" class="tab-pill ${activeTab === 'kanban' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-sm">view_kanban</span>
             <span>4. Kanban de Entregas</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'relatorios')" class="tab-pill ${activeTab === 'relatorios' ? 'active' : ''}">
-            <span class="material-symbols-outlined text-sm">analytics</span>
             <span>5. Relatórios & Curva S</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'prontidao')" class="tab-pill ${activeTab === 'prontidao' ? 'active font-bold border-[#111111]' : ''}">
-            <span class="material-symbols-outlined text-sm">verified</span>
             <span>6. Reunião de Prontidão (Gate D-0)</span>
           </button>
         </div>
