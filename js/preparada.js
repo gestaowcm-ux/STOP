@@ -2166,6 +2166,35 @@ const PreParadaView = {
     }
   },
 
+  onCostInput(val) {
+    const hint = document.getElementById('form-srv-cost-hint');
+    if (!hint) return;
+    const raw = typeof ProjectsView !== 'undefined' ? ProjectsView.parseCurrency(val) : parseFloat(val) || 0;
+    if (raw <= 0) {
+      hint.innerHTML = '<span class="text-[#969696]">Digite o valor estimado (ex: 5,5M ou R$ 250.000)</span>';
+    } else {
+      const formatted = typeof ProjectsView !== 'undefined' ? ProjectsView.formatCurrency(raw) : `R$ ${raw.toLocaleString('pt-BR')}`;
+      let spelled = '';
+      if (raw >= 1000000) {
+        const millions = (raw / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+        spelled = ` (~${millions} milhões)`;
+      } else if (raw >= 1000) {
+        const thousands = (raw / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+        spelled = ` (~${thousands} mil)`;
+      } else {
+        spelled = ` <span class="text-amber-600 font-semibold">⚠️ Valor em reais. Digite <strong>${raw}M</strong> para ${raw} milhões</span>`;
+      }
+      hint.innerHTML = `<span class="text-[#007d48] font-bold font-mono">${formatted}</span> <span class="text-[#707072] text-[11px]">${spelled}</span>`;
+    }
+  },
+
+  onCostBlur(inputEl) {
+    if (!inputEl) return;
+    const raw = typeof ProjectsView !== 'undefined' ? ProjectsView.parseCurrency(inputEl.value) : parseFloat(inputEl.value) || 0;
+    inputEl.value = typeof ProjectsView !== 'undefined' ? ProjectsView.formatCurrency(raw) : `R$ ${raw.toLocaleString('pt-BR')}`;
+    this.onCostInput(inputEl.value);
+  },
+
   closeAddServiceModal() {
     this.currentEditingServiceId = null;
     const modal = document.getElementById('service-create-modal');
@@ -2285,7 +2314,8 @@ const PreParadaView = {
     const desc = descInput ? descInput.value.trim() : '';
     const cat = catInput ? catInput.value : 'Mecânica';
     const hh = hhInput ? parseInt(hhInput.value, 10) || 0 : 0;
-    const cost = costInput ? parseFloat(costInput.value) || 0 : 0;
+    const rawCost = costInput ? (typeof ProjectsView !== 'undefined' ? ProjectsView.parseCurrency(costInput.value) : parseFloat(costInput.value) || 0) : 0;
+    const cost = isNaN(rawCost) ? 0 : rawCost;
     const prob = probInput ? parseInt(probInput.value, 10) || 5 : 5;
     const sev = sevInput ? parseInt(sevInput.value, 10) || 5 : 5;
     const overrideRaw = overrideSelect ? overrideSelect.value : 'auto';
