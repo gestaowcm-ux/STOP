@@ -1234,50 +1234,125 @@ const PreParadaView = {
     }, 1000);
   },
 
+  setMilestoneRelPreset(val) {
+    const input = document.getElementById('form-milestone-rel');
+    if (input) {
+      input.value = val;
+      input.focus();
+    }
+  },
+
   openMilestoneModal(paradaId, editId = null) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
 
-    let relativeDay = 'D-34';
-    let title = 'Novo Marco de Preparação';
-    let targetDate = new Date().toISOString().split('T')[0];
+    const modal = document.getElementById('milestone-edit-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('modal-milestone-title');
+    const subtitleEl = document.getElementById('modal-milestone-subtitle');
+    const paradaIdInput = document.getElementById('form-milestone-parada-id');
+    const editIdInput = document.getElementById('form-milestone-edit-id');
+    const relInput = document.getElementById('form-milestone-rel');
+    const titleInput = document.getElementById('form-milestone-title-input');
+    const dateInput = document.getElementById('form-milestone-date');
+    const statusSelect = document.getElementById('form-milestone-status');
+
+    paradaIdInput.value = paradaId;
+    editIdInput.value = editId || '';
+
+    const paradaName = parada.title || parada.name || parada.unit || parada.id;
 
     if (editId) {
       const ms = (parada.preParada.milestones || []).find(m => m.id === editId);
       if (ms) {
-        relativeDay = ms.relativeDay;
-        title = ms.title;
-        targetDate = ms.targetDate;
+        if (titleEl) titleEl.textContent = 'Editar Marco de Preparação';
+        if (subtitleEl) subtitleEl.textContent = `Marco ${ms.id} • ${paradaName}`;
+        if (relInput) relInput.value = ms.relativeDay || '';
+        if (titleInput) titleInput.value = ms.title || '';
+        if (dateInput) dateInput.value = ms.targetDate || parada.startDate || new Date().toISOString().split('T')[0];
+        if (statusSelect) statusSelect.value = ms.status || 'Não Iniciado';
+      }
+    } else {
+      if (titleEl) titleEl.textContent = 'Novo Marco de Preparação';
+      if (subtitleEl) subtitleEl.textContent = `Linha do Tempo WBS • ${paradaName}`;
+      if (relInput) relInput.value = 'D-30';
+      if (titleInput) titleInput.value = '';
+      if (dateInput) dateInput.value = parada.startDate || new Date().toISOString().split('T')[0];
+      if (statusSelect) statusSelect.value = 'Não Iniciado';
+    }
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      if (titleInput && !editId) titleInput.focus();
+    }, 100);
+  },
+
+  closeMilestoneModal() {
+    const modal = document.getElementById('milestone-edit-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  saveMilestoneModal() {
+    const paradaId = document.getElementById('form-milestone-parada-id')?.value;
+    const editId = document.getElementById('form-milestone-edit-id')?.value;
+    let rel = document.getElementById('form-milestone-rel')?.value?.trim().toUpperCase() || '';
+    const title = document.getElementById('form-milestone-title-input')?.value?.trim() || '';
+    const targetDate = document.getElementById('form-milestone-date')?.value || new Date().toISOString().split('T')[0];
+    const status = document.getElementById('form-milestone-status')?.value || 'Não Iniciado';
+
+    if (!rel) {
+      App.showToast('Por favor, informe o dia relativo do marco (ex: D-30).', 'error');
+      return;
+    }
+
+    if (!title) {
+      App.showToast('Por favor, informe o título ou entregável principal do marco.', 'error');
+      return;
+    }
+
+    // Normalizar formato de dia relativo caso o usuário digite sem "D-"
+    if (!rel.startsWith('D-') && !rel.startsWith('D+')) {
+      if (rel.startsWith('D')) {
+        rel = 'D-' + rel.substring(1).replace('-', '');
+      } else {
+        rel = 'D-' + rel.replace('-', '');
       }
     }
 
-    const newRel = prompt('Defina o dia relativo do Marco (Ex: D-360, D-184, D-95, D-34, D-10):', relativeDay);
-    if (!newRel) return;
-    const newTitle = prompt('Título / Descrição do Milestone:', title);
-    if (!newTitle) return;
-    const newDate = prompt('Data Prevista no Calendário (AAAA-MM-DD):', targetDate) || targetDate;
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+
+    if (!parada.preParada) {
+      parada.preParada = { milestones: [] };
+    }
+    if (!parada.preParada.milestones) {
+      parada.preParada.milestones = [];
+    }
 
     if (editId) {
       const ms = parada.preParada.milestones.find(m => m.id === editId);
       if (ms) {
-        ms.relativeDay = newRel.toUpperCase().trim();
-        ms.title = newTitle.trim();
-        ms.targetDate = newDate;
+        ms.relativeDay = rel;
+        ms.title = title;
+        ms.targetDate = targetDate;
+        ms.status = status;
       }
     } else {
-      const count = (parada.preParada.milestones || []).length + 1;
+      const count = parada.preParada.milestones.length + 1;
       parada.preParada.milestones.push({
         id: `MS-${count < 10 ? '0' + count : count}`,
-        relativeDay: newRel.toUpperCase().trim(),
-        title: newTitle.trim(),
-        targetDate: newDate,
-        status: 'Não Iniciado',
+        relativeDay: rel,
+        title: title,
+        targetDate: targetDate,
+        status: status,
         actions: []
       });
     }
 
     ProjectsView.updateParada(parada);
-    App.showToast('Milestone salvo com sucesso!', 'success');
+    this.closeMilestoneModal();
+    App.showToast('Marco salvo com sucesso!', 'success');
     App.renderCurrentView();
 
     // Se o modal de timeline estiver aberto, atualiza preservando scroll

@@ -282,6 +282,90 @@
   </div>
 
   <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE MARCO TEMPORAL (MILESTONE)
+       ======================================================================== -->
+  <div id="milestone-edit-modal" onclick="if(event.target === this) PreParadaView.closeMilestoneModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-3 min-w-0 pr-2">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">flag</span>
+          </div>
+          <div class="min-w-0">
+            <h3 id="modal-milestone-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Novo Marco de Preparação</h3>
+            <p id="modal-milestone-subtitle" class="text-xs text-[#707072] truncate">Definição de marco temporal (Milestone WBS)</p>
+          </div>
+        </div>
+        <button onclick="PreParadaView.closeMilestoneModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors shrink-0">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="form-milestone-parada-id" value="" />
+      <input type="hidden" id="form-milestone-edit-id" value="" />
+
+      <form onsubmit="event.preventDefault(); PreParadaView.saveMilestoneModal();" class="space-y-4 text-xs">
+        
+        <!-- Dia Relativo do Marco -->
+        <div>
+          <label class="form-label">Dia Relativo do Marco (Contagem Regressiva) *</label>
+          <div class="space-y-2">
+            <input type="text" id="form-milestone-rel" class="form-input font-mono font-bold text-sm uppercase" placeholder="Ex: D-360, D-180, D-95, D-34, D-10, D-0" required />
+            <!-- Chips de atalho rápido -->
+            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+              <span class="text-[10px] text-[#707072] font-medium mr-1">Atalhos rápidos:</span>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-360')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-360</button>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-180')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-180</button>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-90')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-90</button>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-60')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-60</button>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-30')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-30</button>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-10')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-10</button>
+              <button type="button" onclick="PreParadaView.setMilestoneRelPreset('D-0')" class="px-2.5 py-1 rounded-full bg-[#f5f5f5] hover:bg-[#111111] hover:text-white border border-[#e5e5e5] text-[11px] font-mono font-semibold transition-all">D-0</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Título / Descrição do Milestone -->
+        <div>
+          <label class="form-label">Título / Entregável Principal do Marco *</label>
+          <input type="text" id="form-milestone-title-input" class="form-input font-bold" placeholder="Ex: Congelamento de Escopo, Mobilização de Canteiro, Readiness Gate..." required />
+        </div>
+
+        <!-- Data Prevista e Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Data Prevista no Calendário *</label>
+            <input type="date" id="form-milestone-date" class="form-input font-mono" required />
+          </div>
+
+          <div>
+            <label class="form-label">Status do Marco</label>
+            <select id="form-milestone-status" class="form-input font-medium">
+              <option value="Não Iniciado" selected>Não Iniciado</option>
+              <option value="Em Andamento">Em Andamento</option>
+              <option value="Bloqueado">Bloqueado</option>
+              <option value="Concluído">Concluído</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#e5e5e5]">
+          <button type="button" onclick="PreParadaView.closeMilestoneModal()" class="btn-ghost-pill text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-sm">save</span>
+            <span>Salvar Marco</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
        MODAL DE DESDOBRAMENTO DE AÇÕES DO MILESTONE (WBS)
        ======================================================================== -->
   <div id="milestone-action-modal" onclick="if(event.target === this) PreParadaView.closeActionModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
@@ -576,6 +660,454 @@
         </button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE SERVIÇO DE ESCOPO (MATRIZ PxS)
+       ======================================================================== -->
+  <div id="service-create-modal" onclick="if(event.target === this) PreParadaView.closeAddServiceModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      
+      <input type="hidden" id="form-srv-parada-id" value="" />
+
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#111111] text-2xl">construction</span>
+          <div>
+            <h3 id="modal-service-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Demanda de Manutenção</h3>
+            <p class="text-[11px] text-[#707072]">Priorização de Escopo & Linha de Corte Orçamentária</p>
+          </div>
+        </div>
+        <button onclick="PreParadaView.closeAddServiceModal()" class="text-[#707072] hover:text-[#111111] p-1">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0">TAG do Equipamento (Tabela de Configurações) *</label>
+              <button type="button" onclick="PreParadaView.closeAddServiceModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-xs">settings</span>
+                <span>Gerenciar TAGs</span>
+              </button>
+            </div>
+            <select id="form-srv-tag" onchange="PreParadaView.onEquipmentTagChange(this.value, true)" class="form-input font-mono font-bold text-xs bg-white">
+              <option value="">-- Selecione o TAG do Equipamento --</option>
+            </select>
+          </div>
+
+          <!-- Detalhes do Equipamento Selecionado da Tabela Mestra -->
+          <div id="srv-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+            <div class="flex items-center justify-between mb-1">
+              <span id="srv-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+              <span id="srv-preview-tag-crit" class="nike-pill text-[9px]"></span>
+            </div>
+            <div class="text-[11px] text-[#4b4b4d] space-y-0.5">
+              <p id="srv-preview-tag-desc"></p>
+              <p id="srv-preview-tag-unit" class="text-[10px] text-[#707072] font-medium"></p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Disciplina / Categoria *</label>
+              <select id="form-srv-category" class="form-input font-medium">
+                <option value="Mecânica">Mecânica</option>
+                <option value="Caldeiraria">Caldeiraria</option>
+                <option value="Tubulação">Tubulação</option>
+                <option value="Elétrica">Elétrica</option>
+                <option value="Instrumentação">Instrumentação</option>
+                <option value="Inspeção NR-13">Inspeção NR-13</option>
+                <option value="Pintura & Revestimento">Pintura & Revestimento</option>
+                <option value="Andaimes & Acesso">Andaimes & Acesso</option>
+                <option value="Isolamento Térmico">Isolamento Térmico</option>
+                <option value="Válvulas & PSVs">Válvulas & PSVs</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label">Norma Técnica / Criticidade</label>
+              <input type="text" id="form-srv-standard" readonly class="form-input bg-[#f5f5f5] text-[#707072] font-mono text-xs cursor-default" placeholder="Vinculado ao TAG" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Descrição Detalhada da Atividade *</label>
+          <textarea id="form-srv-desc" rows="2.5" class="form-input leading-relaxed" placeholder="Descreva a intervenção mecânica, caldeiraria, inspeção, troca de peças..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Horas-Homem Estimadas (HH) *</label>
+            <input type="number" id="form-srv-hh" class="form-input font-mono font-bold" placeholder="120" value="120" />
+          </div>
+
+          <div>
+            <label class="form-label">Custo Estimado Total (R$) *</label>
+            <input type="number" id="form-srv-cost" class="form-input font-mono font-bold text-[#007d48]" placeholder="250000" value="250000" />
+          </div>
+        </div>
+
+        <!-- Parâmetros da Matriz de Risco PxS (1-10) -->
+        <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">Avaliação de Risco (Matriz P×S)</span>
+            <span id="srv-preview-score" class="nike-pill font-mono font-bold bg-[#111111] text-white">Score: 49 pts</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-[#707072]">Probabilidade de Falha (1 a 10)</span>
+                <span id="label-prob-val" class="font-bold font-mono">7</span>
+              </div>
+              <input type="range" id="form-srv-prob" min="1" max="10" value="7" oninput="PreParadaView.updateServiceModalScorePreview()" class="w-full accent-[#111111]" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-[#707072]">Severidade / Impacto (1 a 10)</span>
+                <span id="label-sev-val" class="font-bold font-mono text-[#d30005]">7</span>
+              </div>
+              <input type="range" id="form-srv-sev" min="1" max="10" value="7" oninput="PreParadaView.updateServiceModalScorePreview()" class="w-full accent-[#d30005]" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Override de Escopo (Decisão Técnica / Ajuste) -->
+        <div class="p-4 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">Ajuste de Escopo & Override</span>
+            <span class="nike-pill text-[9px] bg-white">Decisão Técnica</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Comportamento no Escopo</label>
+              <select id="form-srv-override" onchange="PreParadaView.onOverrideSelectChange(this.value)" class="form-input font-medium text-xs bg-white">
+                <option value="auto">Cálculo Automático por Score (P×S)</option>
+                <option value="include">Forçar INCLUSÃO no Escopo (Override)</option>
+                <option value="exclude">Forçar EXCLUSÃO do Escopo (Corte Técnico)</option>
+              </select>
+            </div>
+            <div id="wrapper-override-reason" class="hidden">
+              <label class="form-label">Justificativa Técnica</label>
+              <input type="text" id="form-srv-override-reason" class="form-input bg-white text-xs" placeholder="Ex: Mandatório NR-13 / Decisão Gerencial" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="PreParadaView.closeAddServiceModal()" class="btn-ghost-pill text-xs">
+          Cancelar
+        </button>
+        <button id="btn-save-service-modal" onclick="PreParadaView.saveAddServiceModal()" class="btn-pill-primary text-xs shadow-md">
+          Salvar Demanda de Escopo
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO RÁPIDO DE ENTREGA / AÇÃO NO KANBAN
+       ======================================================================== -->
+  <div id="kanban-add-action-modal" onclick="if(event.target === this) PreParadaView.closeAddKanbanActionModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      
+      <input type="hidden" id="form-kanban-action-parada-id" value="" />
+
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#111111] text-2xl">add_task</span>
+          <div>
+            <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Nova Entrega da Pré-Parada</h3>
+            <p class="text-[11px] text-[#707072]">Cadastre uma ação/entregável vinculada a um marco cronológico</p>
+          </div>
+        </div>
+        <button onclick="PreParadaView.closeAddKanbanActionModal()" class="text-[#707072] hover:text-[#111111] p-1">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="form-label">Marco Cronológico Vinculado (D-X) *</label>
+          <select id="form-kanban-action-milestone" class="form-input font-medium font-mono">
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Descrição / Título do Entregável *</label>
+          <textarea id="form-kanban-action-title" rows="2.5" class="form-input leading-relaxed" placeholder="Ex: Emissão das RCs de sobressalentes Long Lead, Inspeção de andaimes..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Área de Suporte Responsável *</label>
+            <select id="form-kanban-action-area" class="form-input font-medium" onchange="PreParadaView.onKanbanAreaChange()">
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Responsável Técnico / Dono *</label>
+            <select id="form-kanban-action-owner" class="form-input font-medium">
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Data Limite (Prazo) *</label>
+            <input type="date" id="form-kanban-action-deadline" class="form-input font-mono" />
+          </div>
+
+          <div>
+            <label class="form-label">HH Estimado</label>
+            <input type="number" id="form-kanban-action-hh" class="form-input font-mono font-bold" placeholder="20" value="20" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Status Inicial</label>
+          <select id="form-kanban-action-status" class="form-input font-medium">
+            <option value="Não Iniciada" selected>Não Iniciada (A Fazer)</option>
+            <option value="Em Andamento">Em Andamento</option>
+            <option value="Bloqueada">Bloqueada (Com Impedimento)</option>
+            <option value="Concluída">Concluída</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="PreParadaView.closeAddKanbanActionModal()" class="btn-ghost-pill text-xs">
+          Cancelar
+        </button>
+        <button onclick="PreParadaView.saveAddKanbanAction()" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-sm">add_circle</span>
+          <span>Adicionar Entrega ao Kanban</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO DE ORDEM DE SERVIÇO (OS) NA EXECUÇÃO
+       ======================================================================== -->
+  <div id="order-create-modal" onclick="if(event.target === this) ParadaView.closeAddOrderModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Emitir Ordem de Serviço (OS)</h3>
+        <button onclick="ParadaView.closeAddOrderModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
+              <button type="button" onclick="ParadaView.closeAddOrderModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-xs">settings</span>
+                <span>Gerenciar TAGs</span>
+              </button>
+            </div>
+            <select id="form-order-tag" onchange="ParadaView.onOrderTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
+            </select>
+          </div>
+
+          <div id="order-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+            <div class="flex items-center justify-between mb-1">
+              <span id="order-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+              <span id="order-preview-tag-crit" class="nike-pill text-[9px]"></span>
+            </div>
+            <p id="order-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Título da Atividade / Serviço *</label>
+          <input type="text" id="form-order-title" class="form-input font-semibold" placeholder="Ex: Substituição Bandejas Fracionamento" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Disciplina Técnica *</label>
+            <select id="form-order-disc" class="form-input font-medium">
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Turno de Execução</label>
+            <select id="form-order-shift" class="form-input font-medium">
+              <option value="Diurno">Diurno</option>
+              <option value="Noturno">Noturno</option>
+              <option value="24h">24h (Ininterrupto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Equipe / Empreiteira Responsável</label>
+            <input type="text" id="form-order-team" class="form-input" placeholder="Ex: Consórcio MetalMax / Equipe Própria" value="Equipe de Manutenção" />
+          </div>
+          <div>
+            <label class="form-label">Status Inicial</label>
+            <select id="form-order-status" class="form-input font-medium">
+              <option value="Aguardando Bloqueio">Aguardando Bloqueio LOTO</option>
+              <option value="Não Iniciada" selected>Não Iniciada</option>
+              <option value="Em Execução">Em Execução</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="ParadaView.closeAddOrderModal()" class="btn-ghost-pill text-xs">Cancelar</button>
+        <button onclick="ParadaView.saveAddOrderModal()" class="btn-pill-primary text-xs shadow-md">Cadastrar Ordem de Serviço</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO DE PONTO DE BLOQUEIO LOTO NA EXECUÇÃO
+       ======================================================================== -->
+  <div id="loto-create-modal" onclick="if(event.target === this) ParadaView.closeAddLotoModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Bloqueio LOTO</h3>
+        <button onclick="ParadaView.closeAddLotoModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
+              <button type="button" onclick="ParadaView.closeAddLotoModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-xs">settings</span>
+                <span>Gerenciar TAGs</span>
+              </button>
+            </div>
+            <select id="form-loto-tag" onchange="ParadaView.onLotoTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
+            </select>
+          </div>
+
+          <div id="loto-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+            <div class="flex items-center justify-between mb-1">
+              <span id="loto-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+              <span id="loto-preview-tag-crit" class="nike-pill text-[9px]"></span>
+            </div>
+            <p id="loto-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Tipo de Energia Perigosa *</label>
+            <select id="form-loto-energy" class="form-input font-medium">
+              <option value="Elétrica 480V">Elétrica 480V / MCC</option>
+              <option value="Elétrica 13.8kV">Elétrica Alta Tensão 13.8kV</option>
+              <option value="Fluido Inflamável">Fluido Inflamável / Hidrocarboneto</option>
+              <option value="Vapor de Alta Pressão">Vapor de Alta Pressão (42 kgf/cm²)</option>
+              <option value="Gás Tóxico (H2S)">Gás Tóxico / Asfixiante (H2S)</option>
+              <option value="Mecânica / Cinética">Mecânica / Gravitacional / Mola</option>
+              <option value="Pneumática / Hidráulica">Pneumática / Hidráulica</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Ponto de Isolamento Físico *</label>
+            <input type="text" id="form-loto-point" class="form-input font-mono" placeholder="Ex: Gaveta Disjuntor MCC-01 / Válvula V-102 Raqueteada" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Nº Cadeado / Caixa LOTO *</label>
+            <input type="text" id="form-loto-lock" class="form-input font-mono font-bold" placeholder="Ex: CAD-088 (Caixa Vermelha 03)" />
+          </div>
+          <div>
+            <label class="form-label">Responsável pelo Bloqueio (Operador) *</label>
+            <input type="text" id="form-loto-operator" class="form-input font-medium" placeholder="Ex: Op. Carlos Mendes" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="ParadaView.closeAddLotoModal()" class="btn-ghost-pill text-xs">Cancelar</button>
+        <button onclick="ParadaView.saveAddLotoModal()" class="btn-pill-primary text-xs shadow-md">Registrar Bloqueio LOTO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO DE PENDÊNCIA NA PÓS-PARADA (PUNCH LIST)
+       ======================================================================== -->
+  <div id="punch-create-modal" onclick="if(event.target === this) PosParadaView.closeAddPunchModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Item na Punch List</h3>
+        <button onclick="PosParadaView.closeAddPunchModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
+              <button type="button" onclick="PosParadaView.closeAddPunchModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-xs">settings</span>
+                <span>Gerenciar TAGs</span>
+              </button>
+            </div>
+            <select id="form-punch-tag" onchange="PosParadaView.onPunchTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
+            </select>
+          </div>
+
+          <div id="punch-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+            <div class="flex items-center justify-between mb-1">
+              <span id="punch-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+              <span id="punch-preview-tag-crit" class="nike-pill text-[9px]"></span>
+            </div>
+            <p id="punch-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Tipo de Pendência *</label>
+            <select id="form-punch-type" class="form-input font-medium">
+              <option value="A (Impeditiva)">A (Impeditiva - Bloqueia Startup)</option>
+              <option value="B (Não Impeditiva)" selected>B (Não Impeditiva - Pós-Partida)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Prazo Limite de Saneamento</label>
+            <input type="date" id="form-punch-deadline" class="form-input font-mono" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Descrição Detalhada da Pendência *</label>
+          <textarea id="form-punch-desc" rows="2.5" class="form-input leading-relaxed" placeholder="Ex: Pintura externa de isolamento térmico nos anéis de suporte / Teste hidrostático final..."></textarea>
+        </div>
+
+        <div>
+          <label class="form-label">Responsável pelo Saneamento</label>
+          <select id="form-punch-resp" class="form-input font-medium">
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="PosParadaView.closeAddPunchModal()" class="btn-ghost-pill text-xs">Cancelar</button>
+        <button onclick="PosParadaView.saveAddPunchModal()" class="btn-pill-primary text-xs shadow-md">Salvar Item Punch List</button>
+      </div>
     </div>
   </div>
 
