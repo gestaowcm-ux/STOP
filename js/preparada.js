@@ -3510,7 +3510,7 @@ const PreParadaView = {
                         </div>
 
                         <!-- Título da Entrega / Ação -->
-                        <h5 class="font-bold text-xs text-[#111111] leading-snug tracking-tight">
+                        <h5 class="font-bold text-xs text-[#111111] leading-relaxed tracking-tight break-words whitespace-normal">
                           ${act.title}
                         </h5>
 
