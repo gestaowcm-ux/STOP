@@ -436,7 +436,6 @@ const ProjectsView = {
 
           <div class="flex items-center gap-3">
             <button onclick="ProjectsView.openCreateModal()" class="btn-pill-primary shadow-md hover:shadow-lg flex items-center gap-2">
-              <span class="material-symbols-outlined text-base">add_circle</span>
               <span>Cadastrar Nova Parada</span>
             </button>
           </div>
@@ -448,7 +447,6 @@ const ProjectsView = {
           <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
             <div class="flex items-center justify-between text-[#707072] mb-2">
               <span class="text-[11px] font-bold uppercase tracking-wider">Total de Paradas</span>
-              <span class="material-symbols-outlined text-lg text-[#111111]">fact_check</span>
             </div>
             <div class="text-2xl font-black text-[#111111]">${totalParadas}</div>
             <span class="text-[10px] text-[#707072] mt-1 block font-medium">Em carteira industrial</span>
@@ -457,7 +455,6 @@ const ProjectsView = {
           <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
             <div class="flex items-center justify-between text-[#707072] mb-2">
               <span class="text-[11px] font-bold uppercase tracking-wider">1. Pré-Parada</span>
-              <span class="material-symbols-outlined text-lg text-[#1151ff]">event_note</span>
             </div>
             <div class="text-2xl font-black text-[#1151ff]">${preParadas}</div>
             <span class="text-[10px] text-[#707072] mt-1 block font-medium">Em planejamento / Gate 1</span>
@@ -466,7 +463,6 @@ const ProjectsView = {
           <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
             <div class="flex items-center justify-between text-[#707072] mb-2">
               <span class="text-[11px] font-bold uppercase tracking-wider">2. Em Execução</span>
-              <span class="material-symbols-outlined text-lg text-[#d30005]">precision_manufacturing</span>
             </div>
             <div class="text-2xl font-black text-[#d30005]">${emExecucao}</div>
             <span class="text-[10px] text-[#707072] mt-1 block font-medium">War Room & Turnos ativos</span>
@@ -475,7 +471,6 @@ const ProjectsView = {
           <div class="card-industrial p-5 bg-[#ffffff] border border-[#e5e5e5] rounded-2xl hover:border-[#111111] transition-all">
             <div class="flex items-center justify-between text-[#707072] mb-2">
               <span class="text-[11px] font-bold uppercase tracking-wider">3. Pós-Parada</span>
-              <span class="material-symbols-outlined text-lg text-[#007d48]">task_alt</span>
             </div>
             <div class="text-2xl font-black text-[#007d48]">${posParadas}</div>
             <span class="text-[10px] text-[#707072] mt-1 block font-medium">Comissionamento & Lições</span>
@@ -485,8 +480,7 @@ const ProjectsView = {
 
         <!-- Filtros e Barra de Pesquisa -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f5f5f5] p-3 rounded-2xl border border-[#e5e5e5]">
-          <div class="flex items-center gap-2 flex-1 max-w-md bg-[#ffffff] px-3 py-2 rounded-xl border border-[#e5e5e5] focus-within:border-[#111111]">
-            <span class="material-symbols-outlined text-[#707072] text-lg">search</span>
+          <div class="flex items-center gap-2 flex-1 max-w-md bg-[#ffffff] px-3.5 py-2 rounded-xl border border-[#e5e5e5] focus-within:border-[#111111]">
             <input type="text" id="search-turnarounds-input" oninput="ProjectsView.filterParadas()" placeholder="Filtrar por nome, código ou unidade operacional..." class="w-full text-xs outline-none bg-transparent text-[#111111]" />
           </div>
 
@@ -513,7 +507,6 @@ const ProjectsView = {
     if (!list || list.length === 0) {
       return `
         <div class="col-span-full p-12 text-center bg-[#f5f5f5] rounded-3xl border border-dashed border-[#cacacb]">
-          <span class="material-symbols-outlined text-4xl text-[#707072] mb-2">folder_off</span>
           <h3 class="text-sm font-bold text-[#111111] uppercase tracking-wider">Nenhuma Parada Encontrada</h3>
           <p class="text-xs text-[#707072] mt-1">Cadastre uma nova parada industrial para iniciar o ciclo sequencial de gestão.</p>
           <button onclick="ProjectsView.openCreateModal()" class="btn-pill-primary mt-4 text-xs">
@@ -558,8 +551,7 @@ const ProjectsView = {
             <!-- Título e Unidade -->
             <div>
               <h3 class="text-base font-extrabold text-[#111111] tracking-tight group-hover:text-black leading-snug">${p.name}</h3>
-              <div class="flex items-center gap-1.5 text-xs text-[#707072] mt-1 font-medium">
-                <span class="material-symbols-outlined text-sm text-[#111111]">factory</span>
+              <div class="text-xs text-[#707072] mt-1 font-medium">
                 <span>${p.unit}</span>
               </div>
             </div>
@@ -611,18 +603,17 @@ const ProjectsView = {
 
           <!-- Ações do Card -->
           <div class="flex items-center justify-between gap-2 pt-4 border-t border-[#e5e5e5] mt-4">
-            <div class="flex items-center gap-1">
-              <button onclick="ProjectsView.openCreateModal('${p.id}')" title="Editar Informações da Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111] border-[#e5e5e5]">
-                <span class="material-symbols-outlined text-sm">edit</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="ProjectsView.openCreateModal('${p.id}')" title="Editar Informações da Parada" class="btn-ghost-pill py-1.5 px-3 text-xs text-[#707072] hover:text-[#111111]">
+                Editar
               </button>
-              <button onclick="ProjectsView.deleteParada('${p.id}')" title="Excluir Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005] border-[#e5e5e5]">
-                <span class="material-symbols-outlined text-sm">delete</span>
+              <button onclick="ProjectsView.deleteParada('${p.id}')" title="Excluir Parada" class="btn-ghost-pill py-1.5 px-3 text-xs text-[#707072] hover:text-[#d30005]">
+                Excluir
               </button>
             </div>
 
             <button onclick="App.selectParada('${p.id}', ${p.currentPhase})" class="btn-pill-primary py-2 px-5 text-xs flex items-center gap-1.5 shadow-sm group-hover:bg-black">
               <span>Acessar Parada</span>
-              <span class="material-symbols-outlined text-xs">arrow_forward</span>
             </button>
           </div>
 
