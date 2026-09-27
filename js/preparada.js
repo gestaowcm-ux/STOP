@@ -848,12 +848,11 @@ const PreParadaView = {
 
         <div class="flex items-center gap-3">
           <button onclick="PreParadaView.printTimelineReport('${parada.id}')" class="btn-ghost-pill bg-white text-[#111111] hover:bg-zinc-200 border-transparent text-xs flex items-center gap-2 font-bold shadow-md">
-            <span class="material-symbols-outlined text-base">print</span>
             <span>Imprimir / Salvar PDF</span>
           </button>
           
-          <button onclick="PreParadaView.closeTimelineModal()" class="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 flex items-center justify-center transition-colors">
-            <span class="material-symbols-outlined text-xl">close</span>
+          <button onclick="PreParadaView.closeTimelineModal()" class="px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 text-xs font-bold transition-colors">
+            Fechar
           </button>
         </div>
       </div>
@@ -930,9 +929,8 @@ const PreParadaView = {
               placeholder="Buscar por ação, marco ou responsável..." 
               value="${searchQuery}" 
               oninput="PreParadaView.setTimelineFilter('${parada.id}', '${filterArea}', '${filterStatus}', this.value)"
-              class="form-input text-xs py-1.5 pl-8 pr-3 rounded-full bg-white border-[#e5e5e5]" 
+              class="form-input text-xs py-1.5 px-3.5 rounded-full bg-white border-[#e5e5e5]" 
             />
-            <span class="material-symbols-outlined absolute left-2.5 top-2 text-sm text-[#707072]">search</span>
           </div>
         </div>
 
@@ -941,8 +939,7 @@ const PreParadaView = {
              ==================================================================== -->
         <div class="space-y-6">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-extrabold text-[#111111] uppercase tracking-wider flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">timeline</span>
+            <h3 class="text-sm font-extrabold text-[#111111] uppercase tracking-wider">
               <span>Jornada Cronológica de Marcos (D-X até D-0)</span>
             </h3>
             <span class="text-xs text-[#707072] font-mono">Ordenação: Do primeiro marco até a data de partida</span>
@@ -995,7 +992,6 @@ const PreParadaView = {
                           </span>
                         </div>
                         <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-1">
-                          <span class="material-symbols-outlined text-xs">calendar_month</span>
                           <span>Data Limite: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
                           <span>•</span>
                           <span>${mDone} de ${mTotal} ações finalizadas (${mPct}%)</span>
@@ -1065,8 +1061,7 @@ const PreParadaView = {
         <!-- Matriz de Prontidão por Área de Suporte -->
         <div class="card-industrial bg-[#f9f9f9] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
           <div class="flex items-center justify-between">
-            <h4 class="font-bold text-[#111111] text-xs uppercase tracking-wide flex items-center gap-2">
-              <span class="material-symbols-outlined text-base">domain</span>
+            <h4 class="font-bold text-[#111111] text-xs uppercase tracking-wide">
               <span>Desempenho por Área de Suporte na Linha do Tempo</span>
             </h4>
             <span class="text-xs text-[#707072] font-mono">${areaStats.length} áreas ativas</span>
@@ -1101,7 +1096,6 @@ const PreParadaView = {
 
         <div class="flex items-center gap-3">
           <button onclick="PreParadaView.printTimelineReport('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-base">print</span>
             <span>Imprimir</span>
           </button>
           <button onclick="PreParadaView.closeTimelineModal()" class="btn-pill-primary text-xs px-6 shadow-md">
