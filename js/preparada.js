@@ -13,26 +13,7 @@
 
 const PreParadaView = {
   // Lista padrão de categorias de mão de obra em ordem alfabética (gerenciável)
-  defaultLaborCategories: [
-    'Automação',
-    'Caldeiraria',
-    'Civil',
-    'Elétrica',
-    'Inspeção END',
-    'Instrumentação',
-    'Isolamento Térmico',
-    'Logística & Canteiro',
-    'Lubrificação',
-    'Mecânica',
-    'Montagem de Andaimes',
-    'Pintura Industrial',
-    'Refratário',
-    'Rigging & Içamento',
-    'Siderurgia',
-    'Soldagem Especial',
-    'Tubulação'
-  ],
-
+  
   // 10 Demandas Industriais Padrão
   defaultServicesList: [
     { id: 'SRV-01', tag: 'T-2101', description: 'Troca de 28 bandejas de fracionamento e recuperação de anéis', category: 'Caldeiraria', cost: 1850000, hh: 980, prob: 9, sev: 10, override: null, overrideReason: '' },
@@ -59,9 +40,28 @@ const PreParadaView = {
     area: 'ALL',
     milestone: 'ALL',
     owner: 'ALL',
-    deadline: 'ALL', // 'ALL', 'atrasadas', 'proximas', 'em_dia', 'concluidas'
+    deadline: 'ALL',
     search: ''
   },
+  defaultLaborCategories: [
+    'Automação',
+    'Caldeiraria',
+    'Civil',
+    'Elétrica',
+    'Inspeção END',
+    'Instrumentação',
+    'Isolamento Térmico',
+    'Logística & Canteiro',
+    'Lubrificação',
+    'Mecânica',
+    'Montagem de Andaimes',
+    'Pintura Industrial',
+    'Refratário',
+    'Rigging & Içamento',
+    'Siderurgia',
+    'Soldagem Especial',
+    'Tubulação'
+  ],
 
   // Áreas de suporte envolvidas na Pré-Parada
   supportAreas: [
@@ -100,8 +100,8 @@ const PreParadaView = {
 
           <!-- Banner de Status do Gate 1 -->
           <div class="bg-[#f5f5f5] p-3.5 rounded-2xl border ${gate1.approved ? 'border-[#007d48] bg-green-50/50' : 'border-[#e5e5e5]'} flex items-center gap-3 shrink-0">
-            <div class="w-10 h-10 rounded-xl ${gate1.approved ? 'bg-[#007d48] text-white' : 'bg-[#111111] text-white'} flex items-center justify-center font-bold text-xs font-mono shrink-0">
-              G1
+            <div class="w-10 h-10 rounded-xl ${gate1.approved ? 'bg-[#007d48] text-white' : 'bg-[#111111] text-white'} flex items-center justify-center font-bold shrink-0">
+              <span class="material-symbols-outlined text-xl">${gate1.approved ? 'verified' : 'lock_clock'}</span>
             </div>
             <div class="text-xs">
               <div class="flex items-center gap-2">
@@ -118,26 +118,32 @@ const PreParadaView = {
         <!-- Sub-navegação das 6 Abas Especialistas de Pré-Parada -->
         <div class="flex items-center gap-2 border-b border-[#e5e5e5] pb-2 overflow-x-auto text-xs">
           <button onclick="PreParadaView.switchTab('${parada.id}', 'milestones')" class="tab-pill ${activeTab === 'milestones' ? 'active' : ''}">
+            <span class="material-symbols-outlined text-sm">flag</span>
             <span>1. Milestones & WBS de Ações</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'escopo')" class="tab-pill ${activeTab === 'escopo' ? 'active' : ''}">
+            <span class="material-symbols-outlined text-sm">filter_alt</span>
             <span>2. Escopo, HH & Linha de Corte</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'riscos')" class="tab-pill ${activeTab === 'riscos' ? 'active' : ''}">
+            <span class="material-symbols-outlined text-sm">grid_view</span>
             <span>3. Matriz de Riscos 10x10</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'kanban')" class="tab-pill ${activeTab === 'kanban' ? 'active' : ''}">
+            <span class="material-symbols-outlined text-sm">view_kanban</span>
             <span>4. Kanban de Entregas</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'relatorios')" class="tab-pill ${activeTab === 'relatorios' ? 'active' : ''}">
+            <span class="material-symbols-outlined text-sm">analytics</span>
             <span>5. Relatórios & Curva S</span>
           </button>
 
           <button onclick="PreParadaView.switchTab('${parada.id}', 'prontidao')" class="tab-pill ${activeTab === 'prontidao' ? 'active font-bold border-[#111111]' : ''}">
+            <span class="material-symbols-outlined text-sm">verified</span>
             <span>6. Reunião de Prontidão (Gate D-0)</span>
           </button>
         </div>
@@ -219,7 +225,6 @@ const PreParadaView = {
     if (!parada.preParada.servicesList || parada.preParada.servicesList.length === 0) {
       parada.preParada.servicesList = JSON.parse(JSON.stringify(this.defaultServicesList));
     } else if (parada.preParada.servicesList.length < 5 && !parada.preParada.servicesList.some(s => s.tag === 'T-2101')) {
-      // Mesclar tarefas padrão mantendo intactas as tarefas adicionadas pelo usuário
       const userItems = parada.preParada.servicesList;
       const baseItems = JSON.parse(JSON.stringify(this.defaultServicesList));
       userItems.forEach((u, i) => {
@@ -366,101 +371,126 @@ const PreParadaView = {
             
             <!-- Botão de Abertura da Linha do Tempo Executiva (Popup / Relatório) -->
             <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-2 shadow-md hover:scale-105 transition-all">
+              <span class="material-symbols-outlined text-base">timeline</span>
               <span>Resumo Visual (Linha do Tempo)</span>
             </button>
 
             <!-- Botão para Criar Novo Milestone -->
             <button onclick="PreParadaView.openMilestoneModal('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5 hover:border-[#111111]">
+              <span class="material-symbols-outlined text-base">add_circle</span>
               <span>Novo Marco (D-X)</span>
             </button>
           </div>
         </div>
 
         <!-- ====================================================================
-             LINha DO TEMPO VISUAL CRONOLÓGICA (MINI-TRACK HORIZONTAL INTERATIVO)
+             LINHA DO TEMPO VISUAL CRONOLÓGICA (RÉGUA DOS MARCOS TEMPORAIS)
              ==================================================================== -->
         <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-5 shadow-sm">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-4">
             <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-[#111111] text-white flex items-center justify-center font-bold shrink-0">
+                <span class="material-symbols-outlined text-base">schedule</span>
+              </div>
               <div>
                 <h4 class="font-extrabold text-sm text-[#111111] uppercase tracking-wide">Régua Visual dos Marcos Temporais</h4>
-                <p class="text-[11px] text-[#707072]">Trajetória cronológica de preparação até o Dia D-0 (Início da Parada).</p>
+                <p class="text-[11px] text-[#707072]">Clique em qualquer marco para navegar diretamente até sua tabela WBS detalhada abaixo.</p>
               </div>
             </div>
 
-            <!-- Seletor de Modo de Exibição na Página -->
-            <div class="flex items-center gap-1 bg-[#f5f5f5] p-1 rounded-full border border-[#e5e5e5] text-[11px] font-bold">
-              <button onclick="PreParadaView.setMilestonesViewMode('${parada.id}', 'both')" class="px-3 py-1 rounded-full transition-all ${viewMode === 'both' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#707072] hover:text-[#111111]'}">
-                Visão Completa
+            <!-- Ações Rápidas no Cabeçalho da Régua -->
+            <div class="flex items-center gap-2">
+              <button onclick="PreParadaView.toggleAllMilestonesCollapse()" class="btn-ghost-pill text-xs py-1.5 px-3 flex items-center gap-1.5 font-bold hover:border-[#111111]" title="Alternar visualização compacta / expandida de todas as tabelas WBS">
+                <span class="material-symbols-outlined text-sm">unfold_more</span>
+                <span>Expandir / Recolher Todos</span>
               </button>
-              <button onclick="PreParadaView.setMilestonesViewMode('${parada.id}', 'timeline')" class="px-3 py-1 rounded-full transition-all ${viewMode === 'timeline' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#707072] hover:text-[#111111]'}">
-                Linha do Tempo
-              </button>
-              <button onclick="PreParadaView.setMilestonesViewMode('${parada.id}', 'tree')" class="px-3 py-1 rounded-full transition-all ${viewMode === 'tree' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#707072] hover:text-[#111111]'}">
-                Tabela WBS
+              <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="btn-ghost-pill text-xs py-1.5 px-3 flex items-center gap-1.5 font-bold hover:border-[#111111]" title="Abrir Linha do Tempo em Modo Apresentação / Relatório">
+                <span class="material-symbols-outlined text-sm">fullscreen</span>
+                <span>Modo Apresentação</span>
               </button>
             </div>
           </div>
 
-          <!-- Trilho Horizontal de Marcos com Nós Conectados -->
-          <div class="relative pt-2 pb-3 overflow-x-auto">
-            <div class="min-w-[680px] flex items-stretch justify-between gap-3 relative">
-              
-              <!-- Linha de Fundo do Trilho -->
-              <div class="absolute top-6 left-8 right-8 h-1 bg-[#e5e5e5] -z-0"></div>
+          <!-- Régua Cronológica de Marcos (Multi-linhas responsiva) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 pt-1 pb-2">
+            ${milestones.map((m, idx) => {
+              const mTotal = m.actions ? m.actions.length : 0;
+              const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
+              const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+              const isComplete = mTotal > 0 && mDone === mTotal;
+              const isInProgress = mDone > 0 && mDone < mTotal;
+              const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
+              const isLast = idx === milestones.length - 1;
 
-              ${milestones.map((m, idx) => {
-                const mTotal = m.actions ? m.actions.length : 0;
-                const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
-                const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
-                const isComplete = mTotal > 0 && mDone === mTotal;
-                const isInProgress = mDone > 0 && mDone < mTotal;
-                const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
-
-                return `
-                  <div onclick="PreParadaView.openTimelineModal('${parada.id}', 'ALL', 'ALL', '${m.id}')" title="Clique para ver detalhes do marco ${m.relativeDay}" class="flex-1 flex flex-col items-center text-center cursor-pointer group px-2 relative z-10">
-                    
-                    <!-- Nó do Marco na Linha -->
-                    <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs transition-all transform group-hover:scale-110 shadow-md ${
-                      isComplete ? 'bg-[#007d48] text-white ring-4 ring-green-100' :
-                      isBlocked ? 'bg-[#d30005] text-white ring-4 ring-red-100' :
-                      isInProgress ? 'bg-[#111111] text-white ring-4 ring-zinc-200 timeline-node-active' :
-                      'bg-[#f0f0f0] text-[#707072] border border-[#cacacb]'
-                    }">
-                      <span class="text-[11px] leading-none">${m.relativeDay}</span>
-                      <span class="text-[8px] uppercase tracking-wider font-semibold opacity-90">${m.id}</span>
-                    </div>
-
-                    <!-- Informações do Nó -->
-                    <div class="mt-3 space-y-1 w-full max-w-[150px]">
-                      <div class="font-extrabold text-xs text-[#111111] truncate group-hover:text-[#1151ff] transition-colors" title="${m.title}">
-                        ${m.title}
-                      </div>
-                      
-                      <div class="flex items-center justify-center gap-1 text-[10px] font-mono text-[#707072]">
-                        <span>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</span>
+              return `
+                <div onclick="PreParadaView.scrollToMilestone('${m.id}')" 
+                     title="Clique para ir até a tabela WBS do marco ${m.relativeDay} (${m.title})" 
+                     class="bg-[#fafafa] hover:bg-white border border-[#e5e5e5] hover:border-[#111111] rounded-2xl p-4 transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer group flex flex-col justify-between relative hover:-translate-y-0.5">
+                  
+                  <!-- Topo do Card: Nó D-X, Sequência e Conector de Fluxo -->
+                  <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-[#f0f0f0]">
+                    <div class="flex items-center gap-2">
+                      <!-- Nó do Marco -->
+                      <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-bold text-xs transition-transform group-hover:scale-105 shadow-sm shrink-0 ${
+                        isComplete ? 'bg-[#007d48] text-white ring-2 ring-green-100' :
+                        isBlocked ? 'bg-[#d30005] text-white ring-2 ring-red-100' :
+                        isInProgress ? 'bg-[#111111] text-white ring-2 ring-zinc-200 timeline-node-active' :
+                        'bg-white text-[#707072] border border-[#d1d5db]'
+                      }">
+                        <span class="text-[11px] leading-tight font-black">${m.relativeDay}</span>
+                        <span class="text-[7.5px] uppercase tracking-wider font-semibold opacity-90">${m.id}</span>
                       </div>
 
-                      <!-- Mini Barra de Progresso do Nó -->
-                      <div class="w-full bg-[#f0f0f0] h-1.5 rounded-full overflow-hidden mt-1.5">
-                        <div class="h-full rounded-full transition-all ${
-                          isComplete ? 'bg-[#007d48]' :
-                          isBlocked ? 'bg-[#d30005]' :
-                          'bg-[#111111]'
-                        }" style="width: ${mPct}%;"></div>
-                      </div>
-
-                      <div class="flex items-center justify-between text-[9px] font-mono text-[#707072] pt-0.5">
-                        <span>${mDone}/${mTotal} ações</span>
-                        <span class="font-bold text-[#111111]">${mPct}%</span>
+                      <div class="flex flex-col">
+                        <span class="text-[9px] font-bold text-[#707072] uppercase tracking-wider">Marco #${idx + 1}</span>
+                        <div class="flex items-center gap-1 text-[10px] font-mono text-[#707072]">
+                          <span class="material-symbols-outlined text-[12px]">calendar_month</span>
+                          <span>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</span>
+                        </div>
                       </div>
                     </div>
 
+                    <!-- Botão de Apresentação / Indicador -->
+                    <div class="flex items-center gap-1">
+                      <button onclick="event.stopPropagation(); PreParadaView.openTimelineModal('${parada.id}', 'ALL', 'ALL', '${m.id}')" title="Ver no Modo Apresentação" class="opacity-0 group-hover:opacity-100 p-1 rounded-md text-[#707072] hover:text-[#111111] hover:bg-[#f0f0f0] transition-all">
+                        <span class="material-symbols-outlined text-xs">open_in_new</span>
+                      </button>
+                      ${!isLast ? `
+                        <span class="text-[11px] font-bold text-[#a0a0a2] group-hover:text-[#111111] flex items-center transition-colors">
+                          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </span>
+                      ` : `
+                        <span class="nike-pill bg-[#007d48] text-white text-[8px] font-bold py-0.5 px-2">D-0</span>
+                      `}
+                    </div>
                   </div>
-                `;
-              }).join('')}
 
-            </div>
+                  <!-- Corpo do Card: Título Legível sem cortes excessivos -->
+                  <div class="py-2.5 flex-1 flex flex-col justify-center">
+                    <h5 class="font-extrabold text-xs text-[#111111] group-hover:text-[#1151ff] transition-colors leading-snug line-clamp-2" title="${m.title}">
+                      ${m.title}
+                    </h5>
+                  </div>
+
+                  <!-- Rodapé do Card: Barra de Progresso e Métricas -->
+                  <div class="pt-2 border-t border-[#f0f0f0] space-y-1.5">
+                    <div class="w-full bg-[#e5e5e5] h-1.5 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-300 ${
+                        isComplete ? 'bg-[#007d48]' :
+                        isBlocked ? 'bg-[#d30005]' :
+                        'bg-[#111111]'
+                      }" style="width: ${mPct}%;"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[10px] font-mono">
+                      <span class="text-[#707072] font-medium">${mDone}/${mTotal} ações</span>
+                      <span class="font-bold ${isComplete ? 'text-[#007d48]' : isBlocked ? 'text-[#d30005]' : 'text-[#111111]'}">${mPct}%</span>
+                    </div>
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
           </div>
 
           <!-- Rodapé do Resumo Visual -->
@@ -473,239 +503,204 @@ const PreParadaView = {
             </div>
             
             <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="text-xs font-bold text-[#111111] hover:underline flex items-center gap-1">
-              <span>Abrir Relatório Executivo Completo →</span>
+              <span>Abrir Relatório Executivo Completo</span>
+              <span class="material-symbols-outlined text-sm">open_in_new</span>
             </button>
           </div>
         </div>
 
         <!-- ====================================================================
-             VISÃO LINHA DO TEMPO VERTICAL COMPLETA (SE SELECIONADA OU VISÃO AMBAS)
+             DETALHAMENTO WBS DE MILESTONES E SUAS AÇÕES FILHAS
              ==================================================================== -->
-        ${(viewMode === 'both' || viewMode === 'timeline') ? `
-          <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
-            
-            <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-4">
-              <div>
-                <span class="nike-pill bg-[#111111] text-white">TIMELINE STREAM</span>
-                <h3 class="text-base md:text-lg font-extrabold text-[#111111] tracking-tight mt-1">Trilha Executiva dos Marcos & Entregáveis</h3>
-              </div>
-              <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5">
-                <span>Modo Apresentação / PDF</span>
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-b border-[#e5e5e5] pb-3">
+            <div>
+              <h4 class="font-extrabold text-sm sm:text-base text-[#111111] uppercase tracking-wide">Detalhamento WBS dos Marcos e Entregáveis</h4>
+              <p class="text-xs text-[#707072]">Ações estruturadas por marco temporal com responsáveis, prazos, HH estimado e governança de status.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-[#707072] font-mono bg-[#f5f5f5] px-3 py-1 rounded-full border border-[#e5e5e5]">${milestones.length} Marcos • ${totalActions} Ações • ${totalHh}h HH</span>
+              <button onclick="PreParadaView.openMilestoneModal('${parada.id}')" class="btn-ghost-pill text-xs py-1 px-3 flex items-center gap-1 hover:border-[#111111]">
+                <span class="material-symbols-outlined text-sm">add</span>
+                <span>Novo Marco</span>
               </button>
             </div>
+          </div>
 
-            <!-- Trilha Vertical da Linha do Tempo -->
-            <div class="space-y-8 timeline-spine pl-4 sm:pl-8 relative">
-              ${milestones.map((m, mIdx) => {
-                const mTotal = m.actions ? m.actions.length : 0;
-                const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
-                const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
-                const isComplete = mTotal > 0 && mDone === mTotal;
-                const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
+          ${milestones.map((m, mIdx) => {
+            const mTotal = m.actions ? m.actions.length : 0;
+            const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
+            const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
+            const isComplete = mTotal > 0 && mDone === mTotal;
+            const isBlocked = (m.actions || []).some(a => a.status === 'Bloqueada');
 
-                return `
-                  <div class="relative flex items-start gap-4 sm:gap-6 group">
-                    
-                    <!-- Marcador / Ícone do Nó -->
-                    <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-xs shrink-0 shadow-md relative z-10 ${
+            return `
+              <div id="milestone-card-${m.id}" class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 hover:border-[#111111] transition-all shadow-sm">
+                
+                <!-- Cabeçalho do Milestone com Ações e Botão de Expandir/Recolher -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
+                  <div class="flex items-center gap-3 cursor-pointer" onclick="PreParadaView.toggleMilestoneCollapse('${m.id}')" title="Clique para expandir/recolher este marco">
+                    <div class="w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-bold leading-tight shrink-0 shadow-sm ${
                       isComplete ? 'bg-[#007d48] text-white' :
                       isBlocked ? 'bg-[#d30005] text-white' :
-                      mDone > 0 ? 'bg-[#111111] text-white timeline-node-active' :
-                      'bg-[#f0f0f0] text-[#707072] border border-[#cacacb]'
+                      mDone > 0 ? 'bg-[#111111] text-white' :
+                      'bg-[#111111] text-white'
                     }">
-                      <span class="text-xs leading-none">${m.relativeDay}</span>
-                      <span class="text-[8px] uppercase tracking-wider font-semibold opacity-90">MARCO</span>
+                      <span class="text-xs">${m.relativeDay}</span>
+                      <span class="text-[8px] uppercase tracking-wider text-zinc-300">MARCO</span>
                     </div>
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
+                        <h4 class="font-extrabold text-sm sm:text-base text-[#111111]">${m.title}</h4>
+                        <span class="nike-pill text-[10px] py-0.5 ${
+                          isComplete ? 'bg-green-50 text-green-800 border-green-200 font-bold' :
+                          isBlocked ? 'bg-red-50 text-red-800 border-red-200 font-bold' :
+                          mDone > 0 ? 'bg-blue-50 text-blue-800 border-blue-200 font-bold' :
+                          'bg-gray-100 text-gray-700'
+                        }">
+                          ${isComplete ? 'CONCLUÍDO' : isBlocked ? 'BLOQUEADO' : mDone > 0 ? 'EM ANDAMENTO' : 'NÃO INICIADO'}
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-0.5">
+                        <span class="material-symbols-outlined text-xs">calendar_today</span>
+                        <span>Data Alvo: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
+                        <span>•</span>
+                        <span>${mTotal} ações vinculadas (${mPct}% concluído)</span>
+                      </div>
+                    </div>
+                  </div>
 
-                    <!-- Conteúdo do Card do Marco na Linha do Tempo -->
-                    <div class="flex-1 bg-[#f9f9f9] border border-[#e5e5e5] rounded-2xl p-5 hover:border-[#111111] hover:bg-[#ffffff] transition-all space-y-4">
-                      
-                      <!-- Header do Marco -->
-                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e5e5e5] pb-3">
-                        <div>
-                          <div class="flex items-center gap-2">
-                            <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
-                            <h4 class="font-extrabold text-sm sm:text-base text-[#111111]">${m.title}</h4>
-                            <span class="nike-pill text-[10px] py-0.5 ${
-                              isComplete ? 'bg-green-50 text-green-800 border-green-200' :
-                              isBlocked ? 'bg-red-50 text-red-800 border-red-200' :
-                              mDone > 0 ? 'bg-blue-50 text-blue-800 border-blue-200 font-bold' :
+                  <div class="flex items-center gap-2">
+                    <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1.5 px-3 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm">add</span>
+                      <span>Desdobrar Ação</span>
+                    </button>
+                    <button onclick="PreParadaView.openTimelineModal('${parada.id}', 'ALL', 'ALL', '${m.id}')" title="Visualizar na Linha do Tempo" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
+                      <span class="material-symbols-outlined text-sm">timeline</span>
+                    </button>
+                    <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" title="Editar Marco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
+                      <span class="material-symbols-outlined text-sm">edit</span>
+                    </button>
+                    <button onclick="PreParadaView.deleteMilestone('${parada.id}', '${m.id}')" title="Excluir Marco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
+                      <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                    <button onclick="PreParadaView.toggleMilestoneCollapse('${m.id}')" id="collapse-btn-${m.id}" title="Recolher / Expandir Tabela" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
+                      <span class="material-symbols-outlined text-sm transition-transform duration-200" id="collapse-icon-${m.id}">expand_less</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tabela das Ações Filhas (Desdobramento WBS por Área de Suporte) -->
+                <div id="milestone-body-${m.id}" class="overflow-x-auto transition-all duration-200">
+                  <table class="w-full text-xs text-left">
+                    <thead class="bg-[#f5f5f5] text-[#707072] uppercase font-bold text-[10px] tracking-wider border-b border-[#e5e5e5]">
+                      <tr>
+                        <th class="p-2.5">Código</th>
+                        <th class="p-2.5">Entregável / Ação de Preparação</th>
+                        <th class="p-2.5">Área de Suporte</th>
+                        <th class="p-2.5">Responsável</th>
+                        <th class="p-2.5">Prazo</th>
+                        <th class="p-2.5 text-center">HH</th>
+                        <th class="p-2.5 text-center">Status</th>
+                        <th class="p-2.5 text-center">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e5e5e5]">
+                      ${(m.actions || []).map(act => `
+                        <tr class="hover:bg-[#f9f9f9] transition-colors">
+                          <td class="p-2.5 font-mono font-bold text-[#111111]">${act.id}</td>
+                          <td class="p-2.5 font-bold text-[#111111] max-w-xs leading-snug">${act.title}</td>
+                          <td class="p-2.5">
+                            <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${act.area}</span>
+                          </td>
+                          <td class="p-2.5 text-[#39393b]">${act.owner}</td>
+                          <td class="p-2.5 font-mono text-[#707072]">${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}</td>
+                          <td class="p-2.5 text-center font-mono font-bold text-[#111111]">${act.estimatedHh || 0}h</td>
+                          <td class="p-2.5 text-center">
+                            <button onclick="PreParadaView.toggleActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer ${
+                              act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
+                              act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
+                              act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
                               'bg-gray-100 text-gray-700'
                             }">
-                              ${isComplete ? 'CONCLUÍDO' : isBlocked ? 'BLOQUEADO' : mDone > 0 ? 'EM ANDAMENTO' : 'NÃO INICIADO'}
-                            </span>
-                          </div>
-                          <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-1">
-                            <span>Data Limite: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
-                            <span>•</span>
-                            <span>${mDone} de ${mTotal} ações finalizadas (${mPct}%)</span>
-                          </div>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                          <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1 px-2.5">
-                            <span>Desdobrar</span>
-                          </button>
-                          <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" title="Editar Marco" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#111111]">
-                            Editar
-                          </button>
-                        </div>
-                      </div>
-
-                      <!-- Grid de Ações / Entregáveis Vinculados ao Marco -->
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                        ${(m.actions || []).map(act => `
-                          <div class="p-3 bg-[#ffffff] rounded-xl border border-[#e5e5e5] hover:border-[#111111] transition-all flex flex-col justify-between space-y-2 text-xs">
-                            <div>
-                              <div class="flex items-center justify-between gap-1 mb-1">
-                                <span class="font-mono text-[10px] font-bold text-[#707072]">${act.id}</span>
-                                <span class="nike-pill text-[9px] py-0 bg-[#f0f0f0] font-semibold">${act.area}</span>
-                              </div>
-                              <h5 class="font-bold text-[#111111] leading-snug">${act.title}</h5>
-                            </div>
-
-                            <div class="flex items-center justify-between border-t border-[#f0f0f0] pt-2 text-[11px]">
-                              <span class="text-[#707072]">Resp: <b class="text-[#111111]">${act.owner}</b></span>
-                              
-                              <button onclick="PreParadaView.toggleActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar status" class="nike-pill text-[10px] cursor-pointer py-0.5 ${
-                                act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
-                                act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
-                                act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
-                                'bg-gray-100 text-gray-700'
-                              }">
-                                ${act.status}
-                              </button>
-                            </div>
-                          </div>
-                        `).join('')}
-
-                        ${(!m.actions || m.actions.length === 0) ? `
-                          <div class="col-span-2 p-3 text-center text-xs text-[#707072] italic bg-[#ffffff] rounded-xl border border-dashed border-[#cacacb]">
-                            Nenhum entregável cadastrado. Clique em "Desdobrar" para adicionar ações de SMS, Suprimentos ou Execução.
-                          </div>
-                        ` : ''}
-                      </div>
-
-                    </div>
-
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-          </div>
-        ` : ''}
-
-        <!-- ====================================================================
-             LISTA / ÁRVORE WBS DE MILESTONES E SUAS AÇÕES FILHAS (TABELA CLÁSSICA)
-             ==================================================================== -->
-        ${(viewMode === 'both' || viewMode === 'tree') ? `
-          <div class="space-y-4">
-            <div class="flex items-center justify-between pt-2">
-              <h4 class="font-extrabold text-sm text-[#111111] uppercase tracking-wide">Detalhamento WBS dos Marcos e Entregáveis</h4>
-              <span class="text-xs text-[#707072] font-mono">${milestones.length} Marcos • ${totalActions} Ações • ${totalHh}h HH</span>
-            </div>
-
-            ${milestones.map((m, mIdx) => {
-              const mTotal = m.actions ? m.actions.length : 0;
-              const mDone = m.actions ? m.actions.filter(a => a.status === 'Concluída').length : 0;
-              const mPct = mTotal > 0 ? Math.round((mDone / mTotal) * 100) : 0;
-
-              return `
-                <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 hover:border-[#111111] transition-all shadow-sm">
-                  
-                  <!-- Cabeçalho do Milestone -->
-                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
-                    <div class="flex items-center gap-3">
-                      <div class="w-12 h-12 rounded-2xl bg-[#111111] text-white flex flex-col items-center justify-center font-mono font-bold leading-tight shrink-0 shadow-sm">
-                        <span class="text-xs">${m.relativeDay}</span>
-                        <span class="text-[8px] uppercase tracking-wider text-zinc-400">MARCO</span>
-                      </div>
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <span class="font-mono text-xs font-bold text-[#707072]">${m.id}</span>
-                          <h4 class="font-extrabold text-sm text-[#111111]">${m.title}</h4>
-                        </div>
-                        <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-0.5">
-                          <span>Data Alvo: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
-                          <span>•</span>
-                          <span>${mTotal} ações vinculadas (${mPct}% concluído)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                      <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
-                        <span>Desdobrar Ação</span>
-                      </button>
-                      <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1 px-2.5 text-[#707072] hover:text-[#111111]">
-                        Editar
-                      </button>
-                      <button onclick="PreParadaView.deleteMilestone('${parada.id}', '${m.id}')" class="btn-ghost-pill text-xs py-1 px-2.5 text-[#707072] hover:text-[#d30005]">
-                        Excluir
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Tabela das Ações Filhas (Desdobramento WBS por Área de Suporte) -->
-                  <div class="overflow-x-auto">
-                    <table class="w-full text-xs text-left">
-                      <thead class="bg-[#f5f5f5] text-[#707072] uppercase font-bold text-[10px] tracking-wider border-b border-[#e5e5e5]">
-                        <tr>
-                          <th class="p-2.5">Código</th>
-                          <th class="p-2.5">Entregável / Ação de Preparação</th>
-                          <th class="p-2.5">Área de Suporte</th>
-                          <th class="p-2.5">Responsável</th>
-                          <th class="p-2.5">Prazo</th>
-                          <th class="p-2.5 text-center">HH</th>
-                          <th class="p-2.5 text-center">Status</th>
-                          <th class="p-2.5 text-center">Ações</th>
+                              ${act.status}
+                            </button>
+                          </td>
+                          <td class="p-2.5 text-center">
+                            <button onclick="PreParadaView.deleteAction('${parada.id}', '${m.id}', '${act.id}')" title="Excluir ação" class="text-[#707072] hover:text-[#d30005] p-1">
+                              <span class="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody class="divide-y divide-[#e5e5e5]">
-                        ${(m.actions || []).map(act => `
-                          <tr class="hover:bg-[#f9f9f9] transition-colors">
-                            <td class="p-2.5 font-mono font-bold text-[#111111]">${act.id}</td>
-                            <td class="p-2.5 font-bold text-[#111111] max-w-xs leading-snug">${act.title}</td>
-                            <td class="p-2.5">
-                              <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${act.area}</span>
-                            </td>
-                            <td class="p-2.5 text-[#39393b]">${act.owner}</td>
-                            <td class="p-2.5 font-mono text-[#707072]">${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}</td>
-                            <td class="p-2.5 text-center font-mono font-bold text-[#111111]">${act.estimatedHh || 0}h</td>
-                            <td class="p-2.5 text-center">
-                              <button onclick="PreParadaView.toggleActionStatus('${parada.id}', '${m.id}', '${act.id}')" title="Clique para avançar o status" class="nike-pill text-[10px] cursor-pointer ${
-                                act.status === 'Concluída' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' :
-                                act.status === 'Em Andamento' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' :
-                                act.status === 'Bloqueada' ? 'bg-red-50 text-red-700 border-red-200 font-bold' :
-                                'bg-gray-100 text-gray-700'
-                              }">
-                                ${act.status}
-                              </button>
-                            </td>
-                            <td class="p-2.5 text-center">
-                              <button onclick="PreParadaView.deleteAction('${parada.id}', '${m.id}', '${act.id}')" class="text-xs font-bold text-[#707072] hover:text-[#d30005] px-2 py-1">
-                                Excluir
-                              </button>
-                            </td>
-                          </tr>
-                        `).join('')}
-                        ${(!m.actions || m.actions.length === 0) ? `
-                          <tr>
-                            <td colspan="8" class="p-4 text-center text-[#707072] italic">
-                              Nenhuma ação desdobrada para este milestone. Clique em "Desdobrar Ação" para adicionar entregáveis de SMS, Suprimentos, Contratos, etc.
-                            </td>
-                          </tr>
-                        ` : ''}
-                      </tbody>
-                    </table>
-                  </div>
-
+                      `).join('')}
+                      ${(!m.actions || m.actions.length === 0) ? `
+                        <tr>
+                          <td colspan="8" class="p-4 text-center text-[#707072] italic">
+                            Nenhuma ação desdobrada para este milestone. Clique em "Desdobrar Ação" para adicionar entregáveis de SMS, Suprimentos, Contratos, etc.
+                          </td>
+                        </tr>
+                      ` : ''}
+                    </tbody>
+                  </table>
                 </div>
-              `;
-            }).join('')}
-          </div>
-        ` : ''}
+
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+      </div>
+    `;
+  },
+
+  // Helper para rolar suavemente até o marco na tabela WBS e dar destaque visual
+  scrollToMilestone(milestoneId) {
+    const el = document.getElementById(`milestone-card-${milestoneId}`);
+    if (el) {
+      // Se a tabela estiver recolhida, expandir
+      const body = document.getElementById(`milestone-body-${milestoneId}`);
+      const icon = document.getElementById(`collapse-icon-${milestoneId}`);
+      if (body && body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        if (icon) icon.innerText = 'expand_less';
+      }
+
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-[#111111]', 'shadow-lg');
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-[#111111]', 'shadow-lg');
+      }, 1600);
+    }
+  },
+
+  // Helper para alternar recolhimento de um único marco
+  toggleMilestoneCollapse(milestoneId) {
+    const body = document.getElementById(`milestone-body-${milestoneId}`);
+    const icon = document.getElementById(`collapse-icon-${milestoneId}`);
+    if (body) {
+      const isHidden = body.classList.toggle('hidden');
+      if (icon) icon.innerText = isHidden ? 'expand_more' : 'expand_less';
+    }
+  },
+
+  // Helper para expandir/recolher todos os marcos
+  toggleAllMilestonesCollapse() {
+    const bodies = document.querySelectorAll('[id^="milestone-body-"]');
+    if (!bodies.length) return;
+    const hasVisible = Array.from(bodies).some(b => !b.classList.contains('hidden'));
+    bodies.forEach(b => {
+      const id = b.id.replace('milestone-body-', '');
+      const icon = document.getElementById(`collapse-icon-${id}`);
+      if (hasVisible) {
+        b.classList.add('hidden');
+        if (icon) icon.innerText = 'expand_more';
+      } else {
+        b.classList.remove('hidden');
+        if (icon) icon.innerText = 'expand_less';
+      }
+    });
+  },
 
       </div>
     `;
@@ -848,11 +843,12 @@ const PreParadaView = {
 
         <div class="flex items-center gap-3">
           <button onclick="PreParadaView.printTimelineReport('${parada.id}')" class="btn-ghost-pill bg-white text-[#111111] hover:bg-zinc-200 border-transparent text-xs flex items-center gap-2 font-bold shadow-md">
+            <span class="material-symbols-outlined text-base">print</span>
             <span>Imprimir / Salvar PDF</span>
           </button>
           
-          <button onclick="PreParadaView.closeTimelineModal()" class="px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 text-xs font-bold transition-colors">
-            Fechar
+          <button onclick="PreParadaView.closeTimelineModal()" class="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 flex items-center justify-center transition-colors">
+            <span class="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
       </div>
@@ -929,8 +925,9 @@ const PreParadaView = {
               placeholder="Buscar por ação, marco ou responsável..." 
               value="${searchQuery}" 
               oninput="PreParadaView.setTimelineFilter('${parada.id}', '${filterArea}', '${filterStatus}', this.value)"
-              class="form-input text-xs py-1.5 px-3.5 rounded-full bg-white border-[#e5e5e5]" 
+              class="form-input text-xs py-1.5 pl-8 pr-3 rounded-full bg-white border-[#e5e5e5]" 
             />
+            <span class="material-symbols-outlined absolute left-2.5 top-2 text-sm text-[#707072]">search</span>
           </div>
         </div>
 
@@ -939,7 +936,8 @@ const PreParadaView = {
              ==================================================================== -->
         <div class="space-y-6">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-extrabold text-[#111111] uppercase tracking-wider">
+            <h3 class="text-sm font-extrabold text-[#111111] uppercase tracking-wider flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">timeline</span>
               <span>Jornada Cronológica de Marcos (D-X até D-0)</span>
             </h3>
             <span class="text-xs text-[#707072] font-mono">Ordenação: Do primeiro marco até a data de partida</span>
@@ -992,6 +990,7 @@ const PreParadaView = {
                           </span>
                         </div>
                         <div class="flex items-center gap-2 text-[11px] text-[#707072] mt-1">
+                          <span class="material-symbols-outlined text-xs">calendar_month</span>
                           <span>Data Limite: <b>${m.targetDate ? m.targetDate.split('-').reverse().join('/') : '--'}</b></span>
                           <span>•</span>
                           <span>${mDone} de ${mTotal} ações finalizadas (${mPct}%)</span>
@@ -1061,7 +1060,8 @@ const PreParadaView = {
         <!-- Matriz de Prontidão por Área de Suporte -->
         <div class="card-industrial bg-[#f9f9f9] border border-[#e5e5e5] rounded-3xl p-6 space-y-4">
           <div class="flex items-center justify-between">
-            <h4 class="font-bold text-[#111111] text-xs uppercase tracking-wide">
+            <h4 class="font-bold text-[#111111] text-xs uppercase tracking-wide flex items-center gap-2">
+              <span class="material-symbols-outlined text-base">domain</span>
               <span>Desempenho por Área de Suporte na Linha do Tempo</span>
             </h4>
             <span class="text-xs text-[#707072] font-mono">${areaStats.length} áreas ativas</span>
@@ -1096,6 +1096,7 @@ const PreParadaView = {
 
         <div class="flex items-center gap-3">
           <button onclick="PreParadaView.printTimelineReport('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base">print</span>
             <span>Imprimir</span>
           </button>
           <button onclick="PreParadaView.closeTimelineModal()" class="btn-pill-primary text-xs px-6 shadow-md">
@@ -1369,6 +1370,7 @@ const PreParadaView = {
             <!-- Botões de Ação do Escopo -->
             <div class="flex flex-wrap items-center gap-2">
               <button onclick="PreParadaView.resetEscopoDefaults('${parada.id}')" title="Restaurar as 10 demandas padrão de manutenção industrial" class="btn-ghost-pill text-xs py-2 px-3 flex items-center gap-1.5 hover:border-[#111111]">
+                <span class="material-symbols-outlined text-sm">restart_alt</span>
                 <span>Restaurar 10 Demandas</span>
               </button>
               <button onclick="PreParadaView.openManageLaborCategoriesModal('${parada.id}')" class="btn-ghost-pill text-xs py-2 px-3 flex items-center gap-1.5 hover:border-[#111111]">
@@ -1398,13 +1400,13 @@ const PreParadaView = {
             </div>
 
             <div onclick="PreParadaView.setEscopoStatusFilter('approved')" class="p-4 cursor-pointer bg-emerald-50/60 hover:bg-emerald-100/70 transition-all rounded-2xl border ${filterStatus === 'approved' ? 'border-[#007d48] ring-2 ring-[#007d48]/20' : 'border-emerald-200'} space-y-1">
-              <span class="text-[10px] uppercase font-bold text-[#007d48] block">✓ Seguem p/ Planejamento</span>
+              <span class="text-[10px] uppercase font-bold text-[#007d48] block tracking-wider">Aprovados para Planejamento</span>
               <span class="text-lg font-black font-mono text-[#007d48]">${approvedServices.length} serviços</span>
               <span class="text-[10px] text-[#007d48] font-mono block">R$ ${totalApprovedCost.toLocaleString('pt-BR')} (${totalApprovedHh.toLocaleString('pt-BR')} HH)</span>
             </div>
 
             <div onclick="PreParadaView.setEscopoStatusFilter('cut')" class="p-4 cursor-pointer ${cutServices.length > 0 ? 'bg-red-50/80 hover:bg-red-100' : 'bg-[#f9f9f9]'} transition-all rounded-2xl border ${filterStatus === 'cut' ? 'border-red-600 ring-2 ring-red-600/20' : (cutServices.length > 0 ? 'border-red-200' : 'border-[#e5e5e5]')} space-y-1">
-              <span class="text-[10px] uppercase font-bold ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'} block">❌ Cortados do Escopo</span>
+              <span class="text-[10px] uppercase font-bold ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'} block tracking-wider">Cortados do Escopo</span>
               <span class="text-lg font-black font-mono ${cutServices.length > 0 ? 'text-[#d30005]' : 'text-[#707072]'}">${cutServices.length} serviços</span>
               <span class="text-[10px] text-[#d30005] font-mono block">R$ ${totalCutCost.toLocaleString('pt-BR')} descartados</span>
             </div>
@@ -1421,15 +1423,15 @@ const PreParadaView = {
               <span class="font-bold text-[#111111] uppercase tracking-wider text-[11px] mr-1">Filtro de Escopo:</span>
               
               <button onclick="PreParadaView.setEscopoStatusFilter('all')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'all' ? 'active font-bold bg-[#111111] text-white border-[#111111]' : 'bg-[#f5f5f5] text-[#4b4b4d]'}">
-                <span>Todos Juntos (${services.length})</span>
+                <span class="material-symbols-outlined text-xs">list</span>\n                <span class="material-symbols-outlined text-xs">list</span>\n                <span>Todos (${services.length})</span>
               </button>
 
               <button onclick="PreParadaView.setEscopoStatusFilter('approved')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'approved' ? 'active font-bold bg-[#007d48] text-white border-[#007d48]' : 'bg-[#f5f5f5] text-[#007d48]'}">
-                <span>✓ Seguem p/ Planejamento (${approvedServices.length})</span>
+                <span class="material-symbols-outlined text-xs">check_circle</span>\n                <span class="material-symbols-outlined text-xs">check_circle</span>\n                <span>Aprovados (${approvedServices.length})</span>
               </button>
 
               <button onclick="PreParadaView.setEscopoStatusFilter('cut')" class="tab-pill text-xs py-1.5 px-3.5 ${filterStatus === 'cut' ? 'active font-bold bg-red-600 text-white border-red-600' : 'bg-[#f5f5f5] text-red-700'}">
-                <span>❌ Cortados do Escopo (${cutServices.length})</span>
+                <span class="material-symbols-outlined text-xs">cancel</span>\n                <span class="material-symbols-outlined text-xs">cancel</span>\n                <span>Cortados (${cutServices.length})</span>
               </button>
             </div>
 
@@ -1526,7 +1528,7 @@ const PreParadaView = {
                         </td>
                         <td class="p-3 font-bold text-[#111111] max-w-xs leading-snug">
                           ${s.description}
-                          ${s.override === 'include' ? `<span class="block text-[10px] text-[#007d48] font-bold mt-0.5">★ Incluído por Override Técnico (${s.overrideReason || 'Justificado'})</span>` : ''}
+                          ${s.override === 'include' ? `<span class="block text-[10px] text-[#007d48] font-bold mt-0.5">[Override] Incluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` : ''}
                         </td>
                         <td class="p-3">
                           <span class="nike-pill text-[10px] bg-[#f0f0f0] font-semibold">${s.category}</span>
@@ -1545,7 +1547,7 @@ const PreParadaView = {
                         </td>
                         <td class="p-3 text-center">
                           <span class="nike-pill text-[10px] font-bold bg-emerald-600 text-white border-transparent shadow-sm">
-                            ✓ SEGUE P/ PLANEJAMENTO
+                            APROVADO P/ ESCOPO
                           </span>
                         </td>
                         <td class="p-3 text-center">
@@ -1577,7 +1579,7 @@ const PreParadaView = {
                           <span class="line-through opacity-80">${s.description}</span>
                           <div class="text-[10px] text-[#d30005] font-semibold mt-1">
                             Motivo: Score insuficiente (${s.riskScore} pts) • Estouro acumulado de +R$ ${overAmount.toLocaleString('pt-BR')}
-                            ${s.override === 'exclude' ? `<span class="block text-red-800 font-bold">★ Excluído por Override Técnico (${s.overrideReason || 'Justificado'})</span>` : ''}
+                            ${s.override === 'exclude' ? `<span class="block text-red-800 font-bold">[Override] Excluído por Decisão Técnica (${s.overrideReason || 'Justificado'})</span>` : ''}
                           </div>
                         </td>
                         <td class="p-3">
@@ -1597,7 +1599,7 @@ const PreParadaView = {
                         </td>
                         <td class="p-3 text-center">
                           <span class="nike-pill text-[10px] font-black bg-red-600 text-white border-transparent shadow-sm">
-                            ❌ CORTADO DO ESCOPO
+                            CORTADO DO ESCOPO
                           </span>
                         </td>
                         <td class="p-3 text-center">
@@ -2218,7 +2220,7 @@ const PreParadaView = {
   },
 
   // ==========================================================================
-  // 4. ABA: KANBAN DE ENTREGAS POR ÁREA DE SUPORTE & FILTROS MULTIDIMENSIONAIS
+  // 4. ABA: KANBAN DE ENTREGAS POR ÁREA DE SUPORTE
   // ==========================================================================
   renderKanbanTab(parada) {
     const milestones = this.getSortedMilestones(parada.preParada.milestones || []);
@@ -2342,12 +2344,10 @@ const PreParadaView = {
             <!-- Ações Rápidas no Topo -->
             <div class="flex flex-wrap items-center gap-2.5">
               <button onclick="PreParadaView.openTimelineModal('${parada.id}')" class="btn-ghost-pill text-xs flex items-center gap-1.5 hover:border-[#111111]">
-                <span class="material-symbols-outlined text-sm">timeline</span>
                 <span>Linha do Tempo</span>
               </button>
               <button onclick="PreParadaView.openAddKanbanActionModal('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
-                <span class="material-symbols-outlined text-sm">add_circle</span>
-                <span>Nova Entrega / Ação</span>
+                <span>+ Nova Entrega / Ação</span>
               </button>
             </div>
           </div>
@@ -2421,12 +2421,11 @@ const PreParadaView = {
                   placeholder="Buscar por entrega, código (ACT), responsável, marco..." 
                   value="${this.kanbanFilterState.search || ''}" 
                   oninput="PreParadaView.setKanbanFilter('search', this.value)"
-                  class="form-input text-xs py-2 pl-9 pr-8 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full focus:bg-white focus:border-[#111111] transition-all"
+                  class="form-input text-xs py-2 px-4 rounded-full bg-[#f9f9f9] border-[#e5e5e5] w-full focus:bg-white focus:border-[#111111] transition-all"
                 />
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#707072]">search</span>
                 ${this.kanbanFilterState.search ? `
-                  <button onclick="PreParadaView.setKanbanFilter('search', '')" title="Limpar busca" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#707072] hover:text-[#111111]">
-                    <span class="material-symbols-outlined text-sm">close</span>
+                  <button onclick="PreParadaView.setKanbanFilter('search', '')" title="Limpar busca" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#707072] hover:text-[#111111] text-xs font-bold">
+                    ✕
                   </button>
                 ` : ''}
               </div>
@@ -2437,7 +2436,7 @@ const PreParadaView = {
                   onchange="PreParadaView.setKanbanFilter('area', this.value)" 
                   class="form-input text-xs py-2 px-3 rounded-full bg-[#f9f9f9] font-medium border-[#e5e5e5] hover:border-[#111111] transition-all w-auto"
                 >
-                  <option value="ALL" ${filterArea === 'ALL' ? 'selected' : ''}>🏢 Todas as Áreas (${uniqueAreas.length})</option>
+                  <option value="ALL" ${filterArea === 'ALL' ? 'selected' : ''}>Todas as Áreas (${uniqueAreas.length})</option>
                   ${uniqueAreas.map(a => `<option value="${a}" ${filterArea === a ? 'selected' : ''}>${a}</option>`).join('')}
                 </select>
               </div>
@@ -2448,7 +2447,7 @@ const PreParadaView = {
                   onchange="PreParadaView.setKanbanFilter('milestone', this.value)" 
                   class="form-input text-xs py-2 px-3 rounded-full bg-[#f9f9f9] font-medium border-[#e5e5e5] hover:border-[#111111] transition-all w-auto"
                 >
-                  <option value="ALL" ${filterMilestone === 'ALL' ? 'selected' : ''}>🚩 Todos os Marcos (${milestones.length})</option>
+                  <option value="ALL" ${filterMilestone === 'ALL' ? 'selected' : ''}>Todos os Marcos (${milestones.length})</option>
                   ${milestones.map(m => `<option value="${m.id}" ${filterMilestone === m.id ? 'selected' : ''}>[${m.relativeDay}] ${m.title}</option>`).join('')}
                 </select>
               </div>
@@ -2459,7 +2458,7 @@ const PreParadaView = {
                   onchange="PreParadaView.setKanbanFilter('owner', this.value)" 
                   class="form-input text-xs py-2 px-3 rounded-full bg-[#f9f9f9] font-medium border-[#e5e5e5] hover:border-[#111111] transition-all w-auto"
                 >
-                  <option value="ALL" ${filterOwner === 'ALL' ? 'selected' : ''}>👤 Todos os Responsáveis (${uniqueOwners.length})</option>
+                  <option value="ALL" ${filterOwner === 'ALL' ? 'selected' : ''}>Todos os Responsáveis (${uniqueOwners.length})</option>
                   ${uniqueOwners.map(o => `<option value="${o}" ${filterOwner === o ? 'selected' : ''}>${o}</option>`).join('')}
                 </select>
               </div>
@@ -2470,11 +2469,11 @@ const PreParadaView = {
                   onchange="PreParadaView.setKanbanFilter('deadline', this.value)" 
                   class="form-input text-xs py-2 px-3 rounded-full bg-[#f9f9f9] font-medium border-[#e5e5e5] hover:border-[#111111] transition-all w-auto"
                 >
-                  <option value="ALL" ${filterDeadline === 'ALL' ? 'selected' : ''}>⏱️ Todos os Prazos</option>
-                  <option value="atrasadas" ${filterDeadline === 'atrasadas' ? 'selected' : ''}>🚨 Atrasadas (${totalOverdue})</option>
-                  <option value="proximas" ${filterDeadline === 'proximas' ? 'selected' : ''}>⚠️ Próximos 7 dias</option>
-                  <option value="em_dia" ${filterDeadline === 'em_dia' ? 'selected' : ''}>✅ Em Dia</option>
-                  <option value="concluidas" ${filterDeadline === 'concluidas' ? 'selected' : ''}>✔️ Concluídas (${totalDone})</option>
+                  <option value="ALL" ${filterDeadline === 'ALL' ? 'selected' : ''}>Todos os Prazos</option>
+                  <option value="atrasadas" ${filterDeadline === 'atrasadas' ? 'selected' : ''}>Atrasadas (${totalOverdue})</option>
+                  <option value="proximas" ${filterDeadline === 'proximas' ? 'selected' : ''}>Próximos 7 dias</option>
+                  <option value="em_dia" ${filterDeadline === 'em_dia' ? 'selected' : ''}>Em Dia</option>
+                  <option value="concluidas" ${filterDeadline === 'concluidas' ? 'selected' : ''}>Concluídas (${totalDone})</option>
                 </select>
               </div>
 
@@ -2484,7 +2483,6 @@ const PreParadaView = {
             ${hasActiveFilters ? `
               <div class="shrink-0 flex items-center gap-2">
                 <button onclick="PreParadaView.clearKanbanFilters()" class="btn-ghost-pill text-xs py-1.5 px-3 flex items-center gap-1 text-red-600 hover:bg-red-50 font-bold border-red-200">
-                  <span class="material-symbols-outlined text-sm">filter_alt_off</span>
                   <span>Limpar Filtros</span>
                 </button>
               </div>
@@ -2496,43 +2494,42 @@ const PreParadaView = {
           ${hasActiveFilters ? `
             <div class="pt-3 border-t border-[#f0f0f0] flex flex-wrap items-center justify-between gap-2 text-xs">
               <div class="flex flex-wrap items-center gap-1.5">
-                <span class="text-[11px] font-bold text-[#707072] uppercase mr-1 flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm text-[#111111]">filter_list</span>
-                  <span>Filtros ativos:</span>
+                <span class="text-[11px] font-bold text-[#707072] uppercase mr-1">
+                  Filtros ativos:
                 </span>
 
                 ${filterArea !== 'ALL' ? `
                   <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-900 border border-blue-200">
                     <span>Área: <b>${filterArea}</b></span>
-                    <button onclick="PreParadaView.setKanbanFilter('area', 'ALL')" class="hover:text-red-600 ml-0.5"><span class="material-symbols-outlined text-xs">close</span></button>
+                    <button onclick="PreParadaView.setKanbanFilter('area', 'ALL')" class="hover:text-red-600 ml-0.5 font-bold">✕</button>
                   </span>
                 ` : ''}
 
                 ${filterMilestone !== 'ALL' ? `
                   <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-900 border border-purple-200">
                     <span>Marco: <b>${filterMilestone}</b></span>
-                    <button onclick="PreParadaView.setKanbanFilter('milestone', 'ALL')" class="hover:text-red-600 ml-0.5"><span class="material-symbols-outlined text-xs">close</span></button>
+                    <button onclick="PreParadaView.setKanbanFilter('milestone', 'ALL')" class="hover:text-red-600 ml-0.5 font-bold">✕</button>
                   </span>
                 ` : ''}
 
                 ${filterOwner !== 'ALL' ? `
                   <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
                     <span>Resp: <b>${filterOwner}</b></span>
-                    <button onclick="PreParadaView.setKanbanFilter('owner', 'ALL')" class="hover:text-red-600 ml-0.5"><span class="material-symbols-outlined text-xs">close</span></button>
+                    <button onclick="PreParadaView.setKanbanFilter('owner', 'ALL')" class="hover:text-red-600 ml-0.5 font-bold">✕</button>
                   </span>
                 ` : ''}
 
                 ${filterDeadline !== 'ALL' ? `
                   <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-900 border border-zinc-300">
                     <span>Prazo: <b>${filterDeadline}</b></span>
-                    <button onclick="PreParadaView.setKanbanFilter('deadline', 'ALL')" class="hover:text-red-600 ml-0.5"><span class="material-symbols-outlined text-xs">close</span></button>
+                    <button onclick="PreParadaView.setKanbanFilter('deadline', 'ALL')" class="hover:text-red-600 ml-0.5 font-bold">✕</button>
                   </span>
                 ` : ''}
 
                 ${filterSearch ? `
                   <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-900 border border-zinc-300">
                     <span>Busca: "<b>${filterSearch}</b>"</span>
-                    <button onclick="PreParadaView.setKanbanFilter('search', '')" class="hover:text-red-600 ml-0.5"><span class="material-symbols-outlined text-xs">close</span></button>
+                    <button onclick="PreParadaView.setKanbanFilter('search', '')" class="hover:text-red-600 ml-0.5 font-bold">✕</button>
                   </span>
                 ` : ''}
               </div>
@@ -2559,9 +2556,8 @@ const PreParadaView = {
                 <div class="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
                   <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full ${col.color}"></span>
-                    <h4 class="font-extrabold text-xs uppercase tracking-wider text-[#111111] flex items-center gap-1.5">
-                      <span class="material-symbols-outlined text-sm ${col.textColor}">${col.icon}</span>
-                      <span>${col.label}</span>
+                    <h4 class="font-extrabold text-xs uppercase tracking-wider text-[#111111]">
+                      ${col.label}
                     </h4>
                   </div>
                   
@@ -2599,8 +2595,8 @@ const PreParadaView = {
 
                           <div class="flex items-center gap-1 text-[10px] font-mono text-[#707072]">
                             <span>${act.id}</span>
-                            <button onclick="PreParadaView.deleteAction('${parada.id}', '${act.milestoneId}', '${act.id}')" title="Excluir entrega" class="opacity-0 group-hover:opacity-100 text-[#707072] hover:text-[#d30005] transition-opacity p-0.5">
-                              <span class="material-symbols-outlined text-xs">delete</span>
+                            <button onclick="PreParadaView.deleteAction('${parada.id}', '${act.milestoneId}', '${act.id}')" title="Excluir entrega" class="opacity-0 group-hover:opacity-100 text-[#707072] hover:text-[#d30005] transition-opacity p-0.5 font-bold">
+                              ✕
                             </button>
                           </div>
                         </div>
@@ -2613,8 +2609,7 @@ const PreParadaView = {
                         <!-- Metadados: Responsável e HH -->
                         <div class="flex items-center justify-between text-[11px] text-[#707072] pt-2 border-t border-[#f0f0f0]">
                           <div class="flex items-center gap-1.5 truncate mr-2" title="Responsável: ${act.owner}">
-                            <span class="material-symbols-outlined text-xs text-[#707072]">person</span>
-                            <span class="font-medium text-[#2d2d2e] truncate">${act.owner}</span>
+                            <span class="font-semibold text-[#2d2d2e] truncate">${act.owner}</span>
                           </div>
                           <span class="font-mono text-[10px] font-semibold bg-[#f0f0f0] px-1.5 py-0.5 rounded shrink-0">
                             ${act.estimatedHh || 0} HH
@@ -2626,17 +2621,14 @@ const PreParadaView = {
                           <div>
                             ${act.status === 'Concluída' ? `
                               <span class="inline-flex items-center gap-1 text-[#007d48] font-bold">
-                                <span class="material-symbols-outlined text-xs">check</span>
                                 <span>Entregue</span>
                               </span>
                             ` : isOverdue ? `
                               <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-bold">
-                                <span class="material-symbols-outlined text-xs">warning</span>
                                 <span>Atrasada (${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'})</span>
                               </span>
                             ` : isDueSoon ? `
                               <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
-                                <span class="material-symbols-outlined text-xs">schedule</span>
                                 <span>Vence em ${diffDays}d</span>
                               </span>
                             ` : `
@@ -2667,7 +2659,6 @@ const PreParadaView = {
 
                   ${colActions.length === 0 ? `
                     <div class="flex-1 flex flex-col items-center justify-center p-6 text-center text-xs text-[#9e9ea0] border border-dashed border-[#cacacb] rounded-2xl bg-[#ffffff]/50">
-                      <span class="material-symbols-outlined text-2xl text-zinc-300 mb-1">inbox</span>
                       <span>Nenhuma entrega correspondente nesta etapa.</span>
                     </div>
                   ` : ''}
@@ -2762,8 +2753,9 @@ const PreParadaView = {
             <button onclick="PreParadaView.closeAddKanbanActionModal()" class="btn-ghost-pill text-xs">
               Cancelar
             </button>
-            <button onclick="PreParadaView.saveAddKanbanAction('${parada.id}')" class="btn-pill-primary text-xs shadow-md">
-              Salvar Entrega
+            <button onclick="PreParadaView.saveAddKanbanAction('${parada.id}')" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+              <span class="material-symbols-outlined text-sm">save</span>
+              <span>Salvar Entrega</span>
             </button>
           </div>
 
@@ -3230,6 +3222,240 @@ const PreParadaView = {
       App.renderCurrentView();
     }
   }
-};
+,
 
-window.PreParadaView = PreParadaView;
+  setEscopoStatusFilter(status) {
+    this.escopoFilterState.status = status;
+    App.renderCurrentView();
+  },
+
+  setEscopoCategoryFilter(category) {
+    this.escopoFilterState.category = category;
+    App.renderCurrentView();
+  },
+
+  setEscopoSearch(search) {
+    this.escopoFilterState.search = search;
+    App.renderCurrentView();
+  },
+
+  clearEscopoFilters() {
+    this.escopoFilterState = {
+      status: 'all',
+      category: 'all',
+      search: ''
+    };
+    App.renderCurrentView();
+  },
+
+  resetEscopoDefaults(paradaId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    if (confirm('Deseja restaurar as 10 demandas padrão de manutenção industrial? Suas tarefas criadas manualmente serão preservadas.')) {
+      const userServices = (parada.preParada.servicesList || []).filter(s => !this.defaultServicesList.some(d => d.tag === s.tag && d.description === s.description));
+      const baseServices = JSON.parse(JSON.stringify(this.defaultServicesList));
+      userServices.forEach((u, i) => {
+        u.id = `SRV-${11 + i}`;
+        baseServices.push(u);
+      });
+      parada.preParada.servicesList = baseServices;
+      ProjectsView.updateParada(parada);
+      this.clearEscopoFilters();
+      App.showToast('Demandas restauradas com sucesso!', 'success');
+      App.renderCurrentView();
+    }
+  },
+
+  openAddServiceModal(paradaId) {
+    const modal = document.getElementById('service-create-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      this.updateServiceModalScorePreview();
+    }
+  },
+
+  closeAddServiceModal() {
+    const modal = document.getElementById('service-create-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  updateServiceModalScorePreview() {
+    const probEl = document.getElementById('form-srv-prob');
+    const sevEl = document.getElementById('form-srv-sev');
+    const labelProb = document.getElementById('label-prob-val');
+    const labelSev = document.getElementById('label-sev-val');
+    const previewScore = document.getElementById('srv-preview-score');
+
+    if (probEl && sevEl && previewScore) {
+      const p = parseInt(probEl.value, 10) || 5;
+      const s = parseInt(sevEl.value, 10) || 5;
+      const score = p * s;
+      if (labelProb) labelProb.innerText = p;
+      if (labelSev) labelSev.innerText = s;
+      previewScore.innerText = `Score: ${score} pts (${p}×${s})`;
+      if (score >= 60) {
+        previewScore.className = 'nike-pill font-mono font-bold bg-red-600 text-white border-transparent';
+      } else if (score >= 30) {
+        previewScore.className = 'nike-pill font-mono font-bold bg-amber-500 text-white border-transparent';
+      } else {
+        previewScore.className = 'nike-pill font-mono font-bold bg-[#007d48] text-white border-transparent';
+      }
+    }
+  },
+
+  saveAddServiceModal(paradaId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+
+    const tagInput = document.getElementById('form-srv-tag');
+    const descInput = document.getElementById('form-srv-desc');
+    const catInput = document.getElementById('form-srv-category');
+    const hhInput = document.getElementById('form-srv-hh');
+    const costInput = document.getElementById('form-srv-cost');
+    const probInput = document.getElementById('form-srv-prob');
+    const sevInput = document.getElementById('form-srv-sev');
+
+    const tag = tagInput ? tagInput.value.trim() : '';
+    const desc = descInput ? descInput.value.trim() : '';
+    const cat = catInput ? catInput.value : 'Mecânica';
+    const hh = hhInput ? parseInt(hhInput.value, 10) || 0 : 0;
+    const cost = costInput ? parseFloat(costInput.value) || 0 : 0;
+    const prob = probInput ? parseInt(probInput.value, 10) || 5 : 5;
+    const sev = sevInput ? parseInt(sevInput.value, 10) || 5 : 5;
+
+    if (!tag) {
+      alert('Por favor, informe o TAG do equipamento.');
+      if (tagInput) tagInput.focus();
+      return;
+    }
+    if (!desc) {
+      alert('Por favor, informe a descrição detalhada da atividade.');
+      if (descInput) descInput.focus();
+      return;
+    }
+
+    if (!parada.preParada.servicesList) parada.preParada.servicesList = [];
+    const nextNum = parada.preParada.servicesList.length + 1;
+    parada.preParada.servicesList.push({
+      id: `SRV-${nextNum < 10 ? '0' + nextNum : nextNum}`,
+      tag: tag.toUpperCase(),
+      description: desc,
+      category: cat,
+      hh: hh,
+      cost: cost,
+      prob: Math.min(10, Math.max(1, prob)),
+      sev: Math.min(10, Math.max(1, sev)),
+      override: null,
+      overrideReason: ''
+    });
+
+    ProjectsView.updateParada(parada);
+    this.closeAddServiceModal();
+    App.showToast(`Demanda [${tag.toUpperCase()}] cadastrada e priorizada no escopo!`, 'success');
+    App.renderCurrentView();
+  },
+
+  setKanbanFilter(key, value) {
+    this.kanbanFilterState[key] = value;
+    App.renderCurrentView();
+    if (key === 'search') {
+      const searchInput = document.getElementById('kanban-search-input');
+      if (searchInput) {
+        searchInput.focus();
+        const len = searchInput.value.length;
+        searchInput.setSelectionRange(len, len);
+      }
+    }
+  },
+
+  clearKanbanFilters() {
+    this.kanbanFilterState = {
+      area: 'ALL',
+      milestone: 'ALL',
+      owner: 'ALL',
+      deadline: 'ALL',
+      search: ''
+    };
+    App.renderCurrentView();
+  },
+
+  setActionDirectStatus(paradaId, milestoneId, actionId, newStatus) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
+    if (!ms) return;
+    const act = (ms.actions || []).find(a => a.id === actionId);
+    if (act) {
+      act.status = newStatus;
+      ProjectsView.updateParada(parada);
+      App.showToast(`Status da entrega alterado para: ${newStatus}`, 'success');
+      App.renderCurrentView();
+    }
+  },
+
+  openAddKanbanActionModal(paradaId) {
+    const modal = document.getElementById('kanban-add-action-modal');
+    if (modal) modal.classList.remove('hidden');
+  },
+
+  closeAddKanbanActionModal() {
+    const modal = document.getElementById('kanban-add-action-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  saveAddKanbanAction(paradaId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+
+    const msSelect = document.getElementById('form-kanban-action-milestone');
+    const titleInput = document.getElementById('form-kanban-action-title');
+    const areaSelect = document.getElementById('form-kanban-action-area');
+    const ownerInput = document.getElementById('form-kanban-action-owner');
+    const deadlineInput = document.getElementById('form-kanban-action-deadline');
+    const hhInput = document.getElementById('form-kanban-action-hh');
+    const statusSelect = document.getElementById('form-kanban-action-status');
+
+    const milestoneId = msSelect ? msSelect.value : '';
+    const title = titleInput ? titleInput.value.trim() : '';
+    const area = areaSelect ? areaSelect.value : 'PCM / Planejamento';
+    const owner = ownerInput ? ownerInput.value.trim() : 'Juliana Santos';
+    const deadline = deadlineInput ? deadlineInput.value : '';
+    const hh = hhInput ? parseInt(hhInput.value, 10) || 0 : 0;
+    const status = statusSelect ? statusSelect.value : 'Não Iniciada';
+
+    if (!milestoneId) {
+      alert('Por favor, selecione um Marco de vinculação.');
+      return;
+    }
+    if (!title) {
+      alert('Por favor, informe o título ou descrição da entrega.');
+      if (titleInput) titleInput.focus();
+      return;
+    }
+
+    const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
+    if (!ms) {
+      alert('Marco selecionado não encontrado.');
+      return;
+    }
+
+    if (!ms.actions) ms.actions = [];
+    const nextNum = (parada.preParada.milestones || []).reduce((acc, m) => acc + (m.actions || []).length, 0) + 1;
+
+    ms.actions.push({
+      id: `ACT-${nextNum < 10 ? '0' + nextNum : nextNum}`,
+      title: title,
+      area: area,
+      owner: owner || 'Juliana Santos',
+      deadline: deadline || ms.targetDate,
+      status: status,
+      estimatedHh: hh
+    });
+
+    ProjectsView.updateParada(parada);
+    this.closeAddKanbanActionModal();
+    App.showToast(`Entrega vinculada ao marco [${ms.relativeDay}] com sucesso!`, 'success');
+    App.renderCurrentView();
+  }
+
+};

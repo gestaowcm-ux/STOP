@@ -343,6 +343,10 @@ body::before {
   font-weight: 700;
 }
 
+.sidebar-item.active .material-symbols-outlined {
+  color: #ffffff;
+}
+
 .sidebar-item.active span {
   color: #ffffff !important;
 }
