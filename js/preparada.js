@@ -702,19 +702,6 @@ const PreParadaView = {
     });
   },
 
-      </div>
-    `;
-  },
-
-  setMilestonesViewMode(paradaId, mode) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-    if (!parada.preParada) parada.preParada = {};
-    parada.preParada.milestonesViewMode = mode;
-    ProjectsView.updateParada(parada);
-    App.renderCurrentView();
-  },
-
   // Helper para ordenar milestones cronologicamente (Ex: D-360 -> D-180 -> D-95 -> D-34 -> D-10 -> D-0)
   getSortedMilestones(milestones) {
     return [...milestones].sort((a, b) => {
