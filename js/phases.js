@@ -105,9 +105,18 @@ const PhasesView = {
     container.innerHTML = plants.map((plant, index) => `
       <div class="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] flex items-center justify-between">
         <span class="font-medium text-[#111111] text-xs">${plant}</span>
-        <button onclick="PhasesView.deletePlant(${index})" class="text-[#707072] hover:text-[#d30005] p-1 transition-colors" title="Excluir unidade">
-          <span class="material-symbols-outlined text-base">delete</span>
-        </button>
+        <div class="inline-flex items-center">
+          <div id="plant-actions-${index}" class="inline-flex items-center">
+            <button onclick="PhasesView.askDeletePlant(${index})" class="text-[#707072] hover:text-[#d30005] p-1 transition-colors" title="Excluir unidade">
+              <span class="material-symbols-outlined text-base">delete</span>
+            </button>
+          </div>
+          <div id="plant-confirm-${index}" class="hidden inline-confirm-box animate-fade-in">
+            <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+            <button onclick="PhasesView.confirmDeletePlant(${index})" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+            <button onclick="PhasesView.cancelDeletePlant(${index})" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+          </div>
+        </div>
       </div>
     `).join('');
   },
@@ -130,15 +139,44 @@ const PhasesView = {
     }
   },
 
-  deletePlant(index) {
+  askDeletePlant(index) {
+    document.querySelectorAll('[id^="plant-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="plant-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`plant-actions-${index}`);
+    const confirmBox = document.getElementById(`plant-confirm-${index}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeletePlant(index) {
+    const actions = document.getElementById(`plant-actions-${index}`);
+    const confirmBox = document.getElementById(`plant-confirm-${index}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeletePlant(index) {
     const plants = this.getPlants();
     if (plants.length <= 1) {
-      alert('Mantenha ao menos uma unidade cadastrada.');
+      if (window.App && window.App.showToast) {
+        window.App.showToast('Mantenha ao menos uma unidade cadastrada.', 'error');
+      } else {
+        alert('Mantenha ao menos uma unidade cadastrada.');
+      }
       return;
     }
     plants.splice(index, 1);
     this.savePlants(plants);
     this.renderPlantsList();
+  },
+
+  deletePlant(index) {
+    this.confirmDeletePlant(index);
   },
 
   updatePlantSelectOptions(selectedVal) {
@@ -475,6 +513,31 @@ const PhasesView = {
     App.renderCurrentRoute();
   },
 
+  askRemoveEscopoPackage(pkgId) {
+    document.querySelectorAll('[id^="pkg-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="pkg-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`pkg-actions-${pkgId}`);
+    const confirmBox = document.getElementById(`pkg-confirm-${pkgId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelRemoveEscopoPackage(pkgId) {
+    const actions = document.getElementById(`pkg-actions-${pkgId}`);
+    const confirmBox = document.getElementById(`pkg-confirm-${pkgId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmRemoveEscopoPackage(projectId, pkgId) {
+    this.removeEscopoPackage(projectId, pkgId);
+  },
+
   // --------------------------------------------------------------------------
   // MILESTONES: Métodos de Dados, Modal e Validação de Restrições
   // --------------------------------------------------------------------------
@@ -803,12 +866,57 @@ const PhasesView = {
     App.renderCurrentRoute();
   },
 
-  deleteMilestone(msId) {
-    if (!confirm('Deseja realmente remover este milestone e sua barreira de restrição?')) return;
+  askDeleteMilestone(msId) {
+    document.querySelectorAll('[id^="ms-ph-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="ms-ph-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`ms-ph-actions-${msId}`);
+    const confirmBox = document.getElementById(`ms-ph-confirm-${msId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteMilestone(msId) {
+    const actions = document.getElementById(`ms-ph-actions-${msId}`);
+    const confirmBox = document.getElementById(`ms-ph-confirm-${msId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  askDeleteCardMilestone(msId) {
+    document.querySelectorAll('[id^="ms-card-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="ms-card-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`ms-card-actions-${msId}`);
+    const confirmBox = document.getElementById(`ms-card-confirm-${msId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteCardMilestone(msId) {
+    const actions = document.getElementById(`ms-card-actions-${msId}`);
+    const confirmBox = document.getElementById(`ms-card-confirm-${msId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteMilestone(msId) {
     let list = this.getMilestonesData(App.state.activeProjectId);
     list = list.filter(m => m.id !== msId);
     this.saveMilestonesData(App.state.activeProjectId, list);
     App.renderCurrentRoute();
+  },
+
+  deleteMilestone(msId) {
+    this.confirmDeleteMilestone(msId);
   },
 
   toggleMilestoneStatus(msId) {
@@ -1331,9 +1439,18 @@ const PhasesView = {
                     </td>
                     <td class="py-3.5 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">${pkg.estHh} Hh</td>
                     <td class="py-3.5 px-3 text-center whitespace-nowrap">
-                      <button onclick="PhasesView.removeEscopoPackage('${project.id}', '${pkg.id}')" class="text-[#707072] hover:text-[#d9383a] p-1 rounded-lg hover:bg-[#f5f5f5] transition-colors" title="Remover pacote">
-                        <span class="material-symbols-outlined text-base">delete</span>
-                      </button>
+                      <div class="inline-flex items-center justify-center min-h-[28px]">
+                        <div id="pkg-actions-${pkg.id}" class="inline-flex items-center">
+                          <button onclick="PhasesView.askRemoveEscopoPackage('${pkg.id}')" class="text-[#707072] hover:text-[#d9383a] p-1 rounded-lg hover:bg-[#f5f5f5] transition-colors" title="Remover pacote">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                          </button>
+                        </div>
+                        <div id="pkg-confirm-${pkg.id}" class="hidden inline-confirm-box animate-fade-in">
+                          <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                          <button onclick="PhasesView.confirmRemoveEscopoPackage('${project.id}', '${pkg.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                          <button onclick="PhasesView.cancelRemoveEscopoPackage('${pkg.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 `).join('') : `
@@ -1351,8 +1468,10 @@ const PhasesView = {
           <div class="p-4 rounded-2xl bg-[#f5f5f5] border border-[#e5e5e5] space-y-3">
             <span class="text-xs font-bold text-[#111111] uppercase tracking-wider block">Adicionar Pacote de Trabalho / Equipamento</span>
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 text-xs">
-              <div class="sm:col-span-2">
-                <input type="text" id="new-pkg-tag" placeholder="Tag (ex: E-2101)" class="form-input font-mono font-bold bg-white text-xs" />
+              <div class="sm:col-span-3">
+                <select id="new-pkg-tag" class="form-input font-mono font-bold bg-white text-xs">
+                  ${typeof ConfiguracoesView !== 'undefined' ? ConfiguracoesView.renderTagSelectOptions('', project ? project.unit : null) : '<option value="E-2101">E-2101</option>'}
+                </select>
               </div>
               <div class="sm:col-span-3">
                 <select id="new-pkg-disc" class="form-input bg-white text-xs font-semibold">
@@ -1598,9 +1717,16 @@ const PhasesView = {
                         <button onclick="PhasesView.openMilestoneModal('${m.id}')" class="text-[#707072] hover:text-[#111111] p-1 rounded-lg hover:bg-[#f5f5f5] transition-colors" title="Editar Milestone">
                           <span class="material-symbols-outlined text-base">edit</span>
                         </button>
-                        <button onclick="PhasesView.deleteMilestone('${m.id}')" class="text-[#707072] hover:text-[#d9383a] p-1 rounded-lg hover:bg-[#f5f5f5] transition-colors" title="Excluir Milestone">
-                          <span class="material-symbols-outlined text-base">delete</span>
-                        </button>
+                        <div id="ms-ph-actions-${m.id}" class="inline-flex items-center">
+                          <button onclick="PhasesView.askDeleteMilestone('${m.id}')" class="text-[#707072] hover:text-[#d9383a] p-1 rounded-lg hover:bg-[#f5f5f5] transition-colors" title="Excluir Milestone">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                          </button>
+                        </div>
+                        <div id="ms-ph-confirm-${m.id}" class="hidden inline-confirm-box animate-fade-in">
+                          <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                          <button onclick="PhasesView.confirmDeleteMilestone('${m.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                          <button onclick="PhasesView.cancelDeleteMilestone('${m.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1683,9 +1809,16 @@ const PhasesView = {
               <button onclick="PhasesView.openMilestoneModal('${m.id}')" class="text-[#707072] hover:text-[#111111] p-1 rounded hover:bg-[#f5f5f5] transition-colors" title="Editar Milestone">
                 <span class="material-symbols-outlined text-base">edit</span>
               </button>
-              <button onclick="PhasesView.deleteMilestone('${m.id}')" class="text-[#707072] hover:text-[#d9383a] p-1 rounded hover:bg-[#f5f5f5] transition-colors" title="Excluir Milestone">
-                <span class="material-symbols-outlined text-base">delete</span>
-              </button>
+              <div id="ms-card-actions-${m.id}" class="inline-flex items-center">
+                <button onclick="PhasesView.askDeleteCardMilestone('${m.id}')" class="text-[#707072] hover:text-[#d9383a] p-1 rounded hover:bg-[#f5f5f5] transition-colors" title="Excluir Milestone">
+                  <span class="material-symbols-outlined text-base">delete</span>
+                </button>
+              </div>
+              <div id="ms-card-confirm-${m.id}" class="hidden inline-confirm-box animate-fade-in">
+                <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                <button onclick="PhasesView.confirmDeleteMilestone('${m.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                <button onclick="PhasesView.cancelDeleteCardMilestone('${m.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+              </div>
             </div>
           </div>
         </div>

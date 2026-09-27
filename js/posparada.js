@@ -19,33 +19,20 @@ const PosParadaView = {
     return `
       <div class="space-y-6 animate-fade-in">
         
-        <!-- Header da Fase 3 -->
-        <div class="bg-[#ffffff] p-6 md:p-8 rounded-3xl border border-[#e5e5e5] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="nike-pill bg-emerald-50 text-emerald-800 border-emerald-200">Fase 3 de 3</span>
-              <span class="text-xs text-[#707072] font-mono">Pós-Parada: Startup, Desmobilização & Encerramento</span>
-            </div>
-            <h2 class="text-2xl font-extrabold text-[#111111] tracking-tight">Comissionamento, Punch List & Avaliação de Performance</h2>
-            <p class="text-xs text-[#707072] max-w-xl">
-              Rampa de partida da planta, saneamento de pendências, desmobilização e registro de lições aprendidas.
-            </p>
+        <!-- Header Compacto da Fase 3: Pós-Parada -->
+        <div class="bg-[#ffffff] px-4 py-3 rounded-2xl border border-[#e5e5e5] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="nike-pill bg-emerald-50 text-emerald-800 border-emerald-200 font-bold text-xs">Fase 3: Pós-Parada</span>
+            <span class="text-xs font-bold text-[#111111]">Comissionamento & Encerramento</span>
           </div>
 
-          <!-- Card de Fechamento do Gate 3 -->
-          <div class="bg-[#f5f5f5] p-3.5 rounded-2xl border ${gate3.approved ? 'border-[#007d48] bg-green-50/50' : 'border-[#e5e5e5]'} flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl ${gate3.approved ? 'bg-[#007d48] text-white' : 'bg-[#111111] text-white'} flex items-center justify-center shrink-0">
-              <span class="material-symbols-outlined text-xl">${gate3.approved ? 'task_alt' : 'inventory'}</span>
-            </div>
-            <div class="text-xs">
-              <div class="flex items-center gap-2">
-                <span class="font-bold uppercase tracking-wider text-[#111111]">Gate 3: Encerramento</span>
-                <span class="nike-pill text-[10px] py-0.5 ${gate3.approved ? 'bg-[#007d48] text-white' : 'bg-[#e5e5e5] text-[#4b4b4d]'}">${gate3.approved ? 'CONCLUÍDA' : 'EM FECHAMENTO'}</span>
-              </div>
-              <p class="text-[11px] text-[#707072] mt-0.5">
-                ${gate3.approved ? `Parada encerrada por <b>${gate3.approvedBy}</b>` : 'Requer quitação final para arquivamento'}
-              </p>
-            </div>
+          <!-- Status do Gate 3 -->
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-[#707072] text-[11px] font-medium">Gate 3 (Encerramento):</span>
+            <span class="nike-pill text-[10px] py-0.5 ${gate3.approved ? 'bg-[#007d48] text-white border-transparent font-bold' : 'bg-[#f5f5f5] text-[#4b4b4d] border-[#e5e5e5] font-semibold'}">
+              ${gate3.approved ? 'CONCLUÍDA' : 'EM FECHAMENTO'}
+            </span>
+            ${gate3.approved ? `<span class="text-[11px] text-[#707072] hidden md:inline">(${gate3.approvedBy})</span>` : ''}
           </div>
         </div>
 
@@ -85,6 +72,72 @@ const PosParadaView = {
         <!-- Conteúdo da Sub-Aba Ativa -->
         <div id="pos-parada-tab-content">
           ${this.renderActiveTab(parada, activeTab)}
+        </div>
+
+        <!-- MODAL DE CADASTRO DE PENDÊNCIA (PUNCH LIST) -->
+        <div id="punch-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+          <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+              <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Item na Punch List</h3>
+              <button onclick="PosParadaView.closeAddPunchModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+              <div class="space-y-3">
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
+                    <button type="button" onclick="PosParadaView.closeAddPunchModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                      <span class="material-symbols-outlined text-xs">settings</span>
+                      <span>Gerenciar TAGs</span>
+                    </button>
+                  </div>
+                  <select id="form-punch-tag" onchange="PosParadaView.onPunchTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
+                    ${ConfiguracoesView.renderTagSelectOptions('', parada.unit)}
+                  </select>
+                </div>
+
+                <div id="punch-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+                  <div class="flex items-center justify-between mb-1">
+                    <span id="punch-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+                    <span id="punch-preview-tag-crit" class="nike-pill text-[9px]"></span>
+                  </div>
+                  <p id="punch-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Tipo de Pendência *</label>
+                  <select id="form-punch-type" class="form-input font-medium">
+                    <option value="A (Impeditiva)">A (Impeditiva - Bloqueia Startup)</option>
+                    <option value="B (Não Impeditiva)" selected>B (Não Impeditiva - Pós-Partida)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">Prazo Limite de Saneamento</label>
+                  <input type="date" id="form-punch-deadline" class="form-input font-mono" value="${new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]}" />
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label">Descrição Detalhada da Pendência *</label>
+                <textarea id="form-punch-desc" rows="2.5" class="form-input leading-relaxed" placeholder="Ex: Pintura externa de isolamento térmico nos anéis de suporte / Teste hidrostático final..."></textarea>
+              </div>
+
+              <div>
+                <label class="form-label">Responsável pelo Saneamento</label>
+                <select id="form-punch-resp" class="form-input font-medium">
+                  ${ConfiguracoesView.getSupportAreas().map(a => `<option value="${a.name} (${a.coordinator})">${a.name} — ${a.coordinator}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+              <button onclick="PosParadaView.closeAddPunchModal()" class="btn-ghost-pill text-xs">Cancelar</button>
+              <button onclick="PosParadaView.saveAddPunchModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">Salvar na Punch List</button>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -324,30 +377,110 @@ const PosParadaView = {
   },
 
   addPunchPrompt(paradaId) {
-    const tag = prompt('TAG do Equipamento:');
-    if (!tag) return;
-    const type = prompt('Tipo (A - Impeditiva / B - Não Impeditiva):', 'B (Não Impeditiva)') || 'B (Não Impeditiva)';
-    const desc = prompt('Descrição detalhada da pendência:');
-    if (!desc) return;
-    const resp = prompt('Responsável pelo saneamento:', 'Manutenção Mecânica') || 'Manutenção';
+    this.openAddPunchModal(paradaId);
+  },
 
+  openAddPunchModal(paradaId) {
+    const modal = document.getElementById('punch-create-modal');
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (modal) {
+      const tagSelect = document.getElementById('form-punch-tag');
+      const descInput = document.getElementById('form-punch-desc');
+      const respSelect = document.getElementById('form-punch-resp');
+      const previewEl = document.getElementById('punch-equipment-preview');
+
+      if (tagSelect) {
+        tagSelect.innerHTML = ConfiguracoesView.renderTagSelectOptions('', parada?.unit);
+      }
+      if (respSelect) {
+        respSelect.innerHTML = ConfiguracoesView.getSupportAreas().map(a => `<option value="${a.name} (${a.coordinator})">${a.name} — ${a.coordinator}</option>`).join('');
+      }
+      if (descInput) descInput.value = '';
+      if (previewEl) previewEl.classList.add('hidden');
+
+      modal.classList.remove('hidden');
+    }
+  },
+
+  closeAddPunchModal() {
+    const modal = document.getElementById('punch-create-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  onPunchTagChange(tagCode) {
+    const previewEl = document.getElementById('punch-equipment-preview');
+    const titleEl = document.getElementById('punch-preview-tag-title');
+    const critEl = document.getElementById('punch-preview-tag-crit');
+    const descEl = document.getElementById('punch-preview-tag-desc');
+    const descInput = document.getElementById('form-punch-desc');
+
+    if (!tagCode) {
+      if (previewEl) previewEl.classList.add('hidden');
+      return;
+    }
+
+    const tagObj = ConfiguracoesView.getTagByCode(tagCode);
+    if (tagObj) {
+      if (previewEl) previewEl.classList.remove('hidden');
+      if (titleEl) titleEl.innerText = `${tagObj.tag} — ${tagObj.name}`;
+      if (critEl) {
+        critEl.innerText = tagObj.criticality || 'Classe A';
+        critEl.className = `nike-pill text-[9px] ${tagObj.criticality && tagObj.criticality.includes('Classe A') ? 'bg-red-50 text-red-700 border-red-200 font-bold' : 'bg-amber-50 text-amber-800 border-amber-200'}`;
+      }
+      if (descEl) descEl.innerText = `${tagObj.type} • Norma: ${tagObj.inspectionStandard || 'NR-13'} • ${tagObj.unit || ''} » ${tagObj.system || ''}`;
+
+      if (descInput && (!descInput.value || descInput.value.trim() === '')) {
+        descInput.value = `Pendência técnica no equipamento ${tagObj.tag} (${tagObj.name}): `;
+      }
+    } else {
+      if (previewEl) previewEl.classList.add('hidden');
+    }
+  },
+
+  saveAddPunchModal(paradaId) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
+
+    const tagSelect = document.getElementById('form-punch-tag');
+    const typeSelect = document.getElementById('form-punch-type');
+    const descInput = document.getElementById('form-punch-desc');
+    const respSelect = document.getElementById('form-punch-resp');
+    const deadlineInput = document.getElementById('form-punch-deadline');
+
+    const tag = tagSelect ? tagSelect.value.trim() : '';
+    const type = typeSelect ? typeSelect.value : 'B (Não Impeditiva)';
+    const desc = descInput ? descInput.value.trim() : '';
+    const resp = respSelect ? respSelect.value : 'Manutenção';
+    const deadline = deadlineInput ? deadlineInput.value : new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+
+    if (!tag) {
+      alert('Por favor, selecione o TAG do Equipamento vinculado às Configurações.');
+      if (tagSelect) tagSelect.focus();
+      return;
+    }
+    if (!desc) {
+      alert('Por favor, informe a descrição detalhada da pendência.');
+      if (descInput) descInput.focus();
+      return;
+    }
+
     if (!parada.posParada) parada.posParada = {};
     if (!parada.posParada.punchList) parada.posParada.punchList = [];
 
+    const nextId = `PCH-${Math.floor(10 + Math.random() * 90)}`;
     parada.posParada.punchList.push({
-      id: `PCH-${Math.floor(10 + Math.random() * 90)}`,
+      id: nextId,
       tag: tag.toUpperCase(),
       type: type,
       description: desc,
       responsible: resp,
-      deadline: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+      deadline: deadline,
       status: 'Aberta'
     });
 
     ProjectsView.updateParada(parada);
-    App.showToast('Item cadastrado na Punch List!', 'success');
+    this.closeAddPunchModal();
+    App.showToast(`Pendência [${nextId}] registrada para o TAG [${tag.toUpperCase()}]!`, 'success');
     App.renderCurrentView();
   },
 

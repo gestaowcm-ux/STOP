@@ -234,7 +234,7 @@
 
         <div>
           <label class="form-label">Orçamento Total Previsto</label>
-          <input type="text" id="form-project-budget" class="form-input font-mono text-[#007d48] font-bold" placeholder="R$ 10.000.000,00" />
+          <input type="text" id="form-project-budget" onblur="this.value = ProjectsView.formatCurrency(this.value)" class="form-input font-mono text-[#007d48] font-bold" placeholder="R$ 10.000.000,00" />
         </div>
 
         <div>
@@ -279,12 +279,310 @@
     </div>
   </div>
 
+  <!-- ========================================================================
+       MODAL DE DESDOBRAMENTO DE AÇÕES DO MILESTONE (WBS)
+       ======================================================================== -->
+  <div id="milestone-action-modal" onclick="if(event.target === this) PreParadaView.closeActionModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-3 min-w-0 pr-2">
+          <div class="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">format_list_bulleted_add</span>
+          </div>
+          <div class="min-w-0">
+            <h3 id="modal-milestone-action-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Desdobrar Ação de Preparação</h3>
+            <p id="modal-milestone-action-subtitle" class="text-xs text-[#707072] truncate">Entregável técnico vinculado ao marco cronológico</p>
+          </div>
+        </div>
+        <button onclick="PreParadaView.closeActionModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors shrink-0">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="form-action-parada-id" value="" />
+      <input type="hidden" id="form-action-milestone-id" value="" />
+      <input type="hidden" id="form-action-edit-id" value="" />
+
+      <div class="space-y-4 text-xs">
+        
+        <!-- Descrição da Ação -->
+        <div>
+          <label class="form-label">Descrição do Entregável / Ação de Preparação *</label>
+          <textarea id="form-action-title" rows="3" class="form-input leading-relaxed" placeholder="Ex: Emissão das RCs de sobressalentes Long Lead, Inspeção de andaimes externos..."></textarea>
+        </div>
+
+        <!-- Área de Suporte e Colaborador Responsável -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Área de Suporte Responsável *</label>
+            <select id="form-action-area" class="form-input font-medium" onchange="PreParadaView.onActionAreaChange()">
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Colaborador / Responsável da Área *</label>
+            <select id="form-action-owner" class="form-input font-medium">
+              <!-- Preenchido dinamicamente com base na Área selecionada -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Prazo, HH e Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="form-label">Data Limite (Prazo) *</label>
+            <input type="date" id="form-action-deadline" class="form-input font-mono" />
+          </div>
+
+          <div>
+            <label class="form-label">Esforço Estimado (HH) *</label>
+            <input type="number" id="form-action-hh" class="form-input font-mono font-bold" min="1" value="40" />
+          </div>
+
+          <div>
+            <label class="form-label">Status da Ação</label>
+            <select id="form-action-status" class="form-input font-medium">
+              <option value="Não Iniciada" selected>Não Iniciada</option>
+              <option value="Em Andamento">Em Andamento</option>
+              <option value="Bloqueada">Bloqueada</option>
+              <option value="Concluída">Concluída</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="PreParadaView.closeActionModal()" class="btn-ghost-pill text-xs">
+          Cancelar
+        </button>
+        <button onclick="PreParadaView.saveActionModal()" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-sm">save</span>
+          <span>Salvar Ação</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE CADASTRO / EDIÇÃO DE RISCO (MATRIZ 10x10)
+       ======================================================================== -->
+  <div id="risk-edit-modal" onclick="if(event.target === this) PreParadaView.closeRiskModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-lg">grid_view</span>
+          </div>
+          <div>
+            <h3 id="modal-risk-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Identificar Risco Técnico</h3>
+            <p class="text-[11px] text-[#707072]">Matriz de Probabilidade (1-10) × Severidade (1-10)</p>
+          </div>
+        </div>
+        <button onclick="PreParadaView.closeRiskModal()" class="text-[#707072] hover:text-[#111111] p-1">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="form-risk-parada-id" value="" />
+      <input type="hidden" id="form-risk-edit-id" value="" />
+
+      <div class="space-y-4 text-xs">
+        
+        <!-- Título do Risco -->
+        <div>
+          <label class="form-label">Título da Hipótese de Risco *</label>
+          <input type="text" id="form-risk-title" class="form-input font-bold" placeholder="Ex: Presença residual de gás H2S, atraso no desembaraço alfandegário..." />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="form-label">Tipo / Natureza do Risco</label>
+            <select id="form-risk-type" class="form-input font-medium">
+              <option value="Milestone Específico">Milestone Específico</option>
+              <option value="Risco Externo / Paralelo" selected>Risco Externo / Paralelo</option>
+              <option value="Segurança & SMS">Segurança & SMS</option>
+              <option value="Operacional & Processos">Operacional & Processos</option>
+              <option value="Engenharia & Suprimentos">Engenharia & Suprimentos</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Marco Cronológico Vinculado</label>
+            <select id="form-risk-milestone" class="form-input font-mono font-medium">
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Probabilidade, Severidade e Score -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="form-label">Probabilidade (1 a 10)</label>
+            <select id="form-risk-prob" class="form-input font-bold font-mono" onchange="PreParadaView.updateRiskScoreBadge()">
+              <option value="1">1 - Muito Rara</option>
+              <option value="2">2 - Improvável</option>
+              <option value="3">3 - Baixa</option>
+              <option value="4">4 - Moderada Baixa</option>
+              <option value="5">5 - Média (50%)</option>
+              <option value="6">6 - Moderada Alta</option>
+              <option value="7">7 - Alta</option>
+              <option value="8" selected>8 - Muito Alta</option>
+              <option value="9">9 - Quase Certa</option>
+              <option value="10">10 - Certeza (100%)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Severidade (1 a 10)</label>
+            <select id="form-risk-sev" class="form-input font-bold font-mono" onchange="PreParadaView.updateRiskScoreBadge()">
+              <option value="1">1 - Desprezível</option>
+              <option value="2">2 - Mínimo</option>
+              <option value="3">3 - Baixo</option>
+              <option value="4">4 - Menor</option>
+              <option value="5">5 - Moderado</option>
+              <option value="6">6 - Médio-Alto</option>
+              <option value="7">7 - Severo</option>
+              <option value="8">8 - Crítico</option>
+              <option value="9" selected>9 - Catastrófico</option>
+              <option value="10">10 - Parada Fatal</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Score de Risco (P×S)</label>
+            <div id="form-risk-score-badge" class="h-10 flex items-center justify-center rounded-xl bg-red-100 text-red-800 font-mono font-black text-xs border border-red-300">
+              Score 72 (Crítico)
+            </div>
+          </div>
+        </div>
+
+        <!-- Área de Suporte e Colaborador Responsável -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="form-label">Área de Suporte Responsável *</label>
+            <select id="form-risk-area" class="form-input font-medium" onchange="PreParadaView.onRiskAreaChange()">
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Colaborador / Responsável pelo Risco *</label>
+            <select id="form-risk-owner" class="form-input font-medium">
+              <!-- Preenchido dinamicamente com base na Área selecionada -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Impacto -->
+        <div>
+          <label class="form-label">Descrição do Impacto e Interferência no Negócio</label>
+          <textarea id="form-risk-impact" rows="2.5" class="form-input leading-relaxed" placeholder="Descreva os impactos em caminho crítico, segurança, prazo ou custos caso o risco ocorra..."></textarea>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="PreParadaView.closeRiskModal()" class="btn-ghost-pill text-xs">
+          Cancelar
+        </button>
+        <button onclick="PreParadaView.saveRiskModal()" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-sm">save</span>
+          <span>Salvar Risco</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE AÇÃO MITIGADORA DA MATRIZ DE RISCO
+       ======================================================================== -->
+  <div id="mitigation-action-modal" onclick="if(event.target === this) PreParadaView.closeMitigationModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[260] flex items-center justify-center p-4 hidden animate-fade-in">
+    <div class="card-industrial max-w-2xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-5 rounded-3xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+        <div class="flex items-center gap-3 min-w-0 pr-2">
+          <div class="w-10 h-10 rounded-xl bg-[#007d48] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-xl">shield</span>
+          </div>
+          <div class="min-w-0">
+            <h3 id="modal-mitigation-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Nova Ação Mitigadora</h3>
+            <p id="modal-mitigation-subtitle" class="text-xs text-[#707072] truncate">Plano de resposta e contingência preventiva</p>
+          </div>
+        </div>
+        <button onclick="PreParadaView.closeMitigationModal()" class="text-[#707072] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors shrink-0">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <input type="hidden" id="form-mitigation-parada-id" value="" />
+      <input type="hidden" id="form-mitigation-risk-id" value="" />
+      <input type="hidden" id="form-mitigation-edit-idx" value="" />
+
+      <div class="space-y-4 text-xs">
+        
+        <div>
+          <label class="form-label">Descrição da Ação Mitigadora / Procedimento *</label>
+          <textarea id="form-mitigation-title" rows="3" class="form-input leading-relaxed" placeholder="Ex: Lavagem química contínua, contratação de despachante expresso, contingência de estoque..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Área de Suporte Responsável *</label>
+            <select id="form-mitigation-area" class="form-input font-medium" onchange="PreParadaView.onMitigationAreaChange()">
+              <!-- Preenchido dinamicamente -->
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Colaborador Responsável *</label>
+            <select id="form-mitigation-owner" class="form-input font-medium">
+              <!-- Preenchido dinamicamente com base na Área selecionada -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Data Limite (Prazo) *</label>
+            <input type="date" id="form-mitigation-deadline" class="form-input font-mono" />
+          </div>
+
+          <div>
+            <label class="form-label">Status da Mitigação</label>
+            <select id="form-mitigation-done" class="form-input font-medium">
+              <option value="false" selected>Pendente (Em Andamento)</option>
+              <option value="true">Concluída / Mitigada</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+        <button onclick="PreParadaView.closeMitigationModal()" class="btn-ghost-pill text-xs">
+          Cancelar
+        </button>
+        <button onclick="PreParadaView.saveMitigationModal()" class="btn-pill-primary text-xs flex items-center gap-1.5 shadow-md">
+          <span class="material-symbols-outlined text-sm">save</span>
+          <span>Salvar Ação Mitigadora</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script src="js/users.js?v=4.0"></script>
   <script src="js/projects.js?v=4.0"></script>
+  <script src="js/configuracoes.js?v=4.0"></script>
   <script src="js/preparada.js?v=4.0"></script>
   <script src="js/parada.js?v=4.0"></script>
   <script src="js/posparada.js?v=4.0"></script>
-  <script src="js/configuracoes.js?v=4.0"></script>
   <script src="js/app.js?v=4.0"></script>
 </body>
 </html>

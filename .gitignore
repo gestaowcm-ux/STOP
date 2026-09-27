@@ -19,5 +19,8 @@ Thumbs.db
 # Temporary / Log files
 *.log
 
+# MS Project standalone module (work in progress)
+MS Project/
+
 # Backups
 backup_*/

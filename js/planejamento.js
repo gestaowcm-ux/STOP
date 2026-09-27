@@ -1571,9 +1571,9 @@ const PlanejamentoView = {
                           </button>
                         </div>
                         <div id="wbs-confirm-${item.id}" class="hidden inline-confirm-box animate-fade-in">
-                          <span class="text-[#969696] text-[10px] font-medium">Excluir?</span>
-                          <button onclick="PlanejamentoView.confirmDeleteWbs('${item.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">SIM</button>
-                          <button onclick="PlanejamentoView.cancelDeleteWbs('${item.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">NÃO</button>
+                          <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                          <button onclick="PlanejamentoView.confirmDeleteWbs('${item.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                          <button onclick="PlanejamentoView.cancelDeleteWbs('${item.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
                         </div>
                       </div>
                     </td>
@@ -1615,12 +1615,19 @@ const PlanejamentoView = {
                       </td>
                       <td class="py-1.5 px-3 text-right no-print">
                         <div class="inline-flex items-center gap-1 justify-end min-h-[24px]">
-                          <button onclick="PlanejamentoView.openEditActivityModal('${act.id}')" class="text-[#969696] hover:text-white p-1 transition-colors" title="Editar Atividade N4">
-                            <span class="material-symbols-outlined text-sm">edit</span>
-                          </button>
-                          <button onclick="PlanejamentoView.askDeleteActivity('${act.id}')" class="text-[#666666] hover:text-[#da291c] p-1 transition-colors" title="Excluir Atividade N4">
-                            <span class="material-symbols-outlined text-sm">delete</span>
-                          </button>
+                          <div id="act-actions-${act.id}" class="inline-flex items-center gap-1">
+                            <button onclick="PlanejamentoView.openEditActivityModal('${act.id}')" class="text-[#969696] hover:text-white p-1 transition-colors" title="Editar Atividade N4">
+                              <span class="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                            <button onclick="PlanejamentoView.askDeleteActivity('${act.id}')" class="text-[#666666] hover:text-[#da291c] p-1 transition-colors" title="Excluir Atividade N4">
+                              <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                          </div>
+                          <div id="act-confirm-${act.id}" class="hidden inline-confirm-box animate-fade-in">
+                            <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                            <button onclick="PlanejamentoView.confirmDeleteActivity('${act.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                            <button onclick="PlanejamentoView.cancelDeleteActivity('${act.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1842,9 +1849,9 @@ const PlanejamentoView = {
                             </button>
                           </div>
                           <div id="act-confirm-${act.id}" class="hidden inline-confirm-box animate-fade-in">
-                            <span class="text-[#969696] text-[10px] font-medium">Excluir?</span>
-                            <button onclick="PlanejamentoView.confirmDeleteActivity('${act.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">SIM</button>
-                            <button onclick="PlanejamentoView.cancelDeleteActivity('${act.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">NÃO</button>
+                            <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                            <button onclick="PlanejamentoView.confirmDeleteActivity('${act.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                            <button onclick="PlanejamentoView.cancelDeleteActivity('${act.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
                           </div>
                         </div>
                       </td>
@@ -2298,9 +2305,9 @@ const PlanejamentoView = {
                         </button>
                       </div>
                       <div id="rsk-confirm-${r.id}" class="hidden inline-confirm-box animate-fade-in">
-                        <span class="text-[#969696] text-[10px] font-medium">Excluir?</span>
-                        <button onclick="PlanejamentoView.confirmDeleteRisk('${r.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">SIM</button>
-                        <button onclick="PlanejamentoView.cancelDeleteRisk('${r.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">NÃO</button>
+                        <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                        <button onclick="PlanejamentoView.confirmDeleteRisk('${r.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                        <button onclick="PlanejamentoView.cancelDeleteRisk('${r.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
                       </div>
                     </div>
                   </td>

@@ -101,81 +101,61 @@ const App = {
     const g3 = parada.gates.gate3;
 
     return `
-      <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-fade-in">
-        
-        <!-- Breadcrumb & Top Action Bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#e5e5e5]">
-          <div class="flex items-center gap-2 text-xs">
-            <button onclick="App.switchToPortfolio()" class="font-bold text-[#707072] hover:text-[#111111] flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">arrow_back</span>
-              <span>Portfólio de Paradas</span>
+        <!-- BARRA INTEGRADA DE TOPO & STEPPER DAS 3 FASES (CLEAN & COMPACT) -->
+        <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-2xl p-3 md:p-4 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          
+          <!-- Esquerda: Voltar + Código da Parada + Unidade -->
+          <div class="flex items-center gap-3">
+            <button onclick="App.switchToPortfolio()" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]" title="Voltar ao Portfólio">
+              <span class="material-symbols-outlined text-base">arrow_back</span>
             </button>
-            <span class="text-[#cacacb]">/</span>
-            <span class="font-mono font-bold text-[#111111]">${parada.code}</span>
-            <span class="text-[#cacacb]">/</span>
-            <span class="text-[#707072]">${parada.name}</span>
+            <div class="flex items-center gap-2">
+              <span class="font-display-title text-base text-[#111111]">${parada.code}</span>
+              <span class="nike-pill text-[10px] bg-[#f5f5f5] text-[#4b4b4d] font-semibold">${parada.unit}</span>
+            </div>
           </div>
 
+          <!-- Centro: Stepper Horizontal Compacto das 3 Fases -->
+          <div class="flex items-center p-1 bg-[#f5f5f5] border border-[#e5e5e5] rounded-2xl gap-1 overflow-x-auto text-xs">
+            
+            <!-- Fase 1: Pré-Parada -->
+            <button onclick="App.switchPhase(1)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${this.activePhase === 1 ? 'bg-[#111111] text-white shadow-sm' : 'text-[#4b4b4d] hover:text-[#111111] hover:bg-white/70'}">
+              <span>1. Pré-Parada</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${g1.approved ? (this.activePhase === 1 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800') : (this.activePhase === 1 ? 'bg-zinc-700 text-zinc-300' : 'bg-zinc-200 text-zinc-700')}">
+                ${g1.approved ? 'Gate 1 OK' : 'Aberto'}
+              </span>
+            </button>
+
+            <span class="text-[#cacacb] text-xs font-mono">→</span>
+
+            <!-- Fase 2: Execução / Parada -->
+            <button onclick="App.switchPhase(2)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${this.activePhase === 2 ? 'bg-[#111111] text-white shadow-sm' : 'text-[#4b4b4d] hover:text-[#111111] hover:bg-white/70'}">
+              <span>2. Execução</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${!g1.approved ? 'bg-amber-100 text-amber-800' : (g2.approved ? (this.activePhase === 2 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800') : (this.activePhase === 2 ? 'bg-red-500 text-white' : 'bg-red-100 text-red-800'))}">
+                ${!g1.approved ? 'Bloqueada' : (g2.approved ? 'Gate 2 OK' : 'War Room')}
+              </span>
+            </button>
+
+            <span class="text-[#cacacb] text-xs font-mono">→</span>
+
+            <!-- Fase 3: Pós-Parada -->
+            <button onclick="App.switchPhase(3)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${this.activePhase === 3 ? 'bg-[#111111] text-white shadow-sm' : 'text-[#4b4b4d] hover:text-[#111111] hover:bg-white/70'}">
+              <span>3. Pós-Parada</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${!g2.approved ? 'bg-amber-100 text-amber-800' : (g3.approved ? (this.activePhase === 3 ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800') : (this.activePhase === 3 ? 'bg-zinc-700 text-zinc-300' : 'bg-zinc-200 text-zinc-700'))}">
+                ${!g2.approved ? 'Bloqueada' : (g3.approved ? 'Concluída' : 'Fechamento')}
+              </span>
+            </button>
+
+          </div>
+
+          <!-- Direita: Ações Rápidas -->
           <div class="flex items-center gap-2">
             <button onclick="ProjectsView.openCreateModal('${parada.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
               <span class="material-symbols-outlined text-sm">edit</span>
-              <span>Editar Dados</span>
+              <span>Editar Parada</span>
             </button>
           </div>
-        </div>
 
-        <!-- STEPPER DE FASES PRINCIPAL COM STAGE-GATES (NIKE MONOCHROME ACCENT) -->
-        <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-4 md:p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="font-display-title text-base text-[#111111]">${parada.code}</span>
-              <span class="nike-pill text-[10px] bg-[#f5f5f5]">${parada.unit}</span>
-            </div>
-            <div class="text-xs text-[#707072] font-medium hidden sm:block">
-              Metodologia de 3 Fases Sequenciais com Stage-Gates
-            </div>
-          </div>
-
-          <!-- Stepper 3 Fases com conectores de Gates -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            
-            <!-- Fase 1: Pré-Parada -->
-            <div onclick="App.switchPhase(1)" class="cursor-pointer p-4 rounded-2xl border transition-all ${this.activePhase === 1 ? 'border-[#111111] bg-[#111111] text-white shadow-md' : 'border-[#e5e5e5] bg-[#f9f9f9] hover:border-[#111111]'}">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[10px] uppercase font-bold tracking-wider ${this.activePhase === 1 ? 'text-zinc-400' : 'text-[#707072]'}">Fase 1</span>
-                <span class="nike-pill text-[9px] py-0.5 ${g1.approved ? 'bg-[#007d48] text-white border-transparent' : (this.activePhase === 1 ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-white text-black')}">
-                  ${g1.approved ? 'Gate 1 OK' : 'Em Aberto'}
-                </span>
-              </div>
-              <h3 class="font-bold text-sm leading-tight ${this.activePhase === 1 ? 'text-white' : 'text-[#111111]'}">1. Pré-Parada</h3>
-              <p class="text-[11px] mt-1 line-clamp-1 ${this.activePhase === 1 ? 'text-zinc-400' : 'text-[#707072]'}">Escopo, Cronograma, Materiais & Gate 1 (Go/No-Go)</p>
-            </div>
-
-            <!-- Fase 2: Parada / Execução -->
-            <div onclick="App.switchPhase(2)" class="cursor-pointer p-4 rounded-2xl border transition-all ${this.activePhase === 2 ? 'border-[#111111] bg-[#111111] text-white shadow-md' : 'border-[#e5e5e5] bg-[#f9f9f9] hover:border-[#111111]'}">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[10px] uppercase font-bold tracking-wider ${this.activePhase === 2 ? 'text-zinc-400' : 'text-[#707072]'}">Fase 2</span>
-                <span class="nike-pill text-[9px] py-0.5 ${g2.approved ? 'bg-[#007d48] text-white border-transparent' : (!g1.approved ? 'bg-amber-100 text-amber-900 border-amber-300' : (this.activePhase === 2 ? 'bg-zinc-800 text-white' : 'bg-white text-black'))}">
-                  ${!g1.approved ? 'Bloqueada (Gate 1)' : (g2.approved ? 'Gate 2 OK' : 'War Room Ativo')}
-                </span>
-              </div>
-              <h3 class="font-bold text-sm leading-tight ${this.activePhase === 2 ? 'text-white' : 'text-[#111111]'}">2. Parada (Execução)</h3>
-              <p class="text-[11px] mt-1 line-clamp-1 ${this.activePhase === 2 ? 'text-zinc-400' : 'text-[#707072]'}">War Room, Turnos, OSs, LOTO & Término Mecânico</p>
-            </div>
-
-            <!-- Fase 3: Pós-Parada -->
-            <div onclick="App.switchPhase(3)" class="cursor-pointer p-4 rounded-2xl border transition-all ${this.activePhase === 3 ? 'border-[#111111] bg-[#111111] text-white shadow-md' : 'border-[#e5e5e5] bg-[#f9f9f9] hover:border-[#111111]'}">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[10px] uppercase font-bold tracking-wider ${this.activePhase === 3 ? 'text-zinc-400' : 'text-[#707072]'}">Fase 3</span>
-                <span class="nike-pill text-[9px] py-0.5 ${g3.approved ? 'bg-[#007d48] text-white border-transparent' : (!g2.approved ? 'bg-amber-100 text-amber-900 border-amber-300' : (this.activePhase === 3 ? 'bg-zinc-800 text-white' : 'bg-white text-black'))}">
-                  ${!g2.approved ? 'Bloqueada (Gate 2)' : (g3.approved ? 'Concluída' : 'Em Fechamento')}
-                </span>
-              </div>
-              <h3 class="font-bold text-sm leading-tight ${this.activePhase === 3 ? 'text-white' : 'text-[#111111]'}">3. Pós-Parada</h3>
-              <p class="text-[11px] mt-1 line-clamp-1 ${this.activePhase === 3 ? 'text-zinc-400' : 'text-[#707072]'}">Startup, Punch List, Desmobilização & Lições</p>
-            </div>
-
-          </div>
         </div>
 
         <!-- Renderizador da Fase Selecionada -->
@@ -302,16 +282,7 @@ const App = {
 
     if (badge) {
       if (this.currentView === 'parada-detail') {
-        const p = ProjectsView.getParadaById(this.activeParadaId);
-        if (p) {
-          badge.innerHTML = `
-            <div class="flex items-center gap-2 bg-[#f5f5f5] px-3 py-1.5 rounded-full border border-[#e5e5e5] text-xs">
-              <span class="w-2 h-2 rounded-full ${p.currentPhase === 2 ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}"></span>
-              <span class="font-bold text-[#111111]">${p.code}</span>
-              <span class="text-[#707072] font-medium hidden lg:inline">(${p.unit})</span>
-            </div>
-          `;
-        }
+        badge.innerHTML = '';
       } else {
         badge.innerHTML = `
           <div class="flex items-center gap-2 bg-[#f5f5f5] px-3 py-1.5 rounded-full border border-[#e5e5e5] text-xs">

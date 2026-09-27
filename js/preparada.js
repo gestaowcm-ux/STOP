@@ -63,7 +63,7 @@ const PreParadaView = {
     'Tubulação'
   ],
 
-  // Áreas de suporte envolvidas na Pré-Parada
+  // Áreas de suporte padrão envolvidas na Pré-Parada
   supportAreas: [
     'SMS / Segurança',
     'Suprimentos & Compras',
@@ -76,6 +76,98 @@ const PreParadaView = {
     'Logística & Infraestrutura'
   ],
 
+  getSupportAreaNames() {
+    if (window.ConfiguracoesView && typeof window.ConfiguracoesView.getSupportAreas === 'function') {
+      const list = window.ConfiguracoesView.getSupportAreas();
+      if (list && list.length > 0) return list.map(a => a.name);
+    }
+    return this.supportAreas;
+  },
+
+  getSupportAreasList() {
+    if (window.ConfiguracoesView && typeof window.ConfiguracoesView.getSupportAreas === 'function') {
+      return window.ConfiguracoesView.getSupportAreas();
+    }
+    return this.supportAreas.map((name, i) => ({
+      id: `AREA-0${i+1}`,
+      name: name,
+      coordinator: 'Coordenador(a)',
+      collaborators: []
+    }));
+  },
+
+  getCollaboratorsForArea(areaNameOrId) {
+    if (window.ConfiguracoesView && typeof window.ConfiguracoesView.getCollaboratorsForArea === 'function') {
+      const cols = window.ConfiguracoesView.getCollaboratorsForArea(areaNameOrId);
+      if (cols && cols.length > 0) return cols;
+    }
+    const areas = this.getSupportAreasList();
+    const query = (areaNameOrId || '').trim().toLowerCase();
+    const area = areas.find(a => 
+      a.id.toLowerCase() === query || 
+      a.name.toLowerCase() === query ||
+      a.name.toLowerCase().includes(query) ||
+      query.includes(a.name.toLowerCase().split('/')[0].trim())
+    );
+    if (area && area.collaborators && area.collaborators.length > 0) return area.collaborators;
+    return [];
+  },
+
+  populateCollaboratorsSelect(selectEl, areaName, selectedOwner = '') {
+    if (!selectEl) return;
+    const cols = this.getCollaboratorsForArea(areaName);
+    selectEl.innerHTML = '';
+
+    if (cols.length > 0) {
+      cols.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.textContent = `${c.name} (${c.role || 'Colaborador Técnico'})`;
+        if (selectedOwner && (c.name.toLowerCase() === selectedOwner.toLowerCase() || selectedOwner.toLowerCase().includes(c.name.toLowerCase()))) {
+          opt.selected = true;
+        }
+        selectEl.appendChild(opt);
+      });
+    }
+
+    // Adicionar o coordenador da área caso não conste na lista
+    const areas = this.getSupportAreasList();
+    const query = (areaName || '').trim().toLowerCase();
+    const area = areas.find(a => 
+      a.id.toLowerCase() === query || 
+      a.name.toLowerCase() === query ||
+      a.name.toLowerCase().includes(query) ||
+      query.includes(a.name.toLowerCase().split('/')[0].trim())
+    );
+    if (area && area.coordinator && !cols.some(c => c.name.toLowerCase() === area.coordinator.toLowerCase())) {
+      const opt = document.createElement('option');
+      opt.value = area.coordinator;
+      opt.textContent = `${area.coordinator} (Coordenador da Área)`;
+      if (selectedOwner && selectedOwner.toLowerCase() === area.coordinator.toLowerCase()) {
+        opt.selected = true;
+      }
+      selectEl.appendChild(opt);
+    }
+
+    // Se o responsável atual não estiver na lista (ex: cadastrado anteriormente), preservar criando a opção
+    if (selectedOwner && !Array.from(selectEl.options).some(o => o.value.toLowerCase() === selectedOwner.toLowerCase())) {
+      const opt = document.createElement('option');
+      opt.value = selectedOwner;
+      opt.textContent = `${selectedOwner} (Designado)`;
+      opt.selected = true;
+      selectEl.appendChild(opt);
+    }
+
+    // Se ainda vazio, colocar o usuário logado
+    if (selectEl.options.length === 0) {
+      const currentUser = typeof UsersManager !== 'undefined' && UsersManager.getCurrentUser ? UsersManager.getCurrentUser() : { name: 'Juliana Santos' };
+      const opt = document.createElement('option');
+      opt.value = currentUser.name;
+      opt.textContent = `${currentUser.name} (Responsável)`;
+      selectEl.appendChild(opt);
+    }
+  },
+
   render(parada) {
     if (!parada) return '<div class="p-8 text-center text-xs">Nenhuma parada selecionada.</div>';
 
@@ -87,31 +179,21 @@ const PreParadaView = {
     return `
       <div class="space-y-6 animate-fade-in">
         
-        <!-- Header da Fase 1: Pré-Parada com Status de Prontidão -->
-        <div class="bg-[#ffffff] p-6 rounded-3xl border border-[#e5e5e5] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="nike-pill bg-blue-50 text-blue-800 border-blue-200 font-bold">Fase 1: Pré-Parada</span>
-              <span class="text-xs text-[#707072] font-mono font-medium">Ciclo de Preparação • Início D-0: ${parada.startDate ? parada.startDate.split('-').reverse().join('/') : '--'}</span>
-            </div>
-            <h2 class="text-xl md:text-2xl font-extrabold text-[#111111] tracking-tight">Preparação, Escopo & Governança da Pré-Parada</h2>
-            <p class="text-xs text-[#707072]">Desdobramento de Milestones flexíveis, priorização de escopo com Linha de Corte, Matriz 10x10 e Reunião de Prontidão.</p>
+        <!-- Header Compacto da Fase 1: Pré-Parada -->
+        <div class="bg-[#ffffff] px-4 py-3 rounded-2xl border border-[#e5e5e5] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="nike-pill bg-blue-50 text-blue-800 border-blue-200 font-bold text-xs">Fase 1: Pré-Parada</span>
+            <span class="text-xs font-bold text-[#111111]">Preparação & Governança</span>
+            <span class="text-xs text-[#707072] font-mono">• Início D-0: ${parada.startDate ? parada.startDate.split('-').reverse().join('/') : '--'}</span>
           </div>
 
-          <!-- Banner de Status do Gate 1 -->
-          <div class="bg-[#f5f5f5] p-3.5 rounded-2xl border ${gate1.approved ? 'border-[#007d48] bg-green-50/50' : 'border-[#e5e5e5]'} flex items-center gap-3 shrink-0">
-            <div class="w-10 h-10 rounded-xl ${gate1.approved ? 'bg-[#007d48] text-white' : 'bg-[#111111] text-white'} flex items-center justify-center font-bold shrink-0">
-              <span class="material-symbols-outlined text-xl">${gate1.approved ? 'verified' : 'lock_clock'}</span>
-            </div>
-            <div class="text-xs">
-              <div class="flex items-center gap-2">
-                <span class="font-bold uppercase tracking-wider text-[#111111]">Prontidão D-0</span>
-                <span class="nike-pill text-[10px] py-0.5 ${gate1.approved ? 'bg-[#007d48] text-white border-transparent' : 'bg-[#e5e5e5] text-[#4b4b4d]'}">${gate1.approved ? 'AUTORIZADA' : 'PENDENTE'}</span>
-              </div>
-              <p class="text-[11px] text-[#707072] mt-0.5">
-                ${gate1.approved ? `Homologado por <b>${gate1.approvedBy}</b>` : 'Requer Ata da Reunião de Prontidão assinada'}
-              </p>
-            </div>
+          <!-- Status do Gate 1 / Prontidão -->
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-[#707072] text-[11px] font-medium">Prontidão D-0:</span>
+            <span class="nike-pill text-[10px] py-0.5 ${gate1.approved ? 'bg-[#007d48] text-white border-transparent font-bold' : 'bg-[#f5f5f5] text-[#4b4b4d] border-[#e5e5e5] font-semibold'}">
+              ${gate1.approved ? 'AUTORIZADA' : 'PENDENTE'}
+            </span>
+            ${gate1.approved ? `<span class="text-[11px] text-[#707072] hidden md:inline">(${gate1.approvedBy})</span>` : ''}
           </div>
         </div>
 
@@ -582,9 +664,16 @@ const PreParadaView = {
                     <button onclick="PreParadaView.editMilestone('${parada.id}', '${m.id}')" title="Editar Marco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
                       <span class="material-symbols-outlined text-sm">edit</span>
                     </button>
-                    <button onclick="PreParadaView.deleteMilestone('${parada.id}', '${m.id}')" title="Excluir Marco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
-                      <span class="material-symbols-outlined text-sm">delete</span>
-                    </button>
+                    <div id="ms-actions-${m.id}" class="inline-flex items-center">
+                      <button onclick="PreParadaView.askDeleteMilestone('${parada.id}', '${m.id}')" title="Excluir Marco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                    <div id="ms-confirm-${m.id}" class="hidden inline-confirm-box animate-fade-in">
+                      <span class="text-[#707072] text-[10px] font-bold">Excluir Marco?</span>
+                      <button onclick="PreParadaView.confirmDeleteMilestone('${parada.id}', '${m.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                      <button onclick="PreParadaView.cancelDeleteMilestone('${m.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                    </div>
                     <button onclick="PreParadaView.toggleMilestoneCollapse('${m.id}')" id="collapse-btn-${m.id}" title="Recolher / Expandir Tabela" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
                       <span class="material-symbols-outlined text-sm transition-transform duration-200" id="collapse-icon-${m.id}">expand_less</span>
                     </button>
@@ -628,16 +717,28 @@ const PreParadaView = {
                             </button>
                           </td>
                           <td class="p-2.5 text-center">
-                            <button onclick="PreParadaView.deleteAction('${parada.id}', '${m.id}', '${act.id}')" title="Excluir ação" class="text-[#707072] hover:text-[#d30005] p-1">
-                              <span class="material-symbols-outlined text-base">delete</span>
-                            </button>
+                            <div class="flex items-center justify-center gap-1 min-h-[28px]">
+                              <div id="act-actions-${act.id}" class="inline-flex items-center gap-1">
+                                <button onclick="PreParadaView.openAddActionModal('${parada.id}', '${m.id}', '${act.id}')" title="Editar Ação / Responsável" class="text-[#707072] hover:text-[#111111] p-1">
+                                  <span class="material-symbols-outlined text-base">edit</span>
+                                </button>
+                                <button onclick="PreParadaView.askDeleteAction('${parada.id}', '${m.id}', '${act.id}')" title="Excluir ação" class="text-[#707072] hover:text-[#d30005] p-1">
+                                  <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
+                              </div>
+                              <div id="act-confirm-${act.id}" class="hidden inline-confirm-box animate-fade-in">
+                                <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                                <button onclick="PreParadaView.confirmDeleteAction('${parada.id}', '${m.id}', '${act.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                                <button onclick="PreParadaView.cancelDeleteAction('${act.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       `).join('')}
                       ${(!m.actions || m.actions.length === 0) ? `
                         <tr>
                           <td colspan="8" class="p-4 text-center text-[#707072] italic">
-                            Nenhuma ação desdobrada para este milestone. Clique em "Desdobrar Ação" para adicionar entregáveis de SMS, Suprimentos, Contratos, etc.
+                            Nenhuma ação desdobrada para este milestone. Clique em "Desdobrar Ação" para adicionar entregáveis com colaboradores por área técnica.
                           </td>
                         </tr>
                       ` : ''}
@@ -1176,53 +1277,170 @@ const PreParadaView = {
     this.openMilestoneModal(paradaId, milestoneId);
   },
 
-  deleteMilestone(paradaId, milestoneId) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-    if (confirm('Deseja excluir este Milestone e todas as ações vinculadas?')) {
-      parada.preParada.milestones = (parada.preParada.milestones || []).filter(m => m.id !== milestoneId);
-      ProjectsView.updateParada(parada);
-      App.showToast('Milestone removido.', 'info');
-      App.renderCurrentView();
+  askDeleteMilestone(paradaId, milestoneId) {
+    document.querySelectorAll('[id^="ms-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="ms-actions-"]').forEach(el => el.classList.remove('hidden'));
 
-      const modal = document.getElementById('milestone-timeline-modal');
-      if (modal && !modal.classList.contains('hidden')) {
-        const content = document.getElementById('milestone-timeline-modal-content');
-        if (content) content.innerHTML = this.renderTimelineModalContent(parada);
-      }
+    const actions = document.getElementById(`ms-actions-${milestoneId}`);
+    const confirmBox = document.getElementById(`ms-confirm-${milestoneId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
     }
   },
 
-  openAddActionModal(paradaId, milestoneId) {
+  cancelDeleteMilestone(milestoneId) {
+    const actions = document.getElementById(`ms-actions-${milestoneId}`);
+    const confirmBox = document.getElementById(`ms-confirm-${milestoneId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteMilestone(paradaId, milestoneId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    parada.preParada.milestones = (parada.preParada.milestones || []).filter(m => m.id !== milestoneId);
+    ProjectsView.updateParada(parada);
+    App.showToast('Milestone removido com sucesso.', 'info');
+    App.renderCurrentView();
+
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      const content = document.getElementById('milestone-timeline-modal-content');
+      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
+    }
+  },
+
+  deleteMilestone(paradaId, milestoneId) {
+    this.confirmDeleteMilestone(paradaId, milestoneId);
+  },
+
+  openAddActionModal(paradaId, milestoneId, actionId = null) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
     const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
     if (!ms) return;
 
-    const title = prompt(`Nova Ação para o marco [${ms.relativeDay}]:`);
-    if (!title) return;
-    const area = prompt(`Área de Suporte Responsável:\n(Opções: ${this.supportAreas.join(', ')})`, 'Suprimentos & Compras') || 'Suprimentos & Compras';
-    const owner = prompt('Pessoa Responsável (Nome):', UsersManager.getCurrentUser().name) || UsersManager.getCurrentUser().name;
-    const hh = parseInt(prompt('Estimativa de Horas (HH):', '40') || '40', 10);
-    const deadline = prompt('Data Limite da Ação (AAAA-MM-DD):', ms.targetDate || new Date().toISOString().split('T')[0]);
+    const modal = document.getElementById('milestone-action-modal');
+    if (!modal) return;
 
+    const titleEl = document.getElementById('modal-milestone-action-title');
+    const subtitleEl = document.getElementById('modal-milestone-action-subtitle');
+    const paradaIdInput = document.getElementById('form-action-parada-id');
+    const milestoneIdInput = document.getElementById('form-action-milestone-id');
+    const editIdInput = document.getElementById('form-action-edit-id');
+    const titleInput = document.getElementById('form-action-title');
+    const areaSelect = document.getElementById('form-action-area');
+    const ownerSelect = document.getElementById('form-action-owner');
+    const deadlineInput = document.getElementById('form-action-deadline');
+    const hhInput = document.getElementById('form-action-hh');
+    const statusSelect = document.getElementById('form-action-status');
+
+    paradaIdInput.value = paradaId;
+    milestoneIdInput.value = milestoneId;
+    editIdInput.value = actionId || '';
+
+    // Preencher áreas de suporte disponíveis
+    const areas = this.getSupportAreaNames();
+    areaSelect.innerHTML = areas.map(a => `<option value="${a}">${a}</option>`).join('');
+
+    if (actionId) {
+      const act = (ms.actions || []).find(a => a.id === actionId);
+      if (act) {
+        if (titleEl) titleEl.textContent = 'Editar Ação do Milestone';
+        if (subtitleEl) subtitleEl.textContent = `Marco: [${ms.relativeDay}] ${ms.title} • Ação ${act.id}`;
+        titleInput.value = act.title || '';
+        areaSelect.value = act.area || areas[0];
+        deadlineInput.value = act.deadline || ms.targetDate || '';
+        hhInput.value = act.estimatedHh || 40;
+        statusSelect.value = act.status || 'Não Iniciada';
+
+        this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, act.owner);
+      }
+    } else {
+      if (titleEl) titleEl.textContent = 'Desdobrar Ação de Preparação (WBS)';
+      if (subtitleEl) subtitleEl.textContent = `Marco: [${ms.relativeDay}] ${ms.title}`;
+      titleInput.value = '';
+      areaSelect.value = areas[0];
+      deadlineInput.value = ms.targetDate || new Date().toISOString().split('T')[0];
+      hhInput.value = 40;
+      statusSelect.value = 'Não Iniciada';
+
+      this.populateCollaboratorsSelect(ownerSelect, areas[0], '');
+    }
+
+    modal.classList.remove('hidden');
+  },
+
+  onActionAreaChange() {
+    const areaSelect = document.getElementById('form-action-area');
+    const ownerSelect = document.getElementById('form-action-owner');
+    if (areaSelect && ownerSelect) {
+      this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, '');
+    }
+  },
+
+  closeActionModal() {
+    const modal = document.getElementById('milestone-action-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  saveActionModal() {
+    const paradaId = document.getElementById('form-action-parada-id').value;
+    const milestoneId = document.getElementById('form-action-milestone-id').value;
+    const editId = document.getElementById('form-action-edit-id').value;
+    const title = document.getElementById('form-action-title').value.trim();
+    const area = document.getElementById('form-action-area').value;
+    const owner = document.getElementById('form-action-owner').value;
+    const deadline = document.getElementById('form-action-deadline').value;
+    const hh = parseInt(document.getElementById('form-action-hh').value || '40', 10);
+    const status = document.getElementById('form-action-status').value;
+
+    if (!title) {
+      alert('Por favor, informe a descrição ou entregável da ação.');
+      return;
+    }
+
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
+    if (!ms) return;
     if (!ms.actions) ms.actions = [];
-    ms.actions.push({
-      id: `ACT-${Math.floor(100 + Math.random() * 900)}`,
-      title: title.trim(),
-      area: area.trim(),
-      owner: owner.trim(),
-      deadline: deadline,
-      estimatedHh: hh,
-      status: 'Não Iniciada'
-    });
 
-    ProjectsView.updateParada(parada);
-    App.showToast('Ação desdobrada com sucesso!', 'success');
+    if (editId) {
+      const act = ms.actions.find(a => a.id === editId);
+      if (act) {
+        act.title = title;
+        act.area = area;
+        act.owner = owner;
+        act.deadline = deadline;
+        act.estimatedHh = hh;
+        act.status = status;
+        ProjectsView.updateParada(parada);
+        App.showToast(`Ação [${act.id}] atualizada com sucesso!`, 'success');
+      }
+    } else {
+      const newId = `ACT-${Math.floor(100 + Math.random() * 900)}`;
+      ms.actions.push({
+        id: newId,
+        title: title,
+        area: area,
+        owner: owner,
+        deadline: deadline,
+        estimatedHh: hh,
+        status: status
+      });
+      ProjectsView.updateParada(parada);
+      App.showToast(`Ação desdobrada e atribuída a [${owner}]!`, 'success');
+    }
+
+    this.closeActionModal();
     App.renderCurrentView();
 
-    const modal = document.getElementById('milestone-timeline-modal');
-    if (modal && !modal.classList.contains('hidden')) {
+    const timelineModal = document.getElementById('milestone-timeline-modal');
+    if (timelineModal && !timelineModal.classList.contains('hidden')) {
       const content = document.getElementById('milestone-timeline-modal-content');
       if (content) content.innerHTML = this.renderTimelineModalContent(parada);
     }
@@ -1245,23 +1463,67 @@ const PreParadaView = {
     }
   },
 
-  deleteAction(paradaId, milestoneId, actionId) {
+  askDeleteAction(paradaId, milestoneId, actionId) {
+    document.querySelectorAll('[id^="act-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="act-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`act-actions-${actionId}`);
+    const confirmBox = document.getElementById(`act-confirm-${actionId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteAction(actionId) {
+    const actions = document.getElementById(`act-actions-${actionId}`);
+    const confirmBox = document.getElementById(`act-confirm-${actionId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  askDeleteCardAction(actionId) {
+    document.querySelectorAll('[id^="act-card-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="act-card-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`act-card-actions-${actionId}`);
+    const confirmBox = document.getElementById(`act-card-confirm-${actionId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteCardAction(actionId) {
+    const actions = document.getElementById(`act-card-actions-${actionId}`);
+    const confirmBox = document.getElementById(`act-card-confirm-${actionId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteAction(paradaId, milestoneId, actionId) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
     const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
     if (!ms) return;
-    if (confirm('Deseja remover esta ação?')) {
-      ms.actions = (ms.actions || []).filter(a => a.id !== actionId);
-      ProjectsView.updateParada(parada);
-      App.showToast('Ação removida.', 'info');
-      App.renderCurrentView();
+    ms.actions = (ms.actions || []).filter(a => a.id !== actionId);
+    ProjectsView.updateParada(parada);
+    App.showToast('Ação removida com sucesso.', 'info');
+    App.renderCurrentView();
 
-      const modal = document.getElementById('milestone-timeline-modal');
-      if (modal && !modal.classList.contains('hidden')) {
-        const content = document.getElementById('milestone-timeline-modal-content');
-        if (content) content.innerHTML = this.renderTimelineModalContent(parada);
-      }
+    const modal = document.getElementById('milestone-timeline-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      const content = document.getElementById('milestone-timeline-modal-content');
+      if (content) content.innerHTML = this.renderTimelineModalContent(parada);
     }
+  },
+
+  deleteAction(paradaId, milestoneId, actionId) {
+    this.confirmDeleteAction(paradaId, milestoneId, actionId);
   },
 
 
@@ -1269,7 +1531,8 @@ const PreParadaView = {
   // 2. ABA: ESCOPO, HH & LINHA DE CORTE ORÇAMENTÁRIA (PROBABILIDADE X SEVERIDADE)
   // ==========================================================================
   renderEscopoTab(parada) {
-    const rawBudget = parada.budgetRaw || 14500000;
+    const rawBudget = parada.budgetRaw || (typeof ProjectsView !== 'undefined' ? ProjectsView.parseCurrency(parada.budget) : 14500000) || 14500000;
+    const formattedBudget = typeof ProjectsView !== 'undefined' ? ProjectsView.formatCurrency(parada.budget || rawBudget) : `R$ ${rawBudget.toLocaleString('pt-BR')}`;
     const categories = parada.preParada.laborCategories || this.defaultLaborCategories;
     let services = [...(parada.preParada.servicesList || [])];
 
@@ -1374,7 +1637,7 @@ const PreParadaView = {
             
             <div class="p-4 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5] space-y-1">
               <span class="text-[10px] uppercase font-bold text-[#707072] block">Orçamento Aprovado</span>
-              <span class="text-lg font-black font-mono text-[#007d48]">${parada.budget}</span>
+              <span class="text-lg font-black font-mono text-[#007d48]">${formattedBudget}</span>
               <span class="text-[10px] text-[#707072] block">Teto financeiro fixado</span>
             </div>
 
@@ -1496,7 +1759,7 @@ const PreParadaView = {
                       <tr class="bg-red-600 text-white font-black select-none shadow-md">
                         <td colspan="11" class="py-3.5 px-4 text-center text-xs tracking-wider uppercase">
                           <div class="flex items-center justify-center gap-2">
-                            <span>LINHA DE CORTE ORÇAMENTÁRIA • TETO DE R$ ${rawBudget.toLocaleString('pt-BR')} ATINGIDO</span>
+                            <span>LINHA DE CORTE ORÇAMENTÁRIA • TETO DE ${formattedBudget} ATINGIDO</span>
                             <span class="text-[10px] font-normal opacity-90">(Os serviços abaixo têm menor prioridade e NÃO SEGUIRÃO para o planejamento)</span>
                           </div>
                         </td>
@@ -1538,13 +1801,21 @@ const PreParadaView = {
                           </span>
                         </td>
                         <td class="p-3 text-center">
-                          <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="PreParadaView.toggleOverride('${parada.id}', '${s.id}')" title="Forçar Inclusão / Exclusão (Override)" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#111111]">
-                              Ajustar
+                          <div class="flex items-center justify-center gap-1.5 min-h-[28px]">
+                            <button onclick="PreParadaView.openEditServiceModal('${parada.id}', '${s.id}')" title="Editar Demanda e Ajustar Escopo" class="btn-ghost-pill text-xs py-1 px-2.5 text-[#111111] hover:bg-[#111111] hover:text-white font-bold flex items-center gap-1">
+                              <span class="material-symbols-outlined text-xs">edit</span>
+                              <span>Ajustar</span>
                             </button>
-                            <button onclick="PreParadaView.deleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#d30005]">
-                              Excluir
-                            </button>
+                            <div id="srv-actions-${s.id}" class="inline-flex items-center">
+                              <button onclick="PreParadaView.askDeleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-[#707072] hover:text-[#d30005]">
+                                Excluir
+                              </button>
+                            </div>
+                            <div id="srv-confirm-${s.id}" class="hidden inline-confirm-box animate-fade-in">
+                              <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                              <button onclick="PreParadaView.confirmDeleteService('${parada.id}', '${s.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                              <button onclick="PreParadaView.cancelDeleteService('${s.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -1590,13 +1861,21 @@ const PreParadaView = {
                           </span>
                         </td>
                         <td class="p-3 text-center">
-                          <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="PreParadaView.toggleOverride('${parada.id}', '${s.id}')" title="Forçar Inclusão (Override)" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-black hover:text-white border-red-200">
-                              Ajustar
+                          <div class="flex items-center justify-center gap-1.5 min-h-[28px]">
+                            <button onclick="PreParadaView.openEditServiceModal('${parada.id}', '${s.id}')" title="Editar Demanda e Ajustar Escopo" class="btn-ghost-pill text-xs py-1 px-2.5 text-red-800 bg-red-100 hover:bg-black hover:text-white border-red-200 font-bold flex items-center gap-1">
+                              <span class="material-symbols-outlined text-xs">edit</span>
+                              <span>Ajustar</span>
                             </button>
-                            <button onclick="PreParadaView.deleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-[#d30005] hover:text-white border-red-200">
-                              Excluir
-                            </button>
+                            <div id="srv-actions-${s.id}" class="inline-flex items-center">
+                              <button onclick="PreParadaView.askDeleteService('${parada.id}', '${s.id}')" title="Excluir" class="btn-ghost-pill text-xs py-1 px-2 text-red-700 bg-red-100 hover:bg-[#d30005] hover:text-white border-red-200">
+                                Excluir
+                              </button>
+                            </div>
+                            <div id="srv-confirm-${s.id}" class="hidden inline-confirm-box animate-fade-in">
+                              <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                              <button onclick="PreParadaView.confirmDeleteService('${parada.id}', '${s.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                              <button onclick="PreParadaView.cancelDeleteService('${s.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -1620,13 +1899,13 @@ const PreParadaView = {
 
       </div>
 
-      <!-- MODAL DE CADASTRO DE SERVIÇO DE ESCOPO -->
+      <!-- MODAL DE CADASTRO / EDIÇÃO DE SERVIÇO DE ESCOPO -->
       <div id="service-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
         <div class="card-industrial max-w-xl w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
           
           <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
             <div class="flex items-center gap-2">
-              <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Demanda de Manutenção</h3>
+              <h3 id="modal-service-title" class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Demanda de Manutenção</h3>
             </div>
             <button onclick="PreParadaView.closeAddServiceModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">
               Fechar
@@ -1635,17 +1914,44 @@ const PreParadaView = {
 
           <div class="space-y-4 text-xs">
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-3">
               <div>
-                <label class="form-label">TAG do Equipamento *</label>
-                <input type="text" id="form-srv-tag" class="form-input font-mono font-bold uppercase" placeholder="Ex: T-2101, P-2104A" />
+                <div class="flex items-center justify-between mb-1">
+                  <label class="form-label mb-0">TAG do Equipamento (Tabela de Configurações) *</label>
+                  <button type="button" onclick="PreParadaView.closeAddServiceModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                    <span class="material-symbols-outlined text-xs">settings</span>
+                    <span>Gerenciar TAGs</span>
+                  </button>
+                </div>
+                <select id="form-srv-tag" onchange="PreParadaView.onEquipmentTagChange(this.value, true)" class="form-input font-mono font-bold text-xs bg-white">
+                  ${ConfiguracoesView.renderTagSelectOptions('', parada.unit)}
+                </select>
               </div>
 
-              <div>
-                <label class="form-label">Disciplina / Categoria *</label>
-                <select id="form-srv-category" class="form-input font-medium">
-                  ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                </select>
+              <!-- Detalhes do Equipamento Selecionado da Tabela Mestra -->
+              <div id="srv-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+                <div class="flex items-center justify-between mb-1">
+                  <span id="srv-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+                  <span id="srv-preview-tag-crit" class="nike-pill text-[9px]"></span>
+                </div>
+                <div class="text-[11px] text-[#4b4b4d] space-y-0.5">
+                  <p id="srv-preview-tag-desc"></p>
+                  <p id="srv-preview-tag-unit" class="text-[10px] text-[#707072] font-medium"></p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Disciplina / Categoria *</label>
+                  <select id="form-srv-category" class="form-input font-medium">
+                    ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label">Norma Técnica / Criticidade</label>
+                  <input type="text" id="form-srv-standard" readonly class="form-input bg-[#f5f5f5] text-[#707072] font-mono text-xs cursor-default" placeholder="Vinculado ao TAG" />
+                </div>
               </div>
             </div>
 
@@ -1692,13 +1998,35 @@ const PreParadaView = {
               </div>
             </div>
 
+            <!-- Override de Escopo (Decisão Técnica / Ajuste) -->
+            <div class="p-4 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold uppercase tracking-wider text-[11px] text-[#111111]">Ajuste de Escopo & Override</span>
+                <span class="nike-pill text-[9px] bg-white">Decisão Técnica</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Comportamento no Escopo</label>
+                  <select id="form-srv-override" onchange="PreParadaView.onOverrideSelectChange(this.value)" class="form-input font-medium text-xs bg-white">
+                    <option value="auto">Cálculo Automático por Score (P×S)</option>
+                    <option value="include">Forçar INCLUSÃO no Escopo (Override)</option>
+                    <option value="exclude">Forçar EXCLUSÃO do Escopo (Corte Técnico)</option>
+                  </select>
+                </div>
+                <div id="wrapper-override-reason" class="hidden">
+                  <label class="form-label">Justificativa Técnica</label>
+                  <input type="text" id="form-srv-override-reason" class="form-input bg-white text-xs" placeholder="Ex: Mandatório NR-13 / Decisão Gerencial" />
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
             <button onclick="PreParadaView.closeAddServiceModal()" class="btn-ghost-pill text-xs">
               Cancelar
             </button>
-            <button onclick="PreParadaView.saveAddServiceModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">
+            <button id="btn-save-service-modal" onclick="PreParadaView.saveAddServiceModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">
               Salvar Demanda de Escopo
             </button>
           </div>
@@ -1750,17 +2078,201 @@ const PreParadaView = {
     }
   },
 
+  currentEditingServiceId: null,
+
   openAddServiceModal(paradaId) {
+    this.currentEditingServiceId = null;
     const modal = document.getElementById('service-create-modal');
+    const parada = ProjectsView.getParadaById(paradaId);
     if (modal) {
+      const titleEl = document.getElementById('modal-service-title');
+      const btnSaveEl = document.getElementById('btn-save-service-modal');
+      const tagSelect = document.getElementById('form-srv-tag');
+      const catSelect = document.getElementById('form-srv-category');
+      const descInput = document.getElementById('form-srv-desc');
+      const stdInput = document.getElementById('form-srv-standard');
+      const hhInput = document.getElementById('form-srv-hh');
+      const costInput = document.getElementById('form-srv-cost');
+      const probInput = document.getElementById('form-srv-prob');
+      const sevInput = document.getElementById('form-srv-sev');
+      const overrideSelect = document.getElementById('form-srv-override');
+      const reasonInput = document.getElementById('form-srv-override-reason');
+      const reasonWrapper = document.getElementById('wrapper-override-reason');
+      const previewEl = document.getElementById('srv-equipment-preview');
+
+      if (titleEl) titleEl.innerText = 'Cadastrar Demanda de Manutenção';
+      if (btnSaveEl) btnSaveEl.innerText = 'Salvar Demanda de Escopo';
+
+      if (tagSelect) {
+        tagSelect.innerHTML = ConfiguracoesView.renderTagSelectOptions('', parada ? parada.unit : null);
+      }
+      if (catSelect) {
+        const disciplines = ConfiguracoesView.getDisciplines().map(d => d.name);
+        catSelect.innerHTML = disciplines.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+      if (descInput) descInput.value = '';
+      if (stdInput) stdInput.value = '';
+      if (hhInput) hhInput.value = 120;
+      if (costInput) costInput.value = 250000;
+      if (probInput) probInput.value = 7;
+      if (sevInput) sevInput.value = 7;
+      if (overrideSelect) overrideSelect.value = 'auto';
+      if (reasonInput) reasonInput.value = '';
+      if (reasonWrapper) reasonWrapper.classList.add('hidden');
+      if (previewEl) previewEl.classList.add('hidden');
+
       modal.classList.remove('hidden');
       this.updateServiceModalScorePreview();
     }
   },
 
+  openEditServiceModal(paradaId, serviceId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    const srv = (parada.preParada.servicesList || []).find(s => s.id === serviceId);
+    if (!srv) return;
+
+    this.currentEditingServiceId = serviceId;
+    const modal = document.getElementById('service-create-modal');
+    if (modal) {
+      const titleEl = document.getElementById('modal-service-title');
+      const btnSaveEl = document.getElementById('btn-save-service-modal');
+      const tagSelect = document.getElementById('form-srv-tag');
+      const catSelect = document.getElementById('form-srv-category');
+      const descInput = document.getElementById('form-srv-desc');
+      const stdInput = document.getElementById('form-srv-standard');
+      const hhInput = document.getElementById('form-srv-hh');
+      const costInput = document.getElementById('form-srv-cost');
+      const probInput = document.getElementById('form-srv-prob');
+      const sevInput = document.getElementById('form-srv-sev');
+      const overrideSelect = document.getElementById('form-srv-override');
+      const reasonInput = document.getElementById('form-srv-override-reason');
+      const reasonWrapper = document.getElementById('wrapper-override-reason');
+
+      if (titleEl) titleEl.innerText = `Editar / Ajustar Demanda [${srv.id} - ${srv.tag}]`;
+      if (btnSaveEl) btnSaveEl.innerText = 'Salvar Alterações no Serviço';
+
+      if (tagSelect) {
+        tagSelect.innerHTML = ConfiguracoesView.renderTagSelectOptions(srv.tag, parada.unit);
+        tagSelect.value = srv.tag;
+      }
+      if (catSelect) {
+        const disciplines = ConfiguracoesView.getDisciplines().map(d => d.name);
+        catSelect.innerHTML = disciplines.map(c => `<option value="${c}" ${c === srv.category ? 'selected' : ''}>${c}</option>`).join('');
+        catSelect.value = srv.category;
+      }
+      if (descInput) descInput.value = srv.description || '';
+      if (hhInput) hhInput.value = srv.hh || 0;
+      if (costInput) costInput.value = srv.cost || 0;
+      if (probInput) probInput.value = srv.prob || 5;
+      if (sevInput) sevInput.value = srv.sev || 5;
+
+      const overrideVal = srv.override || 'auto';
+      if (overrideSelect) overrideSelect.value = overrideVal;
+      if (reasonInput) reasonInput.value = srv.overrideReason || '';
+      if (reasonWrapper) {
+        if (overrideVal === 'include' || overrideVal === 'exclude') {
+          reasonWrapper.classList.remove('hidden');
+        } else {
+          reasonWrapper.classList.add('hidden');
+        }
+      }
+
+      this.onEquipmentTagChange(srv.tag, false);
+      this.updateServiceModalScorePreview();
+      modal.classList.remove('hidden');
+    }
+  },
+
+  onOverrideSelectChange(val) {
+    const reasonWrapper = document.getElementById('wrapper-override-reason');
+    if (reasonWrapper) {
+      if (val === 'include' || val === 'exclude') {
+        reasonWrapper.classList.remove('hidden');
+        const reasonInput = document.getElementById('form-srv-override-reason');
+        if (reasonInput && !reasonInput.value) {
+          reasonInput.value = val === 'include' ? 'Inclusão técnica mandatória' : 'Corte técnico / Serviço postergado';
+        }
+      } else {
+        reasonWrapper.classList.add('hidden');
+      }
+    }
+  },
+
   closeAddServiceModal() {
+    this.currentEditingServiceId = null;
     const modal = document.getElementById('service-create-modal');
     if (modal) modal.classList.add('hidden');
+  },
+
+  onEquipmentTagChange(tagCode, autoSuggestDesc = true) {
+    const previewEl = document.getElementById('srv-equipment-preview');
+    const titleEl = document.getElementById('srv-preview-tag-title');
+    const critEl = document.getElementById('srv-preview-tag-crit');
+    const descEl = document.getElementById('srv-preview-tag-desc');
+    const unitEl = document.getElementById('srv-preview-tag-unit');
+    const stdInput = document.getElementById('form-srv-standard');
+    const descInput = document.getElementById('form-srv-desc');
+    const catSelect = document.getElementById('form-srv-category');
+
+    if (!tagCode) {
+      if (previewEl) previewEl.classList.add('hidden');
+      if (stdInput) stdInput.value = '';
+      return;
+    }
+
+    const tagObj = ConfiguracoesView.getTagByCode(tagCode);
+    if (tagObj) {
+      if (previewEl) previewEl.classList.remove('hidden');
+      if (titleEl) titleEl.innerText = `${tagObj.tag} — ${tagObj.name}`;
+      if (critEl) {
+        critEl.innerText = tagObj.criticality || 'Classe A';
+        critEl.className = `nike-pill text-[9px] ${tagObj.criticality && tagObj.criticality.includes('Classe A') ? 'bg-red-50 text-red-700 border-red-200 font-bold' : 'bg-amber-50 text-amber-800 border-amber-200'}`;
+      }
+      if (descEl) descEl.innerText = `${tagObj.type} • ${tagObj.description || ''}`;
+      if (unitEl) unitEl.innerText = `Planta: ${tagObj.unit || ''} » Sistema: ${tagObj.system || ''}`;
+      if (stdInput) stdInput.value = `${tagObj.inspectionStandard || 'NR-13'} | ${tagObj.criticality || 'Classe A'}`;
+
+      // Sugerir categoria / disciplina inteligente com base no tipo apenas se criando novo ou se solicitado
+      if (catSelect && autoSuggestDesc) {
+        const typeLower = (tagObj.type || '').toLowerCase();
+        const tagLower = tagCode.toLowerCase();
+        let matchedCat = null;
+        if (tagLower.startsWith('t-') || typeLower.includes('torre') || typeLower.includes('vaso') || tagLower.startsWith('cyc')) {
+          matchedCat = 'Caldeiraria';
+        } else if (tagLower.startsWith('p-') || tagLower.startsWith('c-') || typeLower.includes('bomba') || typeLower.includes('compressor')) {
+          matchedCat = 'Mecânica';
+        } else if (tagLower.startsWith('e-') || typeLower.includes('permutador') || typeLower.includes('tubulação') || tagLower.startsWith('spool')) {
+          matchedCat = 'Tubulação';
+        } else if (tagLower.startsWith('psv') || tagLower.startsWith('sv') || typeLower.includes('válvula') || typeLower.includes('instrumentação')) {
+          matchedCat = 'Instrumentação';
+        } else if (tagLower.startsWith('mcc') || typeLower.includes('elétrica') || typeLower.includes('painel') || typeLower.includes('transformador')) {
+          matchedCat = 'Elétrica';
+        } else if (tagLower.startsWith('plc') || typeLower.includes('automação') || typeLower.includes('esd')) {
+          matchedCat = 'Automação';
+        } else if (tagLower.startsWith('r-') || tagLower.startsWith('ris') || typeLower.includes('refratário') || typeLower.includes('forno') || tagLower.startsWith('h-')) {
+          matchedCat = 'Refratário';
+        } else if (tagLower.startsWith('iso') || typeLower.includes('isolamento')) {
+          matchedCat = 'Isolamento Térmico';
+        } else if (tagLower.startsWith('pnt') || typeLower.includes('pintura')) {
+          matchedCat = 'Pintura Industrial';
+        } else if (tagLower.startsWith('str') || typeLower.includes('civil')) {
+          matchedCat = 'Civil';
+        }
+
+        if (matchedCat) {
+          const opt = Array.from(catSelect.options).find(o => o.value.toLowerCase() === matchedCat.toLowerCase());
+          if (opt) catSelect.value = opt.value;
+        }
+      }
+
+      // Preencher descrição sugerida se vazia
+      if (descInput && (!descInput.value || descInput.value.trim() === '') && autoSuggestDesc) {
+        descInput.value = `Intervenção técnica em ${tagObj.name} (${tagObj.type}) conforme norma ${tagObj.inspectionStandard || 'NR-13'}.`;
+      }
+    } else {
+      if (previewEl) previewEl.classList.add('hidden');
+    }
   },
 
   updateServiceModalScorePreview() {
@@ -1798,6 +2310,8 @@ const PreParadaView = {
     const costInput = document.getElementById('form-srv-cost');
     const probInput = document.getElementById('form-srv-prob');
     const sevInput = document.getElementById('form-srv-sev');
+    const overrideSelect = document.getElementById('form-srv-override');
+    const reasonInput = document.getElementById('form-srv-override-reason');
 
     const tag = tagInput ? tagInput.value.trim() : '';
     const desc = descInput ? descInput.value.trim() : '';
@@ -1806,9 +2320,12 @@ const PreParadaView = {
     const cost = costInput ? parseFloat(costInput.value) || 0 : 0;
     const prob = probInput ? parseInt(probInput.value, 10) || 5 : 5;
     const sev = sevInput ? parseInt(sevInput.value, 10) || 5 : 5;
+    const overrideRaw = overrideSelect ? overrideSelect.value : 'auto';
+    const overrideVal = (overrideRaw === 'include' || overrideRaw === 'exclude') ? overrideRaw : null;
+    const overrideReason = reasonInput ? reasonInput.value.trim() : '';
 
     if (!tag) {
-      alert('Por favor, informe o TAG do equipamento.');
+      alert('Por favor, selecione o TAG do equipamento vinculado às Configurações.');
       if (tagInput) tagInput.focus();
       return;
     }
@@ -1819,6 +2336,28 @@ const PreParadaView = {
     }
 
     if (!parada.preParada.servicesList) parada.preParada.servicesList = [];
+
+    if (this.currentEditingServiceId) {
+      const srv = parada.preParada.servicesList.find(s => s.id === this.currentEditingServiceId);
+      if (srv) {
+        srv.tag = tag.toUpperCase();
+        srv.description = desc;
+        srv.category = cat;
+        srv.hh = hh;
+        srv.cost = cost;
+        srv.prob = Math.min(10, Math.max(1, prob));
+        srv.sev = Math.min(10, Math.max(1, sev));
+        srv.override = overrideVal;
+        srv.overrideReason = overrideVal ? (overrideReason || 'Ajuste técnico manual') : '';
+
+        ProjectsView.updateParada(parada);
+        this.closeAddServiceModal();
+        App.showToast(`Demanda [${srv.id} - ${tag.toUpperCase()}] atualizada com sucesso!`, 'success');
+        App.renderCurrentView();
+        return;
+      }
+    }
+
     const nextNum = parada.preParada.servicesList.length + 1;
     parada.preParada.servicesList.push({
       id: `SRV-${nextNum < 10 ? '0' + nextNum : nextNum}`,
@@ -1829,8 +2368,8 @@ const PreParadaView = {
       cost: cost,
       prob: Math.min(10, Math.max(1, prob)),
       sev: Math.min(10, Math.max(1, sev)),
-      override: null,
-      overrideReason: ''
+      override: overrideVal,
+      overrideReason: overrideVal ? (overrideReason || 'Ajuste técnico manual') : ''
     });
 
     ProjectsView.updateParada(parada);
@@ -1840,43 +2379,41 @@ const PreParadaView = {
   },
 
   toggleOverride(paradaId, serviceId) {
+    this.openEditServiceModal(paradaId, serviceId);
+  },
+
+  askDeleteService(paradaId, serviceId) {
+    document.querySelectorAll('[id^="srv-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="srv-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`srv-actions-${serviceId}`);
+    const confirmBox = document.getElementById(`srv-confirm-${serviceId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteService(serviceId) {
+    const actions = document.getElementById(`srv-actions-${serviceId}`);
+    const confirmBox = document.getElementById(`srv-confirm-${serviceId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteService(paradaId, serviceId) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
-    const srv = (parada.preParada.servicesList || []).find(s => s.id === serviceId);
-    if (!srv) return;
-
-    const current = srv.override || 'automático';
-    const choice = prompt(`Definir Override para [${srv.id} - ${srv.tag}]:\n1: Forçar INCLUSÃO no escopo\n2: Forçar EXCLUSÃO do escopo\n3: Retornar ao cálculo AUTOMÁTICO por Score`, '1');
-
-    if (choice === '1') {
-      const reason = prompt('Justificativa técnica para forçar a inclusão:', 'Criticidade de processo mandatória');
-      srv.override = 'include';
-      srv.overrideReason = reason || 'Inclusão técnica forçada';
-      App.showToast('Serviço incluído manualmente no escopo!', 'info');
-    } else if (choice === '2') {
-      const reason = prompt('Justificativa técnica para forçar o corte:', 'Serviço postergado para rotina');
-      srv.override = 'exclude';
-      srv.overrideReason = reason || 'Corte técnico manual';
-      App.showToast('Serviço excluído manualmente do escopo!', 'info');
-    } else if (choice === '3') {
-      srv.override = null;
-      srv.overrideReason = '';
-      App.showToast('Serviço restaurado ao cálculo automático.', 'info');
-    }
-
+    parada.preParada.servicesList = (parada.preParada.servicesList || []).filter(s => s.id !== serviceId);
     ProjectsView.updateParada(parada);
+    App.showToast('Demanda de escopo removida com sucesso.', 'info');
     App.renderCurrentView();
   },
 
   deleteService(paradaId, serviceId) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-    if (confirm('Deseja excluir este serviço da lista de escopo?')) {
-      parada.preParada.servicesList = (parada.preParada.servicesList || []).filter(s => s.id !== serviceId);
-      ProjectsView.updateParada(parada);
-      App.showToast('Serviço removido.', 'info');
-      App.renderCurrentView();
-    }
+    this.confirmDeleteService(paradaId, serviceId);
   },
 
   openManageLaborCategoriesModal(paradaId) {
@@ -2053,7 +2590,7 @@ const PreParadaView = {
             return filteredRisks.map(r => {
               const score = r.prob * r.sev;
               return `
-                <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 hover:border-[#111111] transition-all">
+                <div class="card-industrial bg-[#ffffff] border border-[#e5e5e5] rounded-3xl p-6 space-y-4 hover:border-[#111111] transition-all shadow-xs hover:shadow-md">
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f0f0] pb-3">
                     <div class="flex items-center gap-3">
                       <div class="w-12 h-12 rounded-2xl ${score >= 70 ? 'bg-red-600 text-white' : (score >= 40 ? 'bg-amber-500 text-black' : 'bg-[#111111] text-white')} flex flex-col items-center justify-center font-mono font-bold leading-tight shadow-sm shrink-0">
@@ -2061,49 +2598,95 @@ const PreParadaView = {
                         <span class="text-[8px] uppercase">SCORE</span>
                       </div>
                       <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                           <span class="font-mono text-xs font-bold text-[#707072]">${r.id}</span>
                           <span class="nike-pill text-[9px] ${r.type.includes('Externo') ? 'bg-purple-100 text-purple-900 border-purple-300' : 'bg-blue-100 text-blue-900 border-blue-300'} font-bold">${r.type}</span>
                           <span class="nike-pill text-[9px] bg-[#f0f0f0]">${r.area}</span>
+                          ${r.owner ? `<span class="nike-pill text-[9px] bg-zinc-100 text-zinc-800 font-medium">Resp: <b>${r.owner}</b></span>` : ''}
                         </div>
                         <h4 class="font-extrabold text-sm text-[#111111] mt-0.5">${r.title}</h4>
                       </div>
                     </div>
 
                     <div class="flex items-center gap-2">
-                      <button onclick="PreParadaView.addMitigationAction('${parada.id}', '${r.id}')" class="btn-ghost-pill text-xs py-1.5 px-3">
+                      <button onclick="PreParadaView.openAddMitigationModal('${parada.id}', '${r.id}')" class="btn-ghost-pill text-xs py-1.5 px-3 flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">shield</span>
                         <span>+ Ação Mitigadora</span>
                       </button>
-                      <button onclick="PreParadaView.deleteRisk('${parada.id}', '${r.id}')" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
-                        <span class="material-symbols-outlined text-sm">delete</span>
+                      <button onclick="PreParadaView.openAddRiskModal('${parada.id}', '${r.id}')" title="Editar Risco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111]">
+                        <span class="material-symbols-outlined text-sm">edit</span>
                       </button>
+                      <div id="risk-actions-${r.id}" class="inline-flex items-center">
+                        <button onclick="PreParadaView.askDeleteRisk('${parada.id}', '${r.id}')" title="Excluir Risco" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005]">
+                          <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                      <div id="risk-confirm-${r.id}" class="hidden inline-confirm-box animate-fade-in">
+                        <span class="text-[#707072] text-[10px] font-bold">Excluir Risco?</span>
+                        <button onclick="PreParadaView.confirmDeleteRisk('${parada.id}', '${r.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                        <button onclick="PreParadaView.cancelDeleteRisk('${r.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                      </div>
                     </div>
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                     <div class="p-3 bg-[#f9f9f9] rounded-2xl border border-[#e5e5e5]">
                       <span class="text-[10px] uppercase font-bold text-[#707072] block mb-1">Impacto Previsto</span>
-                      <p class="text-[#39393b] leading-relaxed">${r.impactDescription}</p>
+                      <p class="text-[#39393b] leading-relaxed">${r.impactDescription || 'Sem descrição detalhada.'}</p>
                     </div>
 
                     <div class="md:col-span-2 p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] space-y-2">
-                      <span class="text-[10px] uppercase font-bold text-[#111111] flex items-center gap-1">
-                        <span class="material-symbols-outlined text-xs text-[#007d48]">verified</span>
-                        Plano de Ações Mitigadoras (${(r.mitigationActions || []).length})
-                      </span>
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] uppercase font-bold text-[#111111] flex items-center gap-1">
+                          <span class="material-symbols-outlined text-xs text-[#007d48]">verified</span>
+                          Plano de Ações Mitigadoras (${(r.mitigationActions || []).length})
+                        </span>
+                        <button onclick="PreParadaView.openAddMitigationModal('${parada.id}', '${r.id}')" class="text-[10px] font-bold text-[#1151ff] hover:underline flex items-center gap-0.5">
+                          <span class="material-symbols-outlined text-xs">add</span>
+                          <span>Adicionar Ação</span>
+                        </button>
+                      </div>
 
                       <div class="space-y-1.5">
-                        ${(r.mitigationActions || []).map(act => `
-                          <div class="flex items-center justify-between gap-2 p-2 bg-[#ffffff] rounded-xl border border-[#e5e5e5] text-xs">
-                            <div class="flex items-center gap-2">
-                              <span class="material-symbols-outlined text-sm ${act.done ? 'text-[#007d48]' : 'text-amber-600'}">${act.done ? 'check_circle' : 'pending'}</span>
-                              <span class="${act.done ? 'line-through text-[#707072]' : 'font-bold text-[#111111]'}">${act.title}</span>
+                        ${(r.mitigationActions || []).map((act, idx) => `
+                          <div class="flex items-center justify-between gap-2 p-2 bg-[#ffffff] rounded-xl border border-[#e5e5e5] hover:border-[#111111] transition-all text-xs group">
+                            <div class="flex items-center gap-2 min-w-0 pr-2">
+                              <button onclick="PreParadaView.toggleMitigationDone('${parada.id}', '${r.id}', ${idx})" title="Clique para alternar status da mitigação" class="shrink-0">
+                                <span class="material-symbols-outlined text-base ${act.done ? 'text-[#007d48]' : 'text-amber-600'}">${act.done ? 'check_circle' : 'pending'}</span>
+                              </button>
+                              <div class="min-w-0">
+                                <span class="${act.done ? 'line-through text-[#707072]' : 'font-bold text-[#111111]'} block leading-tight truncate">${act.title}</span>
+                                <span class="text-[10px] text-[#707072] block leading-tight font-mono">
+                                  ${act.area ? `<span class="font-semibold text-zinc-600">${act.area}</span> • ` : ''}Resp: <b class="text-[#111111]">${act.owner || 'Designado'}</b> • Prazo: ${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'}
+                                </span>
+                              </div>
                             </div>
-                            <span class="text-[10px] text-[#707072]">Resp: <b>${act.owner}</b> (${act.deadline ? act.deadline.split('-').reverse().join('/') : '--'})</span>
+                            
+                            <div class="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100">
+                              <button onclick="PreParadaView.openAddMitigationModal('${parada.id}', '${r.id}', ${idx})" title="Editar Ação Mitigadora" class="p-1 rounded hover:bg-[#f0f0f0] text-[#707072] hover:text-[#111111]">
+                                <span class="material-symbols-outlined text-xs">edit</span>
+                              </button>
+                              <div id="mitig-actions-${r.id}-${idx}" class="inline-flex items-center">
+                                <button onclick="PreParadaView.askDeleteMitigationAction('${r.id}', ${idx})" title="Remover Ação" class="p-1 rounded hover:bg-[#f0f0f0] text-[#707072] hover:text-[#d30005]">
+                                  <span class="material-symbols-outlined text-xs">delete</span>
+                                </button>
+                              </div>
+                              <div id="mitig-confirm-${r.id}-${idx}" class="hidden inline-confirm-box animate-fade-in">
+                                <span class="text-[#707072] text-[9px] font-bold">Excluir?</span>
+                                <button onclick="PreParadaView.confirmDeleteMitigationAction('${parada.id}', '${r.id}', ${idx})" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                                <button onclick="PreParadaView.cancelDeleteMitigationAction('${r.id}', ${idx})" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                              </div>
+                            </div>
                           </div>
                         `).join('')}
-                        ${(!r.mitigationActions || r.mitigationActions.length === 0) ? `<span class="text-xs text-[#707072] italic">Nenhuma ação mitigadora cadastrada ainda.</span>` : ''}
+                        ${(!r.mitigationActions || r.mitigationActions.length === 0) ? `
+                          <div class="p-3 bg-white rounded-xl border border-dashed border-[#d1d5db] text-center text-xs text-[#707072]">
+                            <span>Nenhuma ação mitigadora cadastrada ainda.</span>
+                            <button onclick="PreParadaView.openAddMitigationModal('${parada.id}', '${r.id}')" class="block mx-auto mt-1 font-bold text-[#1151ff] hover:underline text-[11px]">
+                              + Cadastrar primeira ação preventiva
+                            </button>
+                          </div>
+                        ` : ''}
                       </div>
                     </div>
                   </div>
@@ -2117,68 +2700,357 @@ const PreParadaView = {
     `;
   },
 
-  openAddRiskModal(paradaId) {
+  updateRiskScoreBadge() {
+    const prob = parseInt(document.getElementById('form-risk-prob')?.value || '8', 10);
+    const sev = parseInt(document.getElementById('form-risk-sev')?.value || '9', 10);
+    const score = prob * sev;
+    const badge = document.getElementById('form-risk-score-badge');
+    if (!badge) return;
+
+    if (score >= 70) {
+      badge.className = 'h-10 flex items-center justify-center rounded-xl bg-red-100 text-red-800 font-mono font-black text-xs border border-red-300';
+      badge.textContent = `Score ${score} (Crítico)`;
+    } else if (score >= 40) {
+      badge.className = 'h-10 flex items-center justify-center rounded-xl bg-amber-100 text-amber-900 font-mono font-black text-xs border border-amber-300';
+      badge.textContent = `Score ${score} (Alto Risco)`;
+    } else if (score >= 20) {
+      badge.className = 'h-10 flex items-center justify-center rounded-xl bg-blue-100 text-blue-900 font-mono font-black text-xs border border-blue-300';
+      badge.textContent = `Score ${score} (Moderado)`;
+    } else {
+      badge.className = 'h-10 flex items-center justify-center rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-xs border border-emerald-300';
+      badge.textContent = `Score ${score} (Baixo)`;
+    }
+  },
+
+  openAddRiskModal(paradaId, riskId = null) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
 
-    const title = prompt('Título da Hipótese de Risco (Ex: Troca de software de manutenção em paralelo):');
-    if (!title) return;
-    const type = prompt('Tipo do Risco:\n1: Risco de Milestone Específico\n2: Risco Externo / Geral / Paralelo à Parada', '2') === '1' ? 'Milestone Específico' : 'Risco Externo / Paralelo';
-    const prob = parseInt(prompt('Probabilidade de Ocorrência (1 a 10):', '8') || '8', 10);
-    const sev = parseInt(prompt('Severidade / Impacto na Parada (1 a 10):', '9') || '9', 10);
-    const area = prompt(`Área de Suporte Responsável:\n(${this.supportAreas.join(', ')})`, 'PCM / Planejamento') || 'PCM / Planejamento';
-    const impact = prompt('Descreva o impacto e a interferência no projeto:');
+    const modal = document.getElementById('risk-edit-modal');
+    if (!modal) return;
 
+    const titleEl = document.getElementById('modal-risk-title');
+    const paradaIdInput = document.getElementById('form-risk-parada-id');
+    const editIdInput = document.getElementById('form-risk-edit-id');
+    const titleInput = document.getElementById('form-risk-title');
+    const typeSelect = document.getElementById('form-risk-type');
+    const milestoneSelect = document.getElementById('form-risk-milestone');
+    const probSelect = document.getElementById('form-risk-prob');
+    const sevSelect = document.getElementById('form-risk-sev');
+    const areaSelect = document.getElementById('form-risk-area');
+    const ownerSelect = document.getElementById('form-risk-owner');
+    const impactInput = document.getElementById('form-risk-impact');
+
+    paradaIdInput.value = paradaId;
+    editIdInput.value = riskId || '';
+
+    // Preencher Milestones
+    const milestones = this.getSortedMilestones(parada.preParada.milestones || []);
+    milestoneSelect.innerHTML = `<option value="Geral">Geral / Não vinculado a marco único</option>` +
+      milestones.map(m => `<option value="${m.id}">[${m.relativeDay}] ${m.title}</option>`).join('');
+
+    // Preencher Áreas
+    const areas = this.getSupportAreaNames();
+    areaSelect.innerHTML = areas.map(a => `<option value="${a}">${a}</option>`).join('');
+
+    if (riskId) {
+      const r = (parada.preParada.risks10x10 || []).find(item => item.id === riskId);
+      if (r) {
+        if (titleEl) titleEl.textContent = `Editar Risco (${r.id})`;
+        titleInput.value = r.title || '';
+        typeSelect.value = r.type || 'Risco Externo / Paralelo';
+        milestoneSelect.value = r.linkedMilestone || 'Geral';
+        probSelect.value = String(r.prob || 8);
+        sevSelect.value = String(r.sev || 9);
+        areaSelect.value = r.area || areas[0];
+        impactInput.value = r.impactDescription || '';
+
+        this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, r.owner || '');
+      }
+    } else {
+      if (titleEl) titleEl.textContent = 'Identificar e Registrar Risco Técnico';
+      titleInput.value = '';
+      typeSelect.value = 'Risco Externo / Paralelo';
+      milestoneSelect.value = 'Geral';
+      probSelect.value = '8';
+      sevSelect.value = '9';
+      areaSelect.value = areas[0];
+      impactInput.value = '';
+
+      this.populateCollaboratorsSelect(ownerSelect, areas[0], '');
+    }
+
+    this.updateRiskScoreBadge();
+    modal.classList.remove('hidden');
+  },
+
+  onRiskAreaChange() {
+    const areaSelect = document.getElementById('form-risk-area');
+    const ownerSelect = document.getElementById('form-risk-owner');
+    if (areaSelect && ownerSelect) {
+      this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, '');
+    }
+  },
+
+  closeRiskModal() {
+    const modal = document.getElementById('risk-edit-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  saveRiskModal() {
+    const paradaId = document.getElementById('form-risk-parada-id').value;
+    const editId = document.getElementById('form-risk-edit-id').value;
+    const title = document.getElementById('form-risk-title').value.trim();
+    const type = document.getElementById('form-risk-type').value;
+    const linkedMilestone = document.getElementById('form-risk-milestone').value;
+    const prob = parseInt(document.getElementById('form-risk-prob').value || '8', 10);
+    const sev = parseInt(document.getElementById('form-risk-sev').value || '9', 10);
+    const area = document.getElementById('form-risk-area').value;
+    const owner = document.getElementById('form-risk-owner').value;
+    const impact = document.getElementById('form-risk-impact').value.trim();
+
+    if (!title) {
+      alert('Por favor, informe o título da hipótese de risco.');
+      return;
+    }
+
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
     if (!parada.preParada.risks10x10) parada.preParada.risks10x10 = [];
-    parada.preParada.risks10x10.push({
-      id: `RSK-${Math.floor(100 + Math.random() * 900)}`,
-      title: title.trim(),
-      type: type,
-      prob: Math.min(10, Math.max(1, prob)),
-      sev: Math.min(10, Math.max(1, sev)),
-      area: area.trim(),
-      impactDescription: impact || 'Sem descrição detalhada.',
-      mitigationActions: []
-    });
 
-    ProjectsView.updateParada(parada);
-    App.showToast('Risco registrado na Matriz 10x10!', 'success');
+    if (editId) {
+      const r = parada.preParada.risks10x10.find(item => item.id === editId);
+      if (r) {
+        r.title = title;
+        r.type = type;
+        r.linkedMilestone = linkedMilestone;
+        r.prob = prob;
+        r.sev = sev;
+        r.area = area;
+        r.owner = owner;
+        r.impactDescription = impact || 'Sem descrição detalhada.';
+        ProjectsView.updateParada(parada);
+        App.showToast(`Risco [${r.id}] atualizado!`, 'success');
+      }
+    } else {
+      const count = parada.preParada.risks10x10.length + 1;
+      const newId = `RSK-${100 + count}`;
+      parada.preParada.risks10x10.push({
+        id: newId,
+        title: title,
+        type: type,
+        linkedMilestone: linkedMilestone,
+        prob: prob,
+        sev: sev,
+        area: area,
+        owner: owner,
+        impactDescription: impact || 'Sem descrição detalhada.',
+        mitigationActions: []
+      });
+      ProjectsView.updateParada(parada);
+      App.showToast(`Risco registrado na Matriz 10x10 sob responsabilidade de [${owner}]!`, 'success');
+    }
+
+    this.closeRiskModal();
     App.renderCurrentView();
   },
 
-  addMitigationAction(paradaId, riskId) {
+  openAddMitigationModal(paradaId, riskId, actionIndex = null) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
     const rsk = (parada.preParada.risks10x10 || []).find(r => r.id === riskId);
     if (!rsk) return;
 
-    const actTitle = prompt(`Ação Mitigadora para [${rsk.title}]:`);
-    if (!actTitle) return;
-    const owner = prompt('Responsável pela Mitigação:', UsersManager.getCurrentUser().name) || UsersManager.getCurrentUser().name;
-    const deadline = prompt('Data Limite (AAAA-MM-DD):', new Date().toISOString().split('T')[0]);
+    const modal = document.getElementById('mitigation-action-modal');
+    if (!modal) return;
 
+    const titleEl = document.getElementById('modal-mitigation-title');
+    const subtitleEl = document.getElementById('modal-mitigation-subtitle');
+    const paradaIdInput = document.getElementById('form-mitigation-parada-id');
+    const riskIdInput = document.getElementById('form-mitigation-risk-id');
+    const editIdxInput = document.getElementById('form-mitigation-edit-idx');
+    const titleInput = document.getElementById('form-mitigation-title');
+    const areaSelect = document.getElementById('form-mitigation-area');
+    const ownerSelect = document.getElementById('form-mitigation-owner');
+    const deadlineInput = document.getElementById('form-mitigation-deadline');
+    const doneSelect = document.getElementById('form-mitigation-done');
+
+    paradaIdInput.value = paradaId;
+    riskIdInput.value = riskId;
+    editIdxInput.value = actionIndex !== null ? String(actionIndex) : '';
+
+    // Preencher Áreas
+    const areas = this.getSupportAreaNames();
+    areaSelect.innerHTML = areas.map(a => `<option value="${a}">${a}</option>`).join('');
+
+    const defaultArea = rsk.area || areas[0];
+
+    if (actionIndex !== null && rsk.mitigationActions && rsk.mitigationActions[actionIndex]) {
+      const act = rsk.mitigationActions[actionIndex];
+      if (titleEl) titleEl.textContent = 'Editar Ação Mitigadora';
+      if (subtitleEl) subtitleEl.textContent = `Risco: ${rsk.id} • ${rsk.title}`;
+      titleInput.value = act.title || '';
+      areaSelect.value = act.area || defaultArea;
+      deadlineInput.value = act.deadline || new Date().toISOString().split('T')[0];
+      doneSelect.value = act.done ? 'true' : 'false';
+
+      this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, act.owner);
+    } else {
+      if (titleEl) titleEl.textContent = 'Nova Ação Mitigadora';
+      if (subtitleEl) subtitleEl.textContent = `Risco: ${rsk.id} • ${rsk.title}`;
+      titleInput.value = '';
+      areaSelect.value = defaultArea;
+      deadlineInput.value = new Date().toISOString().split('T')[0];
+      doneSelect.value = 'false';
+
+      this.populateCollaboratorsSelect(ownerSelect, defaultArea, '');
+    }
+
+    modal.classList.remove('hidden');
+  },
+
+  onMitigationAreaChange() {
+    const areaSelect = document.getElementById('form-mitigation-area');
+    const ownerSelect = document.getElementById('form-mitigation-owner');
+    if (areaSelect && ownerSelect) {
+      this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, '');
+    }
+  },
+
+  closeMitigationModal() {
+    const modal = document.getElementById('mitigation-action-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  saveMitigationModal() {
+    const paradaId = document.getElementById('form-mitigation-parada-id').value;
+    const riskId = document.getElementById('form-mitigation-risk-id').value;
+    const editIdx = document.getElementById('form-mitigation-edit-idx').value;
+    const title = document.getElementById('form-mitigation-title').value.trim();
+    const area = document.getElementById('form-mitigation-area').value;
+    const owner = document.getElementById('form-mitigation-owner').value;
+    const deadline = document.getElementById('form-mitigation-deadline').value;
+    const done = document.getElementById('form-mitigation-done').value === 'true';
+
+    if (!title) {
+      alert('Por favor, descreva a ação mitigadora.');
+      return;
+    }
+
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    const rsk = (parada.preParada.risks10x10 || []).find(r => r.id === riskId);
+    if (!rsk) return;
     if (!rsk.mitigationActions) rsk.mitigationActions = [];
-    rsk.mitigationActions.push({
-      title: actTitle.trim(),
-      owner: owner.trim(),
-      deadline: deadline,
-      done: false
-    });
 
+    if (editIdx !== '') {
+      const idx = parseInt(editIdx, 10);
+      if (rsk.mitigationActions[idx]) {
+        rsk.mitigationActions[idx].title = title;
+        rsk.mitigationActions[idx].area = area;
+        rsk.mitigationActions[idx].owner = owner;
+        rsk.mitigationActions[idx].deadline = deadline;
+        rsk.mitigationActions[idx].done = done;
+        ProjectsView.updateParada(parada);
+        App.showToast('Ação mitigadora atualizada!', 'success');
+      }
+    } else {
+      rsk.mitigationActions.push({
+        title: title,
+        area: area,
+        owner: owner,
+        deadline: deadline,
+        done: done
+      });
+      ProjectsView.updateParada(parada);
+      App.showToast(`Ação mitigadora atribuída a [${owner}]!`, 'success');
+    }
+
+    this.closeMitigationModal();
+    App.renderCurrentView();
+  },
+
+  toggleMitigationDone(paradaId, riskId, idx) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    const rsk = (parada.preParada.risks10x10 || []).find(r => r.id === riskId);
+    if (!rsk || !rsk.mitigationActions || !rsk.mitigationActions[idx]) return;
+
+    rsk.mitigationActions[idx].done = !rsk.mitigationActions[idx].done;
     ProjectsView.updateParada(parada);
-    App.showToast('Ação mitigadora adicionada ao plano de risco!', 'success');
+    App.showToast(`Status da mitigação alterado para: ${rsk.mitigationActions[idx].done ? 'Concluída' : 'Pendente'}`, 'info');
+    App.renderCurrentView();
+  },
+
+  askDeleteMitigationAction(riskId, idx) {
+    document.querySelectorAll('[id^="mitig-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="mitig-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`mitig-actions-${riskId}-${idx}`);
+    const confirmBox = document.getElementById(`mitig-confirm-${riskId}-${idx}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteMitigationAction(riskId, idx) {
+    const actions = document.getElementById(`mitig-actions-${riskId}-${idx}`);
+    const confirmBox = document.getElementById(`mitig-confirm-${riskId}-${idx}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteMitigationAction(paradaId, riskId, idx) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    const rsk = (parada.preParada.risks10x10 || []).find(r => r.id === riskId);
+    if (!rsk || !rsk.mitigationActions || !rsk.mitigationActions[idx]) return;
+
+    rsk.mitigationActions.splice(idx, 1);
+    ProjectsView.updateParada(parada);
+    App.showToast('Ação mitigadora removida.', 'info');
+    App.renderCurrentView();
+  },
+
+  deleteMitigationAction(paradaId, riskId, idx) {
+    this.confirmDeleteMitigationAction(paradaId, riskId, idx);
+  },
+
+  askDeleteRisk(paradaId, riskId) {
+    document.querySelectorAll('[id^="risk-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="risk-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`risk-actions-${riskId}`);
+    const confirmBox = document.getElementById(`risk-confirm-${riskId}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteRisk(riskId) {
+    const actions = document.getElementById(`risk-actions-${riskId}`);
+    const confirmBox = document.getElementById(`risk-confirm-${riskId}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteRisk(paradaId, riskId) {
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (!parada) return;
+    parada.preParada.risks10x10 = (parada.preParada.risks10x10 || []).filter(r => r.id !== riskId);
+    ProjectsView.updateParada(parada);
+    App.showToast('Risco removido da Matriz 10x10.', 'info');
     App.renderCurrentView();
   },
 
   deleteRisk(paradaId, riskId) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-    if (confirm('Deseja excluir este risco da Matriz 10x10?')) {
-      parada.preParada.risks10x10 = (parada.preParada.risks10x10 || []).filter(r => r.id !== riskId);
-      ProjectsView.updateParada(parada);
-      App.showToast('Risco removido.', 'info');
-      App.renderCurrentView();
-    }
+    this.confirmDeleteRisk(paradaId, riskId);
   },
 
   filterRisksByCell(paradaId, prob, sev) {
@@ -2582,9 +3454,16 @@ const PreParadaView = {
 
                           <div class="flex items-center gap-1 text-[10px] font-mono text-[#707072]">
                             <span>${act.id}</span>
-                            <button onclick="PreParadaView.deleteAction('${parada.id}', '${act.milestoneId}', '${act.id}')" title="Excluir entrega" class="opacity-0 group-hover:opacity-100 text-[#707072] hover:text-[#d30005] transition-opacity p-0.5 font-bold">
-                              ✕
-                            </button>
+                            <div id="act-card-actions-${act.id}" class="inline-flex items-center">
+                              <button onclick="PreParadaView.askDeleteCardAction('${act.id}')" title="Excluir entrega" class="opacity-0 group-hover:opacity-100 text-[#707072] hover:text-[#d30005] transition-opacity p-0.5 font-bold flex items-center">
+                                <span class="material-symbols-outlined text-xs">delete</span>
+                              </button>
+                            </div>
+                            <div id="act-card-confirm-${act.id}" class="hidden inline-confirm-box animate-fade-in">
+                              <span class="text-[#707072] text-[9px] font-bold">Excluir?</span>
+                              <button onclick="PreParadaView.confirmDeleteAction('${parada.id}', '${act.milestoneId}', '${act.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                              <button onclick="PreParadaView.cancelDeleteCardAction('${act.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+                            </div>
                           </div>
                         </div>
 
@@ -2697,15 +3576,17 @@ const PreParadaView = {
               <!-- Área de Suporte -->
               <div>
                 <label class="form-label">Área de Suporte Responsável *</label>
-                <select id="form-kanban-action-area" class="form-input font-medium">
-                  ${uniqueAreas.map(a => `<option value="${a}">${a}</option>`).join('')}
+                <select id="form-kanban-action-area" class="form-input font-medium" onchange="PreParadaView.onKanbanAreaChange()">
+                  ${this.getSupportAreaNames().map(a => `<option value="${a}">${a}</option>`).join('')}
                 </select>
               </div>
 
               <!-- Responsável -->
               <div>
-                <label class="form-label">Pessoa Responsável (Owner) *</label>
-                <input type="text" id="form-kanban-action-owner" class="form-input font-medium" value="${UsersManager.getCurrentUser() ? UsersManager.getCurrentUser().name : 'Juliana Santos'}" placeholder="Nome do responsável..." />
+                <label class="form-label">Colaborador Responsável *</label>
+                <select id="form-kanban-action-owner" class="form-input font-medium">
+                  <!-- Preenchido dinamicamente com base na Área selecionada -->
+                </select>
               </div>
             </div>
 
@@ -2797,7 +3678,23 @@ const PreParadaView = {
       const sel = document.getElementById('form-kanban-action-milestone');
       if (sel) sel.value = targetMilestoneId;
     }
+
+    const areaSelect = document.getElementById('form-kanban-action-area');
+    const ownerSelect = document.getElementById('form-kanban-action-owner');
+    if (areaSelect && ownerSelect) {
+      const defaultArea = areaSelect.value || this.getSupportAreaNames()[0];
+      this.populateCollaboratorsSelect(ownerSelect, defaultArea, '');
+    }
+
     modal.classList.remove('hidden');
+  },
+
+  onKanbanAreaChange() {
+    const areaSelect = document.getElementById('form-kanban-action-area');
+    const ownerSelect = document.getElementById('form-kanban-action-owner');
+    if (areaSelect && ownerSelect) {
+      this.populateCollaboratorsSelect(ownerSelect, areaSelect.value, '');
+    }
   },
 
   closeAddKanbanActionModal() {
@@ -2830,12 +3727,11 @@ const PreParadaView = {
 
     if (!ms.actions) ms.actions = [];
 
-    const count = ms.actions.length + 1;
     ms.actions.push({
       id: `ACT-${Math.floor(100 + Math.random() * 900)}`,
       title: title.trim(),
       area: area ? area.trim() : 'Suprimentos & Compras',
-      owner: owner ? owner.trim() : UsersManager.getCurrentUser().name,
+      owner: owner ? owner.trim() : (UsersManager.getCurrentUser() ? UsersManager.getCurrentUser().name : 'Juliana Santos'),
       deadline: deadline || ms.targetDate,
       estimatedHh: hh || 40,
       status: status
@@ -2843,7 +3739,7 @@ const PreParadaView = {
 
     ProjectsView.updateParada(parada);
     this.closeAddKanbanActionModal();
-    App.showToast('Nova entrega cadastrada com sucesso no Kanban!', 'success');
+    App.showToast(`Nova entrega atribuída a [${owner}] no marco [${ms.relativeDay}]!`, 'success');
     App.renderCurrentView();
   },
 
@@ -3209,240 +4105,7 @@ const PreParadaView = {
       App.renderCurrentView();
     }
   }
-,
-
-  setEscopoStatusFilter(status) {
-    this.escopoFilterState.status = status;
-    App.renderCurrentView();
-  },
-
-  setEscopoCategoryFilter(category) {
-    this.escopoFilterState.category = category;
-    App.renderCurrentView();
-  },
-
-  setEscopoSearch(search) {
-    this.escopoFilterState.search = search;
-    App.renderCurrentView();
-  },
-
-  clearEscopoFilters() {
-    this.escopoFilterState = {
-      status: 'all',
-      category: 'all',
-      search: ''
-    };
-    App.renderCurrentView();
-  },
-
-  resetEscopoDefaults(paradaId) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-    if (confirm('Deseja restaurar as 10 demandas padrão de manutenção industrial? Suas tarefas criadas manualmente serão preservadas.')) {
-      const userServices = (parada.preParada.servicesList || []).filter(s => !this.defaultServicesList.some(d => d.tag === s.tag && d.description === s.description));
-      const baseServices = JSON.parse(JSON.stringify(this.defaultServicesList));
-      userServices.forEach((u, i) => {
-        u.id = `SRV-${11 + i}`;
-        baseServices.push(u);
-      });
-      parada.preParada.servicesList = baseServices;
-      ProjectsView.updateParada(parada);
-      this.clearEscopoFilters();
-      App.showToast('Demandas restauradas com sucesso!', 'success');
-      App.renderCurrentView();
-    }
-  },
-
-  openAddServiceModal(paradaId) {
-    const modal = document.getElementById('service-create-modal');
-    if (modal) {
-      modal.classList.remove('hidden');
-      this.updateServiceModalScorePreview();
-    }
-  },
-
-  closeAddServiceModal() {
-    const modal = document.getElementById('service-create-modal');
-    if (modal) modal.classList.add('hidden');
-  },
-
-  updateServiceModalScorePreview() {
-    const probEl = document.getElementById('form-srv-prob');
-    const sevEl = document.getElementById('form-srv-sev');
-    const labelProb = document.getElementById('label-prob-val');
-    const labelSev = document.getElementById('label-sev-val');
-    const previewScore = document.getElementById('srv-preview-score');
-
-    if (probEl && sevEl && previewScore) {
-      const p = parseInt(probEl.value, 10) || 5;
-      const s = parseInt(sevEl.value, 10) || 5;
-      const score = p * s;
-      if (labelProb) labelProb.innerText = p;
-      if (labelSev) labelSev.innerText = s;
-      previewScore.innerText = `Score: ${score} pts (${p}×${s})`;
-      if (score >= 60) {
-        previewScore.className = 'nike-pill font-mono font-bold bg-red-600 text-white border-transparent';
-      } else if (score >= 30) {
-        previewScore.className = 'nike-pill font-mono font-bold bg-amber-500 text-white border-transparent';
-      } else {
-        previewScore.className = 'nike-pill font-mono font-bold bg-[#007d48] text-white border-transparent';
-      }
-    }
-  },
-
-  saveAddServiceModal(paradaId) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-
-    const tagInput = document.getElementById('form-srv-tag');
-    const descInput = document.getElementById('form-srv-desc');
-    const catInput = document.getElementById('form-srv-category');
-    const hhInput = document.getElementById('form-srv-hh');
-    const costInput = document.getElementById('form-srv-cost');
-    const probInput = document.getElementById('form-srv-prob');
-    const sevInput = document.getElementById('form-srv-sev');
-
-    const tag = tagInput ? tagInput.value.trim() : '';
-    const desc = descInput ? descInput.value.trim() : '';
-    const cat = catInput ? catInput.value : 'Mecânica';
-    const hh = hhInput ? parseInt(hhInput.value, 10) || 0 : 0;
-    const cost = costInput ? parseFloat(costInput.value) || 0 : 0;
-    const prob = probInput ? parseInt(probInput.value, 10) || 5 : 5;
-    const sev = sevInput ? parseInt(sevInput.value, 10) || 5 : 5;
-
-    if (!tag) {
-      alert('Por favor, informe o TAG do equipamento.');
-      if (tagInput) tagInput.focus();
-      return;
-    }
-    if (!desc) {
-      alert('Por favor, informe a descrição detalhada da atividade.');
-      if (descInput) descInput.focus();
-      return;
-    }
-
-    if (!parada.preParada.servicesList) parada.preParada.servicesList = [];
-    const nextNum = parada.preParada.servicesList.length + 1;
-    parada.preParada.servicesList.push({
-      id: `SRV-${nextNum < 10 ? '0' + nextNum : nextNum}`,
-      tag: tag.toUpperCase(),
-      description: desc,
-      category: cat,
-      hh: hh,
-      cost: cost,
-      prob: Math.min(10, Math.max(1, prob)),
-      sev: Math.min(10, Math.max(1, sev)),
-      override: null,
-      overrideReason: ''
-    });
-
-    ProjectsView.updateParada(parada);
-    this.closeAddServiceModal();
-    App.showToast(`Demanda [${tag.toUpperCase()}] cadastrada e priorizada no escopo!`, 'success');
-    App.renderCurrentView();
-  },
-
-  setKanbanFilter(key, value) {
-    this.kanbanFilterState[key] = value;
-    App.renderCurrentView();
-    if (key === 'search') {
-      const searchInput = document.getElementById('kanban-search-input');
-      if (searchInput) {
-        searchInput.focus();
-        const len = searchInput.value.length;
-        searchInput.setSelectionRange(len, len);
-      }
-    }
-  },
-
-  clearKanbanFilters() {
-    this.kanbanFilterState = {
-      area: 'ALL',
-      milestone: 'ALL',
-      owner: 'ALL',
-      deadline: 'ALL',
-      search: ''
-    };
-    App.renderCurrentView();
-  },
-
-  setActionDirectStatus(paradaId, milestoneId, actionId, newStatus) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-    const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
-    if (!ms) return;
-    const act = (ms.actions || []).find(a => a.id === actionId);
-    if (act) {
-      act.status = newStatus;
-      ProjectsView.updateParada(parada);
-      App.showToast(`Status da entrega alterado para: ${newStatus}`, 'success');
-      App.renderCurrentView();
-    }
-  },
-
-  openAddKanbanActionModal(paradaId) {
-    const modal = document.getElementById('kanban-add-action-modal');
-    if (modal) modal.classList.remove('hidden');
-  },
-
-  closeAddKanbanActionModal() {
-    const modal = document.getElementById('kanban-add-action-modal');
-    if (modal) modal.classList.add('hidden');
-  },
-
-  saveAddKanbanAction(paradaId) {
-    const parada = ProjectsView.getParadaById(paradaId);
-    if (!parada) return;
-
-    const msSelect = document.getElementById('form-kanban-action-milestone');
-    const titleInput = document.getElementById('form-kanban-action-title');
-    const areaSelect = document.getElementById('form-kanban-action-area');
-    const ownerInput = document.getElementById('form-kanban-action-owner');
-    const deadlineInput = document.getElementById('form-kanban-action-deadline');
-    const hhInput = document.getElementById('form-kanban-action-hh');
-    const statusSelect = document.getElementById('form-kanban-action-status');
-
-    const milestoneId = msSelect ? msSelect.value : '';
-    const title = titleInput ? titleInput.value.trim() : '';
-    const area = areaSelect ? areaSelect.value : 'PCM / Planejamento';
-    const owner = ownerInput ? ownerInput.value.trim() : 'Juliana Santos';
-    const deadline = deadlineInput ? deadlineInput.value : '';
-    const hh = hhInput ? parseInt(hhInput.value, 10) || 0 : 0;
-    const status = statusSelect ? statusSelect.value : 'Não Iniciada';
-
-    if (!milestoneId) {
-      alert('Por favor, selecione um Marco de vinculação.');
-      return;
-    }
-    if (!title) {
-      alert('Por favor, informe o título ou descrição da entrega.');
-      if (titleInput) titleInput.focus();
-      return;
-    }
-
-    const ms = (parada.preParada.milestones || []).find(m => m.id === milestoneId);
-    if (!ms) {
-      alert('Marco selecionado não encontrado.');
-      return;
-    }
-
-    if (!ms.actions) ms.actions = [];
-    const nextNum = (parada.preParada.milestones || []).reduce((acc, m) => acc + (m.actions || []).length, 0) + 1;
-
-    ms.actions.push({
-      id: `ACT-${nextNum < 10 ? '0' + nextNum : nextNum}`,
-      title: title,
-      area: area,
-      owner: owner || 'Juliana Santos',
-      deadline: deadline || ms.targetDate,
-      status: status,
-      estimatedHh: hh
-    });
-
-    ProjectsView.updateParada(parada);
-    this.closeAddKanbanActionModal();
-    App.showToast(`Entrega vinculada ao marco [${ms.relativeDay}] com sucesso!`, 'success');
-    App.renderCurrentView();
-  }
 
 };
+
+window.PreParadaView = PreParadaView;

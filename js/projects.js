@@ -374,11 +374,61 @@ const ProjectsView = {
     }
   ],
 
+  formatCurrency(val) {
+    if (val === null || val === undefined || val === '') return 'R$ 0,00';
+    if (typeof val === 'number') {
+      return isNaN(val) ? 'R$ 0,00' : val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+    const str = String(val).trim();
+    if (str.startsWith('R$')) return str;
+    
+    // Parse numeric value from string (supports "3000000", "3000000.00", "3.000.000,00")
+    let clean = str.replace(/R\$\s*/g, '').trim();
+    if (clean.includes(',') && clean.includes('.')) {
+      clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (clean.includes(',')) {
+      clean = clean.replace(',', '.');
+    } else {
+      clean = clean.replace(/[^\d.-]/g, '');
+    }
+    const num = parseFloat(clean);
+    if (!isNaN(num)) {
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+    return str;
+  },
+
+  parseCurrency(val) {
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    const str = String(val).trim();
+    let clean = str.replace(/R\$\s*/g, '').trim();
+    if (clean.includes(',') && clean.includes('.')) {
+      clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (clean.includes(',')) {
+      clean = clean.replace(',', '.');
+    } else {
+      clean = clean.replace(/[^\d.-]/g, '');
+    }
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
+  },
+
   getParadas() {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.map(p => {
+            if (p.budget !== undefined || p.budgetRaw !== undefined) {
+              const raw = this.parseCurrency(p.budgetRaw !== undefined ? p.budgetRaw : p.budget);
+              p.budget = this.formatCurrency(p.budget !== undefined ? p.budget : raw);
+              p.budgetRaw = raw;
+            }
+            return p;
+          });
+        }
       }
     } catch (e) {
       console.warn('Erro ao ler paradas do storage:', e);
@@ -612,12 +662,19 @@ const ProjectsView = {
           <!-- Ações do Card -->
           <div class="flex items-center justify-between gap-2 pt-4 border-t border-[#e5e5e5] mt-4">
             <div class="flex items-center gap-1">
-              <button onclick="ProjectsView.openCreateModal('${p.id}')" title="Editar Informações da Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111] border-[#e5e5e5]">
-                <span class="material-symbols-outlined text-sm">edit</span>
-              </button>
-              <button onclick="ProjectsView.deleteParada('${p.id}')" title="Excluir Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005] border-[#e5e5e5]">
-                <span class="material-symbols-outlined text-sm">delete</span>
-              </button>
+              <div id="parada-actions-${p.id}" class="flex items-center gap-1">
+                <button onclick="ProjectsView.openCreateModal('${p.id}')" title="Editar Informações da Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#111111] border-[#e5e5e5]">
+                  <span class="material-symbols-outlined text-sm">edit</span>
+                </button>
+                <button onclick="ProjectsView.askDeleteParada('${p.id}')" title="Excluir Parada" class="btn-icon-pill w-8 h-8 text-[#707072] hover:text-[#d30005] border-[#e5e5e5]">
+                  <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </div>
+              <div id="parada-confirm-${p.id}" class="hidden inline-confirm-box animate-fade-in">
+                <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                <button onclick="ProjectsView.confirmDeleteParada('${p.id}')" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                <button onclick="ProjectsView.cancelDeleteParada('${p.id}')" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
+              </div>
             </div>
 
             <button onclick="App.selectParada('${p.id}', ${p.currentPhase})" class="btn-pill-primary py-2 px-5 text-xs flex items-center gap-1.5 shadow-sm group-hover:bg-black">
@@ -685,7 +742,7 @@ const ProjectsView = {
       document.getElementById('form-project-manager').value = p.manager || '';
       document.getElementById('form-project-sponsor').value = p.sponsor || '';
       document.getElementById('form-project-type').value = p.type || '';
-      document.getElementById('form-project-budget').value = p.budget || '';
+      document.getElementById('form-project-budget').value = this.formatCurrency(p.budget || p.budgetRaw);
       document.getElementById('form-project-start').value = p.startDate || '';
       document.getElementById('form-project-end').value = p.endDate || '';
       document.getElementById('form-project-days').value = p.durationDays || '';
@@ -726,7 +783,9 @@ const ProjectsView = {
     const manager = document.getElementById('form-project-manager')?.value.trim() || UsersManager.getCurrentUser().name;
     const sponsor = document.getElementById('form-project-sponsor')?.value.trim() || 'Diretoria Executiva';
     const type = document.getElementById('form-project-type')?.value.trim() || 'Parada Geral';
-    const budget = document.getElementById('form-project-budget')?.value.trim() || 'R$ 0,00';
+    const rawBudgetInput = document.getElementById('form-project-budget')?.value.trim() || '0';
+    const budgetRaw = this.parseCurrency(rawBudgetInput);
+    const budget = this.formatCurrency(budgetRaw);
     const startDate = document.getElementById('form-project-start')?.value || '';
     const endDate = document.getElementById('form-project-end')?.value || '';
     const durationDays = parseInt(document.getElementById('form-project-days')?.value || '30', 10);
@@ -749,6 +808,7 @@ const ProjectsView = {
         p.sponsor = sponsor;
         p.type = type;
         p.budget = budget;
+        p.budgetRaw = budgetRaw;
         p.startDate = startDate;
         p.endDate = endDate;
         p.durationDays = durationDays;
@@ -766,7 +826,7 @@ const ProjectsView = {
         sponsor: sponsor,
         type: type,
         budget: budget,
-        budgetRaw: 8000000,
+        budgetRaw: budgetRaw || 8000000,
         startDate: startDate,
         endDate: endDate,
         durationDays: durationDays,
@@ -829,15 +889,38 @@ const ProjectsView = {
     App.renderCurrentView();
   },
 
-  deleteParada(id) {
+  askDeleteParada(id) {
+    document.querySelectorAll('[id^="parada-confirm-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="parada-actions-"]').forEach(el => el.classList.remove('hidden'));
+
+    const actions = document.getElementById(`parada-actions-${id}`);
+    const confirmBox = document.getElementById(`parada-confirm-${id}`);
+    if (actions && confirmBox) {
+      actions.classList.add('hidden');
+      confirmBox.classList.remove('hidden');
+    }
+  },
+
+  cancelDeleteParada(id) {
+    const actions = document.getElementById(`parada-actions-${id}`);
+    const confirmBox = document.getElementById(`parada-confirm-${id}`);
+    if (actions && confirmBox) {
+      confirmBox.classList.add('hidden');
+      actions.classList.remove('hidden');
+    }
+  },
+
+  confirmDeleteParada(id) {
     const p = this.getParadaById(id);
     if (!p) return;
-    if (confirm(`Tem certeza que deseja excluir a parada "${p.name}"? Esta ação não pode ser desfeita.`)) {
-      const list = this.getParadas().filter(item => item.id !== id);
-      this.saveParadas(list);
-      App.showToast('Parada removida do portfólio.', 'info');
-      App.renderCurrentView();
-    }
+    const list = this.getParadas().filter(item => item.id !== id);
+    this.saveParadas(list);
+    App.showToast(`Parada "${p.name}" removida com sucesso.`, 'info');
+    App.renderCurrentView();
+  },
+
+  deleteParada(id) {
+    this.confirmDeleteParada(id);
   }
 };
 

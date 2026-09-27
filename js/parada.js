@@ -19,31 +19,24 @@ const ParadaView = {
     return `
       <div class="space-y-6 animate-fade-in">
         
-        <!-- Header da Fase 2 com War Room Pulse e Gate 2 Status -->
-        <div class="bg-zinc-950 text-white p-6 md:p-8 rounded-3xl border border-zinc-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="nike-pill bg-red-600 text-white border-transparent animate-pulse">WAR ROOM AO VIVO</span>
-              <span class="text-xs text-zinc-400 font-mono">Fase 2: Execução de Parada (D-0 até Término Mecânico)</span>
-            </div>
-            <h2 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
-              <span>${parada.name}</span>
-            </h2>
-            <p class="text-xs text-zinc-400 max-w-xl">
-              Monitoramento horário em tempo real, passagem de turno, caminho crítico, LOTO e apontamento de ordens de serviço.
-            </p>
+        <!-- Header Compacto da Fase 2: Execução / War Room -->
+        <div class="bg-zinc-950 text-white px-4 py-3 rounded-2xl border border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="nike-pill bg-red-600 text-white border-transparent text-xs animate-pulse font-bold">WAR ROOM AO VIVO</span>
+            <span class="text-xs font-bold text-white">Fase 2: Execução de Campo</span>
+            <span class="text-xs text-zinc-400 font-mono">• Dia D+${parada.parada?.dayNumber || 1}</span>
           </div>
 
-          <!-- Card de Avanço Consolidado no Topo -->
-          <div class="flex items-center gap-4 bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shrink-0">
-            <div class="text-right">
-              <span class="text-[10px] uppercase font-bold text-zinc-400 block">Avanço Físico Real</span>
-              <span class="text-3xl font-black text-white font-mono">${(parada.parada.realProgress || 0).toFixed(1)}%</span>
-              <span class="text-[10px] text-zinc-400 block font-mono">Planejado: ${(parada.parada.plannedProgress || 0).toFixed(1)}%</span>
+          <!-- Indicadores de Avanço e Término Mecânico -->
+          <div class="flex items-center gap-4 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-zinc-400 text-[11px]">Avanço Real:</span>
+              <span class="font-mono font-bold text-white text-sm">${(parada.parada?.realProgress || 0).toFixed(1)}%</span>
+              <span class="text-[10px] text-zinc-400 font-mono hidden sm:inline">(Plan: ${(parada.parada?.plannedProgress || 0).toFixed(1)}%)</span>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-red-600/30">
-              D+${parada.parada.dayNumber || 1}
-            </div>
+            <span class="nike-pill text-[10px] py-0.5 ${gate2.approved ? 'bg-[#007d48] text-white border-transparent font-bold' : 'bg-red-500/20 text-red-300 border-red-500/30 font-semibold'}">
+              ${gate2.approved ? 'GATE 2 OK' : 'EM ANDAMENTO'}
+            </span>
           </div>
         </div>
 
@@ -88,6 +81,139 @@ const ParadaView = {
         <!-- Conteúdo da Sub-Aba Ativa -->
         <div id="parada-tab-content">
           ${this.renderActiveTab(parada, activeTab)}
+        </div>
+
+        <!-- MODAL DE CADASTRO DE ORDEM DE SERVIÇO (OS) -->
+        <div id="order-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+          <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+              <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Emitir Ordem de Serviço (OS)</h3>
+              <button onclick="ParadaView.closeAddOrderModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+              <div class="space-y-3">
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
+                    <button type="button" onclick="ParadaView.closeAddOrderModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                      <span class="material-symbols-outlined text-xs">settings</span>
+                      <span>Gerenciar TAGs</span>
+                    </button>
+                  </div>
+                  <select id="form-order-tag" onchange="ParadaView.onOrderTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
+                    ${ConfiguracoesView.renderTagSelectOptions('', parada.unit)}
+                  </select>
+                </div>
+
+                <div id="order-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+                  <div class="flex items-center justify-between mb-1">
+                    <span id="order-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+                    <span id="order-preview-tag-crit" class="nike-pill text-[9px]"></span>
+                  </div>
+                  <p id="order-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label">Título da Atividade / Serviço *</label>
+                <input type="text" id="form-order-title" class="form-input font-semibold" placeholder="Ex: Substituição Bandejas Fracionamento" />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Disciplina Técnica *</label>
+                  <select id="form-order-disc" class="form-input font-medium">
+                    ${ConfiguracoesView.getDisciplines().map(d => `<option value="${d.name}">${d.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">Turno de Execução</label>
+                  <select id="form-order-shift" class="form-input font-medium">
+                    <option value="Diurno">Diurno</option>
+                    <option value="Noturno">Noturno</option>
+                    <option value="24h">24h (Ininterrupto)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Equipe / Empreiteira Responsável</label>
+                  <input type="text" id="form-order-team" class="form-input" placeholder="Ex: Consórcio MetalMax / Equipe Própria" value="Equipe de Manutenção" />
+                </div>
+                <div>
+                  <label class="form-label">Status Inicial</label>
+                  <select id="form-order-status" class="form-input font-medium">
+                    <option value="Aguardando Bloqueio">Aguardando Bloqueio LOTO</option>
+                    <option value="Não Iniciada" selected>Não Iniciada</option>
+                    <option value="Em Execução">Em Execução</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+              <button onclick="ParadaView.closeAddOrderModal()" class="btn-ghost-pill text-xs">Cancelar</button>
+              <button onclick="ParadaView.saveAddOrderModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">Cadastrar Ordem de Serviço</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL DE CADASTRO DE PONTO DE BLOQUEIO LOTO -->
+        <div id="loto-create-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 hidden animate-fade-in">
+          <div class="card-industrial max-w-lg w-full border border-[#e5e5e5] bg-[#ffffff] shadow-2xl space-y-4 rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
+              <h3 class="text-base font-extrabold text-[#111111] uppercase tracking-tight">Cadastrar Bloqueio LOTO</h3>
+              <button onclick="ParadaView.closeAddLotoModal()" class="text-xs font-bold text-[#707072] hover:text-[#111111] px-2 py-1">Fechar</button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+              <div class="space-y-3">
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="form-label mb-0">TAG do Equipamento (Configurações) *</label>
+                    <button type="button" onclick="ParadaView.closeAddLotoModal(); App.navigateTo('configuracoes'); ConfiguracoesView.switchTab('equipamentos');" class="text-[10px] text-[#1151ff] hover:underline flex items-center gap-0.5">
+                      <span class="material-symbols-outlined text-xs">settings</span>
+                      <span>Gerenciar TAGs</span>
+                    </button>
+                  </div>
+                  <select id="form-loto-tag" onchange="ParadaView.onLotoTagChange(this.value)" class="form-input font-mono font-bold text-xs bg-white">
+                    ${ConfiguracoesView.renderTagSelectOptions('', parada.unit)}
+                  </select>
+                </div>
+
+                <div id="loto-equipment-preview" class="p-3 bg-[#f5f5f5] rounded-2xl border border-[#e5e5e5] hidden">
+                  <div class="flex items-center justify-between mb-1">
+                    <span id="loto-preview-tag-title" class="font-bold text-[#111111] text-xs font-mono"></span>
+                    <span id="loto-preview-tag-crit" class="nike-pill text-[9px]"></span>
+                  </div>
+                  <p id="loto-preview-tag-desc" class="text-[11px] text-[#4b4b4d]"></p>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label">Ponto Físico de Isolamento / Bloqueio *</label>
+                <input type="text" id="form-loto-point" class="form-input font-medium" placeholder="Ex: Válvula de Entrada de Carga V-01 (Raquete e Cadeado Vermelho)" />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">Responsável pelo Travamento</label>
+                  <input type="text" id="form-loto-lockedby" class="form-input" value="${UsersManager.getCurrentUser().name}" />
+                </div>
+                <div>
+                  <label class="form-label">Data do Bloqueio</label>
+                  <input type="date" id="form-loto-date" class="form-input font-mono" value="${new Date().toISOString().split('T')[0]}" />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#e5e5e5]">
+              <button onclick="ParadaView.closeAddLotoModal()" class="btn-ghost-pill text-xs">Cancelar</button>
+              <button onclick="ParadaView.saveAddLotoModal('${parada.id}')" class="btn-pill-primary text-xs shadow-md">Registrar Bloqueio LOTO</button>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -606,30 +732,130 @@ const ParadaView = {
   },
 
   addOrderPrompt(paradaId) {
-    const tag = prompt('TAG do Equipamento:');
-    if (!tag) return;
-    const title = prompt('Título do Serviço:');
-    if (!title) return;
-    const discipline = prompt('Disciplina (Caldeiraria, Mecânica, Elétrica, Instrumentação):', 'Mecânica') || 'Mecânica';
+    this.openAddOrderModal(paradaId);
+  },
 
+  openAddOrderModal(paradaId) {
+    const modal = document.getElementById('order-create-modal');
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (modal) {
+      const tagSelect = document.getElementById('form-order-tag');
+      const discSelect = document.getElementById('form-order-disc');
+      const titleInput = document.getElementById('form-order-title');
+      const previewEl = document.getElementById('order-equipment-preview');
+
+      if (tagSelect) {
+        tagSelect.innerHTML = ConfiguracoesView.renderTagSelectOptions('', parada?.unit);
+      }
+      if (discSelect) {
+        discSelect.innerHTML = ConfiguracoesView.getDisciplines().map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+      }
+      if (titleInput) titleInput.value = '';
+      if (previewEl) previewEl.classList.add('hidden');
+
+      modal.classList.remove('hidden');
+    }
+  },
+
+  closeAddOrderModal() {
+    const modal = document.getElementById('order-create-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  onOrderTagChange(tagCode) {
+    const previewEl = document.getElementById('order-equipment-preview');
+    const titleEl = document.getElementById('order-preview-tag-title');
+    const critEl = document.getElementById('order-preview-tag-crit');
+    const descEl = document.getElementById('order-preview-tag-desc');
+    const titleInput = document.getElementById('form-order-title');
+    const discSelect = document.getElementById('form-order-disc');
+
+    if (!tagCode) {
+      if (previewEl) previewEl.classList.add('hidden');
+      return;
+    }
+
+    const tagObj = ConfiguracoesView.getTagByCode(tagCode);
+    if (tagObj) {
+      if (previewEl) previewEl.classList.remove('hidden');
+      if (titleEl) titleEl.innerText = `${tagObj.tag} — ${tagObj.name}`;
+      if (critEl) {
+        critEl.innerText = tagObj.criticality || 'Classe A';
+        critEl.className = `nike-pill text-[9px] ${tagObj.criticality && tagObj.criticality.includes('Classe A') ? 'bg-red-50 text-red-700 border-red-200 font-bold' : 'bg-amber-50 text-amber-800 border-amber-200'}`;
+      }
+      if (descEl) descEl.innerText = `${tagObj.type} • Norma: ${tagObj.inspectionStandard || 'NR-13'} • ${tagObj.unit || ''} » ${tagObj.system || ''}`;
+
+      if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
+        titleInput.value = `Manutenção / Revisão em ${tagObj.name}`;
+      }
+
+      if (discSelect) {
+        const typeLower = (tagObj.type || '').toLowerCase();
+        const tagLower = tagCode.toLowerCase();
+        let matchedCat = 'Mecânica';
+        if (tagLower.startsWith('t-') || typeLower.includes('torre') || typeLower.includes('vaso') || tagLower.startsWith('cyc')) matchedCat = 'Caldeiraria';
+        else if (tagLower.startsWith('p-') || tagLower.startsWith('c-') || typeLower.includes('bomba') || typeLower.includes('compressor')) matchedCat = 'Mecânica';
+        else if (tagLower.startsWith('e-') || typeLower.includes('permutador') || typeLower.includes('tubulação')) matchedCat = 'Tubulação';
+        else if (tagLower.startsWith('psv') || tagLower.startsWith('sv') || typeLower.includes('válvula') || typeLower.includes('instrumentação')) matchedCat = 'Instrumentação';
+        else if (tagLower.startsWith('mcc') || typeLower.includes('elétrica') || typeLower.includes('painel')) matchedCat = 'Elétrica';
+        else if (tagLower.startsWith('plc') || typeLower.includes('automação')) matchedCat = 'Automação';
+        else if (tagLower.startsWith('r-') || tagLower.startsWith('ris') || typeLower.includes('refratário')) matchedCat = 'Refratário';
+        
+        const opt = Array.from(discSelect.options).find(o => o.value.toLowerCase() === matchedCat.toLowerCase());
+        if (opt) discSelect.value = opt.value;
+      }
+    } else {
+      if (previewEl) previewEl.classList.add('hidden');
+    }
+  },
+
+  saveAddOrderModal(paradaId) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
+
+    const tagSelect = document.getElementById('form-order-tag');
+    const titleInput = document.getElementById('form-order-title');
+    const discSelect = document.getElementById('form-order-disc');
+    const teamInput = document.getElementById('form-order-team');
+    const shiftSelect = document.getElementById('form-order-shift');
+    const statusSelect = document.getElementById('form-order-status');
+
+    const tag = tagSelect ? tagSelect.value.trim() : '';
+    const title = titleInput ? titleInput.value.trim() : '';
+    const discipline = discSelect ? discSelect.value : 'Mecânica';
+    const team = teamInput ? teamInput.value.trim() : 'Equipe de Campo';
+    const shift = shiftSelect ? shiftSelect.value : 'Diurno';
+    const status = statusSelect ? statusSelect.value : 'Não Iniciada';
+
+    if (!tag) {
+      alert('Por favor, selecione o TAG do Equipamento vinculado às Configurações.');
+      if (tagSelect) tagSelect.focus();
+      return;
+    }
+    if (!title) {
+      alert('Por favor, informe o título da Ordem de Serviço.');
+      if (titleInput) titleInput.focus();
+      return;
+    }
+
     if (!parada.parada) parada.parada = {};
     if (!parada.parada.orders) parada.parada.orders = [];
 
+    const nextId = `OS-${Math.floor(5000 + Math.random() * 4000)}`;
     parada.parada.orders.push({
-      id: `OS-${Math.floor(5000 + Math.random() * 4000)}`,
+      id: nextId,
       tag: tag.toUpperCase(),
       title: title,
       discipline: discipline,
-      team: 'Equipe de Campo',
-      shift: 'Diurno',
-      progress: 0,
-      status: 'Não Iniciada'
+      team: team || 'Equipe de Campo',
+      shift: shift,
+      progress: status === 'Em Execução' ? 25 : 0,
+      status: status
     });
 
     ProjectsView.updateParada(parada);
-    App.showToast('Ordem de Serviço criada!', 'success');
+    this.closeAddOrderModal();
+    App.showToast(`Ordem de Serviço ${nextId} emitida para o TAG [${tag.toUpperCase()}]!`, 'success');
     App.renderCurrentView();
   },
 
@@ -694,27 +920,103 @@ const ParadaView = {
   },
 
   addLotoPrompt(paradaId) {
-    const tag = prompt('TAG do Equipamento:');
-    if (!tag) return;
-    const point = prompt('Descrição do Ponto de Isolamento (Ex: Válvula de Entrada / Disjuntor Geral):');
-    if (!point) return;
+    this.openAddLotoModal(paradaId);
+  },
 
+  openAddLotoModal(paradaId) {
+    const modal = document.getElementById('loto-create-modal');
+    const parada = ProjectsView.getParadaById(paradaId);
+    if (modal) {
+      const tagSelect = document.getElementById('form-loto-tag');
+      const pointInput = document.getElementById('form-loto-point');
+      const previewEl = document.getElementById('loto-equipment-preview');
+
+      if (tagSelect) {
+        tagSelect.innerHTML = ConfiguracoesView.renderTagSelectOptions('', parada?.unit);
+      }
+      if (pointInput) pointInput.value = '';
+      if (previewEl) previewEl.classList.add('hidden');
+
+      modal.classList.remove('hidden');
+    }
+  },
+
+  closeAddLotoModal() {
+    const modal = document.getElementById('loto-create-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  onLotoTagChange(tagCode) {
+    const previewEl = document.getElementById('loto-equipment-preview');
+    const titleEl = document.getElementById('loto-preview-tag-title');
+    const critEl = document.getElementById('loto-preview-tag-crit');
+    const descEl = document.getElementById('loto-preview-tag-desc');
+    const pointInput = document.getElementById('form-loto-point');
+
+    if (!tagCode) {
+      if (previewEl) previewEl.classList.add('hidden');
+      return;
+    }
+
+    const tagObj = ConfiguracoesView.getTagByCode(tagCode);
+    if (tagObj) {
+      if (previewEl) previewEl.classList.remove('hidden');
+      if (titleEl) titleEl.innerText = `${tagObj.tag} — ${tagObj.name}`;
+      if (critEl) {
+        critEl.innerText = tagObj.criticality || 'Classe A';
+        critEl.className = `nike-pill text-[9px] ${tagObj.criticality && tagObj.criticality.includes('Classe A') ? 'bg-red-50 text-red-700 border-red-200 font-bold' : 'bg-amber-50 text-amber-800 border-amber-200'}`;
+      }
+      if (descEl) descEl.innerText = `${tagObj.type} • ${tagObj.unit || ''} » ${tagObj.system || ''}`;
+
+      if (pointInput && (!pointInput.value || pointInput.value.trim() === '')) {
+        pointInput.value = `Bloqueio de entrada/saída de processo no TAG ${tagObj.tag}`;
+      }
+    } else {
+      if (previewEl) previewEl.classList.add('hidden');
+    }
+  },
+
+  saveAddLotoModal(paradaId) {
     const parada = ProjectsView.getParadaById(paradaId);
     if (!parada) return;
+
+    const tagSelect = document.getElementById('form-loto-tag');
+    const pointInput = document.getElementById('form-loto-point');
+    const lockedByInput = document.getElementById('form-loto-lockedby');
+    const dateInput = document.getElementById('form-loto-date');
+
+    const tag = tagSelect ? tagSelect.value.trim() : '';
+    const point = pointInput ? pointInput.value.trim() : '';
+    const lockedBy = lockedByInput ? lockedByInput.value.trim() : UsersManager.getCurrentUser().name;
+    const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+
+    if (!tag) {
+      alert('Por favor, selecione o TAG do Equipamento vinculado às Configurações.');
+      if (tagSelect) tagSelect.focus();
+      return;
+    }
+    if (!point) {
+      alert('Por favor, informe a descrição do ponto físico de isolamento.');
+      if (pointInput) pointInput.focus();
+      return;
+    }
+
     if (!parada.parada) parada.parada = {};
     if (!parada.parada.loto) parada.parada.loto = [];
 
+    const nextId = `LOTO-${Math.floor(10 + Math.random() * 90)}`;
     parada.parada.loto.push({
-      id: `LOTO-${Math.floor(10 + Math.random() * 90)}`,
+      id: nextId,
       tag: tag.toUpperCase(),
       point: point,
-      lockedBy: UsersManager.getCurrentUser().name,
-      date: new Date().toISOString().split('T')[0],
+      lockedBy: lockedBy,
+      date: date,
       status: 'Bloqueado Ativo'
     });
 
     ProjectsView.updateParada(parada);
-    App.showToast('Ponto de bloqueio LOTO cadastrado!', 'success');
+    this.closeAddLotoModal();
+    App.showToast(`Ponto de bloqueio [${nextId}] registrado para o TAG [${tag.toUpperCase()}]!`, 'success');
     App.renderCurrentView();
   },
 

@@ -879,9 +879,9 @@ const IniciacaoView = {
                           </button>
                         </div>
                         <div id="stk-confirm-${stk.id}" class="hidden inline-confirm-box animate-fade-in">
-                          <span class="text-[#969696] text-[10px] font-medium">Excluir?</span>
-                          <button onclick="IniciacaoView.confirmDeleteStakeholder(${stk.id})" class="inline-confirm-btn-yes" title="Confirmar exclusão">SIM</button>
-                          <button onclick="IniciacaoView.cancelDeleteStakeholder(${stk.id})" class="inline-confirm-btn-no" title="Cancelar exclusão">NÃO</button>
+                          <span class="text-[#707072] text-[10px] font-bold">Excluir?</span>
+                          <button onclick="IniciacaoView.confirmDeleteStakeholder(${stk.id})" class="inline-confirm-btn-yes" title="Confirmar exclusão">Sim</button>
+                          <button onclick="IniciacaoView.cancelDeleteStakeholder(${stk.id})" class="inline-confirm-btn-no" title="Cancelar exclusão">Não</button>
                         </div>
                       </div>
                     </td>
